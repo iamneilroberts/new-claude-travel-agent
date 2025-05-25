@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "d1-database": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://clean-d1-mcp.somotravel.workers.dev/sse"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "your-cloudflare-api-token-here"
+      }
+    },
+    "example-mcp-server": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://your-mcp-server.workers.dev/sse"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "your-cloudflare-api-token-here"
+      }
+    }
+  }
+}

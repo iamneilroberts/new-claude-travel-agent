@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Claude Desktop config with sensitive data
+claude-desktop-config.json
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+build/
+.wrangler/
+*/dist/
+*/build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Cloudflare
+.dev.vars
+wrangler.toml
