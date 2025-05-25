@@ -1,0 +1,1 @@
+- Do not modify the ~/.config/Claude/claude_desktop_config file. I will maintain it manually. Make changes to a local claude_desktop_config and inform me

@@ -10,6 +10,18 @@
         "MCP_AUTH_TOKEN": "your-cloudflare-api-token-here"
       }
     },
+    "amadeus-api": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://amadeus-api-mcp.somotravel.workers.dev/sse",
+        "--header",
+        "Authorization:${AMADEUS_AUTH_HEADER}"
+      ],
+      "env": {
+        "AMADEUS_AUTH_HEADER": "Bearer your-amadeus-auth-token-here"
+      }
+    },
     "example-mcp-server": {
       "command": "npx",
       "args": [
@@ -17,7 +29,7 @@
         "https://your-mcp-server.workers.dev/sse"
       ],
       "env": {
-        "MCP_AUTH_TOKEN": "your-cloudflare-api-token-here"
+        "MCP_AUTH_TOKEN": "your-auth-token-here"
       }
     }
   }
