@@ -5431,13 +5431,10 @@ var index_default = {
     try {
       const url = new URL(request.url);
       if (url.pathname === "/.well-known/oauth-metadata" || url.pathname === "/.well-known/openid-configuration" || url.pathname === "/sse/.well-known/oauth-metadata" || url.pathname === "/sse/.well-known/openid-configuration") {
-        const baseUrl = url.origin;
-        const metadata = getOAuthMetadata(baseUrl);
-        return new Response(JSON.stringify(metadata), {
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
+        // Return 404 to force mcp-remote to use simple Bearer token auth
+        return new Response("Not found", {
+          status: 404,
+          headers: corsHeaders
         });
       } else if (url.pathname === "/authorize" || url.pathname === "/sse/authorize") {
         return handleAuthorize(request, env);
