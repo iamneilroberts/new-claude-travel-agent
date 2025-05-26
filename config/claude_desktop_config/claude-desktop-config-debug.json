@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "d1-database": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://clean-d1-mcp.somotravel.workers.dev/sse"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "NkYJjz86DTJ8ciEjALmX4OqGrUBsKPsUeATY_0Cu"
+      }
+    },
+    "amadeus-api": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://amadeus-api-mcp.somotravel.workers.dev/sse",
+        "--debug",
+        "--transport",
+        "sse-only"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "NkYJjz86DTJ8ciEjALmX4OqGrUBsKPsUeATY_0Cu"
+      }
+    }
+  }
+}
