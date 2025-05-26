@@ -48,6 +48,40 @@
   }
   ```
 
+## LATEST FIX (May 26, 2025 - Hanging Issue Resolved)
+
+### Issue: Server hanging during initialization and falling back to SSE
+- **Problem:** wrangler.toml was pointing to `worker-simple.js` (manual SSE) instead of `worker-minimal.js` (McpAgent)
+- **Root Cause:** Configuration pointing to obsolete worker implementation
+- **Solution:** 
+  1. Update wrangler.toml to use `worker-minimal.js`
+  2. Add required durable object bindings with SQLite migration
+  3. Move obsolete workers to `obsolete/` folder
+
+### Critical Configuration Fix
+
+**File:** `/remote-mcp-servers/amadeus-api-mcp/wrangler.toml`
+```toml
+name = "amadeus-api-mcp"
+main = "worker-minimal.js"  # NOT worker-simple.js
+compatibility_date = "2025-05-25"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [
+  { class_name = "AmadeusMCP", name = "MCP_OBJECT" }
+]
+
+[[migrations]]
+tag = "v9"
+new_sqlite_classes = [ "AmadeusMCP" ]  # Use SQLite for free plan
+
+[vars]
+MCP_AUTH_KEY = "amadeus-mcp-auth-key-2025"
+```
+
+**Key Insight:** Always use `new_sqlite_classes` instead of `new_classes` for Cloudflare free plan.
+
 ## Final Working Implementation
 
 **File:** `/remote-mcp-servers/amadeus-api-mcp/worker-minimal.js`
