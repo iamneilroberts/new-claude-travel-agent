@@ -1,5 +1,5 @@
-import { Env } from '../index';
-import { ToolRegistry } from '../protocol';
+import type { Env } from '../index';
+import type { ToolRegistry } from '../protocol';
 import { getAmadeusClient } from '../services/amadeus-client';
 import { testConnectionTool } from './test-connection';
 import { searchFlightsTool } from './search-flights';
@@ -13,6 +13,11 @@ import { searchHotelsByCityTool } from './search-hotels-by-city';
 import { getHotelRatingsTool } from './get-hotel-ratings';
 import { searchActivitiesByCoordinatesTool } from './search-activities-by-coordinates';
 import { getTravelRecommendationsTool } from './get-travel-recommendations';
+import { flightChoicePredictionTool } from './flight-choice-prediction';
+import { locationScoreTool } from './location-score';
+import { hotelNameAutocompleteTool } from './hotel-name-autocomplete';
+import { citySearchTool } from './city-search';
+import { flightCheckInLinksTool } from './flight-check-in-links';
 
 export async function initializeTools(env: Env): Promise<ToolRegistry> {
   // Initialize Amadeus client
@@ -37,7 +42,12 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
     searchHotelsByCityTool,
     getHotelRatingsTool,
     searchActivitiesByCoordinatesTool,
-    getTravelRecommendationsTool
+    getTravelRecommendationsTool,
+    flightChoicePredictionTool,
+    locationScoreTool,
+    hotelNameAutocompleteTool,
+    citySearchTool,
+    flightCheckInLinksTool
   ];
   
   tools.forEach(tool => {
