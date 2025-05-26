@@ -105,3 +105,9 @@ MCP_AUTH_TOKEN="amadeus-mcp-auth-key-2025" npx mcp-remote https://amadeus-api-mc
 - Simpler configuration (no --header flag needed)
 - No OAuth discovery issues
 - No space escaping workarounds needed
+
+## Future Improvements
+- **TODO**: Refactor worker to remove unused OAuth infrastructure (currently ~170KB)
+- **TODO**: Follow D1 worker's simpler pattern (no OAuth metadata endpoints)
+- **TODO**: Reduce file size by removing unnecessary OAuth code
+- Current solution works by returning 404 for OAuth metadata, forcing simple auth
