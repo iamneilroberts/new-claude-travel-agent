@@ -36,7 +36,7 @@ async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promis
     }
 
     const amadeus = await getAmadeusClient(env);
-    const response = await amadeus.get(`/v1/reference-data/locations/cities?${queryParams.toString()}`);
+    const response = await amadeus.get('/v1/reference-data/locations/cities', Object.fromEntries(queryParams));
 
     if (!response.data || response.data.length === 0) {
       const errorResult = {

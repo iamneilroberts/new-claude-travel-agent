@@ -12,9 +12,7 @@ import { searchFlightInspirationsTool } from './search-flight-inspirations';
 import { searchHotelsByCityTool } from './search-hotels-by-city';
 import { getHotelRatingsTool } from './get-hotel-ratings';
 import { searchActivitiesByCoordinatesTool } from './search-activities-by-coordinates';
-import { getTravelRecommendationsTool } from './get-travel-recommendations';
 import { flightChoicePredictionTool } from './flight-choice-prediction';
-import { locationScoreTool } from './location-score';
 import { hotelNameAutocompleteTool } from './hotel-name-autocomplete';
 import { citySearchTool } from './city-search';
 import { flightCheckInLinksTool } from './flight-check-in-links';
@@ -42,9 +40,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
     searchHotelsByCityTool,
     getHotelRatingsTool,
     searchActivitiesByCoordinatesTool,
-    getTravelRecommendationsTool,
     flightChoicePredictionTool,
-    locationScoreTool,
     hotelNameAutocompleteTool,
     citySearchTool,
     flightCheckInLinksTool
