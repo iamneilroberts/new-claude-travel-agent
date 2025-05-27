@@ -1,0 +1,32 @@
+{
+  "name": "r2-storage-mcp",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker implementing MCP for R2 storage",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir=dist",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check": "tsc --noEmit",
+    "lint": "eslint --ext .js,.ts .",
+    "format": "prettier --write ."
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "hono": "^3.10.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240419.0",
+    "@types/node": "^20.10.5",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.3",
+    "wrangler": "^4.15.2"
+  }
+}

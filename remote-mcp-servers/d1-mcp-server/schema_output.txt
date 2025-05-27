@@ -1,0 +1,20 @@
+
+ ⛅️ wrangler 4.6.0 (update available 4.14.4)
+--------------------------------------------
+
+🌀 Executing on local database travel-assistant-db (e6723f99-1d99-45bb-a941-e7600a56abe9) from .wrangler/state/v3/d1:
+🌀 To execute on your remote database, add a --remote flag to your wrangler command.
+🚣 1 command executed successfully.
+[
+  {
+    "results": [
+      {
+        "sql": "CREATE TABLE _cf_METADATA (\n        key INTEGER PRIMARY KEY,\n        value BLOB\n      )"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "duration": 0
+    }
+  }
+]

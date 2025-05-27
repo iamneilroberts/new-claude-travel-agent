@@ -1,0 +1,20 @@
+{
+  "name": "sequential-thinking-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for sequential thinking processes",
+  "main": "src-simple/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "hono": "^3.10.2"
+  },
+  "devDependencies": {
+    "vitest": "^0.34.6",
+    "wrangler": "^4.15.2"
+  }
+}

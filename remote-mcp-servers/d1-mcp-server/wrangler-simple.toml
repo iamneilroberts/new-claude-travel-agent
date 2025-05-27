@@ -1,0 +1,8 @@
+name = "clean-d1-mcp"
+main = "src-simple/index.js"
+compatibility_date = "2023-05-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "travel-assistant-db"
+database_id = "e6723f99-1d99-45bb-a941-e7600a56abe9"
