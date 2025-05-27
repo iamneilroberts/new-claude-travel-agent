@@ -26,7 +26,7 @@ KV_OUTPUT=$(wrangler kv:namespace create "CONVERSATION_STATE" --preview false 2>
 if [ $? -eq 0 ]; then
     KV_ID=$(echo "$KV_OUTPUT" | grep -o 'id = "[^"]*"' | cut -d'"' -f2)
     echo "✅ KV namespace created: $KV_ID"
-    
+
     # Update wrangler.toml with KV ID
     sed -i "s/id = \"conversation-state-namespace-id\"/id = \"$KV_ID\"/" wrangler.toml
     echo "✅ Updated wrangler.toml with KV namespace ID"
@@ -40,7 +40,7 @@ KV_PREVIEW_OUTPUT=$(wrangler kv:namespace create "CONVERSATION_STATE" --preview 
 if [ $? -eq 0 ]; then
     KV_PREVIEW_ID=$(echo "$KV_PREVIEW_OUTPUT" | grep -o 'id = "[^"]*"' | cut -d'"' -f2)
     echo "✅ KV preview namespace created: $KV_PREVIEW_ID"
-    
+
     # Update wrangler.toml with preview KV ID
     sed -i "s/preview_id = \"conversation-state-preview-id\"/preview_id = \"$KV_PREVIEW_ID\"/" wrangler.toml
     echo "✅ Updated wrangler.toml with KV preview namespace ID"
@@ -89,13 +89,13 @@ fi
 echo "🚀 Deploying worker..."
 if wrangler deploy; then
     echo "✅ Mobile Interaction MCP deployed successfully!"
-    
+
     # Get worker URL
     WORKER_URL=$(wrangler subdomain get 2>/dev/null | grep -o 'https://[^[:space:]]*workers.dev' | head -1)
     if [ -z "$WORKER_URL" ]; then
         WORKER_URL="https://mobile-interaction-mcp.YOUR-SUBDOMAIN.workers.dev"
     fi
-    
+
     echo ""
     echo "🎉 Deployment Complete!"
     echo "📍 Worker URL: $WORKER_URL"
@@ -115,7 +115,7 @@ if wrangler deploy; then
     echo "     \"args\": [\"$WORKER_URL\"]"
     echo "   }"
     echo ""
-    
+
 else
     echo "❌ Deployment failed"
     exit 1

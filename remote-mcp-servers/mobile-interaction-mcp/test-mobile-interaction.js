@@ -18,7 +18,7 @@ const testMessages = [
   {
     platform: 'telegram',
     sender_id: '12345',
-    message_id: 'test_msg_2', 
+    message_id: 'test_msg_2',
     content: 'Change the Barcelona flight to 8:30 PM',
     message_type: 'text'
   },
@@ -39,11 +39,11 @@ const testMessages = [
 // Test MCP connection
 async function testMCPConnection() {
   console.log('🔗 Testing MCP connection...');
-  
+
   try {
     const response = await fetch(`${MCP_URL}/health`);
     const data = await response.json();
-    
+
     if (data.status === 'healthy') {
       console.log('✅ MCP server is healthy');
       console.log(`   Service: ${data.service}`);
@@ -63,7 +63,7 @@ async function testMCPConnection() {
 async function testMessageProcessing(message) {
   console.log(`📱 Testing ${message.platform} message processing...`);
   console.log(`   Content: "${message.content}"`);
-  
+
   try {
     const response = await fetch(`${MCP_URL}/mcp`, {
       method: 'POST',
@@ -83,17 +83,17 @@ async function testMessageProcessing(message) {
     });
 
     const data = await response.json();
-    
+
     if (data.result) {
       const result = JSON.parse(data.result.content[0].text);
       console.log('✅ Message processed successfully');
       console.log(`   Intent: ${result.intent.type} (confidence: ${result.intent.confidence})`);
       console.log(`   Response: "${result.response.message}"`);
-      
+
       if (result.response.requires_confirmation) {
         console.log(`   Requires confirmation: ${result.response.confirmation_options.join(', ')}`);
       }
-      
+
       return result;
     } else {
       console.log('❌ Message processing failed:', data.error);
@@ -108,7 +108,7 @@ async function testMessageProcessing(message) {
 // Test trip query
 async function testTripQuery() {
   console.log('🔍 Testing trip information query...');
-  
+
   try {
     const response = await fetch(`${MCP_URL}/mcp`, {
       method: 'POST',
@@ -130,16 +130,16 @@ async function testTripQuery() {
     });
 
     const data = await response.json();
-    
+
     if (data.result) {
       const result = JSON.parse(data.result.content[0].text);
       console.log('✅ Trip query successful');
       console.log(`   Found ${result.length} trips`);
-      
+
       if (result.length > 0) {
         console.log(`   First trip: ${result[0].client_name} - ${result[0].destination}`);
       }
-      
+
       return result;
     } else {
       console.log('❌ Trip query failed:', data.error);
@@ -154,7 +154,7 @@ async function testTripQuery() {
 // Test response sending
 async function testResponseSending() {
   console.log('📤 Testing mobile response sending...');
-  
+
   try {
     const response = await fetch(`${MCP_URL}/mcp`, {
       method: 'POST',
@@ -179,13 +179,13 @@ async function testResponseSending() {
     });
 
     const data = await response.json();
-    
+
     if (data.result) {
       const result = JSON.parse(data.result.content[0].text);
       console.log('✅ Response sending successful');
       console.log(`   Status: ${result.status}`);
       console.log(`   Platform: ${result.platform}`);
-      
+
       return result;
     } else {
       console.log('❌ Response sending failed:', data.error);
@@ -200,12 +200,12 @@ async function testResponseSending() {
 // Test webhook endpoints
 async function testWebhookEndpoints() {
   console.log('🌐 Testing webhook endpoints...');
-  
+
   // Test WhatsApp webhook verification
   try {
     const whatsappVerify = await fetch(`${MCP_URL}/webhook/whatsapp?hub.mode=subscribe&hub.verify_token=${MCP_AUTH_KEY}&hub.challenge=test_challenge`);
     const challenge = await whatsappVerify.text();
-    
+
     if (challenge === 'test_challenge') {
       console.log('✅ WhatsApp webhook verification working');
     } else {
@@ -214,7 +214,7 @@ async function testWebhookEndpoints() {
   } catch (error) {
     console.log('❌ WhatsApp webhook test failed:', error.message);
   }
-  
+
   // Test Telegram webhook
   try {
     const telegramResponse = await fetch(`${MCP_URL}/webhook/telegram`, {
@@ -229,7 +229,7 @@ async function testWebhookEndpoints() {
         }
       })
     });
-    
+
     if (telegramResponse.status === 200) {
       console.log('✅ Telegram webhook endpoint working');
     } else {
@@ -243,32 +243,32 @@ async function testWebhookEndpoints() {
 // Main test runner
 async function runTests() {
   console.log('🚀 Starting Mobile Interaction MCP Test Suite\n');
-  
+
   // Test MCP connection first
   const isConnected = await testMCPConnection();
   if (!isConnected) {
     console.log('⛔ Cannot proceed with tests - MCP server not available');
     return;
   }
-  
+
   // Test message processing for each platform
   for (const message of testMessages) {
     await testMessageProcessing(message);
     console.log(''); // Add spacing
   }
-  
+
   // Test database queries
   await testTripQuery();
   console.log('');
-  
+
   // Test response sending
   await testResponseSending();
   console.log('');
-  
+
   // Test webhook endpoints
   await testWebhookEndpoints();
   console.log('');
-  
+
   console.log('✨ Test suite completed!');
   console.log('\n💡 Next steps:');
   console.log('   1. Deploy to Cloudflare Workers');

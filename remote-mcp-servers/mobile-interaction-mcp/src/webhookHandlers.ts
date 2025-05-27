@@ -4,7 +4,7 @@
 import { MobileMessage } from './tools/index.js';
 
 export class WebhookHandlers {
-  
+
   /**
    * Process WhatsApp webhook payload
    */
@@ -150,11 +150,11 @@ export class WebhookHandlers {
       // Handle media attachments (MMS)
       let attachments: any[] = [];
       const numMedia = parseInt(payload.NumMedia || '0');
-      
+
       for (let i = 0; i < numMedia; i++) {
         const mediaUrl = payload[`MediaUrl${i}`];
         const mediaContentType = payload[`MediaContentType${i}`];
-        
+
         if (mediaUrl) {
           attachments.push({
             type: mediaContentType.startsWith('image/') ? 'image' : 'document',

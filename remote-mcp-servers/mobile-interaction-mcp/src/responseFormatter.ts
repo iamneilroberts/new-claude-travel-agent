@@ -4,7 +4,7 @@
 import { MobileResponse } from './tools/index.js';
 
 export class MobileResponseFormatter {
-  
+
   /**
    * Format response for WhatsApp
    */
@@ -36,7 +36,7 @@ export class MobileResponseFormatter {
     // Add attachments
     if (response.attachments && response.attachments.length > 0) {
       const attachment = response.attachments[0]; // WhatsApp handles one attachment at a time
-      
+
       if (attachment.type === 'image') {
         whatsappMessage.type = 'image';
         whatsappMessage.image = {
@@ -82,7 +82,7 @@ export class MobileResponseFormatter {
     // Handle attachments
     if (response.attachments && response.attachments.length > 0) {
       const attachment = response.attachments[0];
-      
+
       if (attachment.type === 'image') {
         telegramMessage = {
           photo: attachment.url,
@@ -134,27 +134,27 @@ export class MobileResponseFormatter {
     }
 
     let info = `✈️ **${tripData.client_name}'s Trip**\n\n`;
-    
+
     if (tripData.destination) {
       info += `📍 **Destination:** ${tripData.destination}\n`;
     }
-    
+
     if (tripData.start_date && tripData.end_date) {
       info += `📅 **Dates:** ${tripData.start_date} to ${tripData.end_date}\n`;
     }
-    
+
     if (tripData.flight_details) {
       info += `✈️ **Flight:** ${tripData.flight_details}\n`;
     }
-    
+
     if (tripData.hotel_details) {
       info += `🏨 **Hotel:** ${tripData.hotel_details}\n`;
     }
-    
+
     if (tripData.booking_reference) {
       info += `🎫 **Reference:** ${tripData.booking_reference}\n`;
     }
-    
+
     if (tripData.total_cost) {
       info += `💰 **Total:** ${tripData.total_cost}\n`;
     }
@@ -167,7 +167,7 @@ export class MobileResponseFormatter {
    */
   static formatErrorMessage(error: string, platform: 'whatsapp' | 'telegram' | 'sms'): string {
     const baseMessage = `❌ Sorry, I encountered an issue: ${error}`;
-    
+
     switch (platform) {
       case 'whatsapp':
       case 'telegram':
@@ -185,15 +185,15 @@ export class MobileResponseFormatter {
   static formatConfirmationRequest(action: string, details: any, platform: string): MobileResponse {
     let message = `🤔 **Confirmation Required**\n\n`;
     message += `I'm about to ${action}:\n\n`;
-    
+
     if (details.trip_reference) {
       message += `Trip: ${details.trip_reference}\n`;
     }
-    
+
     if (details.changes) {
       message += `Changes: ${details.changes}\n`;
     }
-    
+
     message += '\nDo you want me to proceed?';
 
     return {
@@ -209,15 +209,15 @@ export class MobileResponseFormatter {
   static formatSuccessMessage(action: string, details: any): string {
     let message = `✅ **Success!**\n\n`;
     message += `I've successfully ${action}.\n\n`;
-    
+
     if (details.confirmation_number) {
       message += `Confirmation: ${details.confirmation_number}\n`;
     }
-    
+
     if (details.next_steps) {
       message += `Next steps: ${details.next_steps}\n`;
     }
-    
+
     return message;
   }
 

@@ -106,7 +106,7 @@ export class R2StorageMCP extends McpAgent {
           try {
             if (params.bucket_name === 'travel-media' && env.TRAVEL_MEDIA_BUCKET) {
               const object = await env.TRAVEL_MEDIA_BUCKET.get(params.key);
-              
+
               if (object) {
                 // For images, return metadata and URL info
                 const result = {
@@ -309,7 +309,7 @@ export class R2StorageMCP extends McpAgent {
 
       console.log('R2 Storage MCP server initialized with tools:', [
         'r2_buckets_list',
-        'r2_objects_list', 
+        'r2_objects_list',
         'r2_object_get',
         'r2_upload_image',
         'r2_object_delete'

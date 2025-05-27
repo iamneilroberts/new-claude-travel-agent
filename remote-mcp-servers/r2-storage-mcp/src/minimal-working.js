@@ -454,7 +454,7 @@ async function handleRequest(request, env) {
           }
 
           const object = await env.TRAVEL_MEDIA_BUCKET.get(args.key);
-          
+
           if (!object) {
             return {
               jsonrpc: '2.0',

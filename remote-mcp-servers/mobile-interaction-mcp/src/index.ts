@@ -56,14 +56,14 @@ export class MobileInteractionMCP extends McpAgent {
 
             // Parse travel intent from message
             const intent = await this.messageParser.parseTravelIntent(message);
-            
+
             // Get or create conversation context
             const conversationId = `${params.platform}_${params.sender_id}`;
             const context = await this.getConversationContext(conversationId, env.CONVERSATION_STATE);
-            
+
             // Process based on intent and generate response
             const response = await this.processIntent(intent, message, context, env);
-            
+
             // Update conversation context
             await this.updateConversationContext(conversationId, context, env.CONVERSATION_STATE);
 
@@ -83,8 +83,8 @@ export class MobileInteractionMCP extends McpAgent {
             return {
               content: [{
                 type: "text",
-                text: JSON.stringify({ 
-                  status: "error", 
+                text: JSON.stringify({
+                  status: "error",
                   message: error instanceof Error ? error.message : 'Unknown error processing message'
                 })
               }]
@@ -127,8 +127,8 @@ export class MobileInteractionMCP extends McpAgent {
             return {
               content: [{
                 type: "text",
-                text: JSON.stringify({ 
-                  status: "error", 
+                text: JSON.stringify({
+                  status: "error",
                   message: error instanceof Error ? error.message : 'Failed to send message'
                 })
               }]
@@ -162,8 +162,8 @@ export class MobileInteractionMCP extends McpAgent {
             return {
               content: [{
                 type: "text",
-                text: JSON.stringify({ 
-                  status: "error", 
+                text: JSON.stringify({
+                  status: "error",
                   message: error instanceof Error ? error.message : 'Failed to query trip information'
                 })
               }]
@@ -183,10 +183,10 @@ export class MobileInteractionMCP extends McpAgent {
         async (params) => {
           try {
             const transcription = await this.messageParser.processVoiceMessage(
-              params.audio_url, 
+              params.audio_url,
               env.OPENAI_API_KEY
             );
-            
+
             // Process the transcribed text as a regular message
             const message: MobileMessage = {
               platform: params.platform,
@@ -216,8 +216,8 @@ export class MobileInteractionMCP extends McpAgent {
             return {
               content: [{
                 type: "text",
-                text: JSON.stringify({ 
-                  status: "error", 
+                text: JSON.stringify({
+                  status: "error",
                   message: error instanceof Error ? error.message : 'Failed to process voice message'
                 })
               }]
@@ -304,7 +304,7 @@ export class MobileInteractionMCP extends McpAgent {
     };
 
     const tripInfo = await this.queryTripDatabase(searchParams, env.DB);
-    
+
     if (tripInfo && tripInfo.length > 0) {
       const trip = tripInfo[0];
       return {

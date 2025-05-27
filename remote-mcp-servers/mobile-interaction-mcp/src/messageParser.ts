@@ -4,14 +4,14 @@
 import { MobileMessage, TravelIntent } from './tools/index.js';
 
 export class MobileMessageParser {
-  
+
   /**
    * Parse mobile message content to extract travel intent
    * Based on email parsing patterns from claude-travel-chat project
    */
   async parseTravelIntent(message: MobileMessage): Promise<TravelIntent> {
     const content = message.content.toLowerCase();
-    
+
     // Intent classification patterns (adapted from email parser)
     const intentPatterns = {
       query: [
@@ -208,14 +208,14 @@ export class MobileMessageParser {
       if (!audioResponse.ok) {
         throw new Error(`Failed to fetch audio: ${audioResponse.status}`);
       }
-      
+
       const audioBlob = await audioResponse.blob();
-      
+
       // Create form data for OpenAI Whisper API
       const formData = new FormData();
       formData.append('file', audioBlob, 'voice.ogg');
       formData.append('model', 'whisper-1');
-      
+
       // Use OpenAI Whisper API for transcription
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
