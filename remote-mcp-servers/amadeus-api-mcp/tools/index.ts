@@ -53,9 +53,9 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       inputSchema: tool.schema
     });
     
-    registry.handlers.set(tool.name, async (params) => {
+    registry.handlers.set(tool.name, async (params, handlerEnv) => {
       try {
-        return await tool.execute(params, env);
+        return await tool.execute(params, handlerEnv || env);
       } catch (error) {
         console.error(`Error in tool ${tool.name}:`, error);
         throw error;

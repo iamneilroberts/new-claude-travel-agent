@@ -1,0 +1,25 @@
+{
+  "name": "google-places-api-mcp",
+  "version": "1.0.0",
+  "description": "Google Places API MCP Server for Claude",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "format": "biome format --write",
+    "lint:fix": "biome lint --fix",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.4",
+    "agents": "^0.0.93",
+    "zod": "^3.25.16"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.16.0"
+  }
+}

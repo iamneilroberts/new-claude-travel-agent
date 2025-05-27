@@ -33,7 +33,9 @@ export const searchFlightsTool = {
   },
   execute: async (params: any, env: Env) => {
     try {
+      console.log('search_flights received params:', JSON.stringify(params));
       const validated = flightSearchSchema.parse(params);
+      console.log('search_flights validated params:', JSON.stringify(validated));
       const result = await searchFlights(validated, env);
       
       return {
