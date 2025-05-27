@@ -90,10 +90,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, path, content, message, branch, sha } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.createOrUpdateFileContents({
         owner,
         repo,
@@ -103,7 +103,7 @@ mcp.addTool({
         branch,
         sha
       });
-      
+
       return {
         status: 'success',
         commit: response.data.commit,
@@ -131,17 +131,17 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, path, branch } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.getContent({
         owner,
         repo,
         path,
         ref: branch
       });
-      
+
       // Handle file
       if (!Array.isArray(response.data)) {
         const content = Buffer.from(response.data.content, 'base64').toString();
@@ -154,7 +154,7 @@ mcp.addTool({
           url: response.data.html_url
         };
       }
-      
+
       // Handle directory
       return {
         status: 'success',
@@ -190,19 +190,19 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, branch, files, message } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       // Get the latest commit on the branch to use as base
       const branchData = await github.repos.getBranch({
         owner,
         repo,
         branch
       });
-      
+
       const baseTree = branchData.data.commit.sha;
-      
+
       // Create blobs for each file
       const blobs = await Promise.all(
         files.map(async file => {
@@ -212,7 +212,7 @@ mcp.addTool({
             content: Buffer.from(file.content).toString('base64'),
             encoding: 'base64'
           });
-          
+
           return {
             path: file.path,
             mode: '100644', // Regular file
@@ -221,7 +221,7 @@ mcp.addTool({
           };
         })
       );
-      
+
       // Create a new tree with the blobs
       const tree = await github.git.createTree({
         owner,
@@ -229,7 +229,7 @@ mcp.addTool({
         base_tree: baseTree,
         tree: blobs
       });
-      
+
       // Create a commit
       const commit = await github.git.createCommit({
         owner,
@@ -238,7 +238,7 @@ mcp.addTool({
         tree: tree.data.sha,
         parents: [baseTree]
       });
-      
+
       // Update the branch reference
       await github.git.updateRef({
         owner,
@@ -246,7 +246,7 @@ mcp.addTool({
         ref: `heads/${branch}`,
         sha: commit.data.sha
       });
-      
+
       return {
         status: 'success',
         commit: {
@@ -274,10 +274,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, branch, from_branch } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       // Get the default branch if from_branch not specified
       let sourceBranch = from_branch;
       if (!sourceBranch) {
@@ -287,14 +287,14 @@ mcp.addTool({
         });
         sourceBranch = repoData.data.default_branch;
       }
-      
+
       // Get the commit SHA of the source branch
       const sourceRef = await github.git.getRef({
         owner,
         repo,
         ref: `heads/${sourceBranch}`
       });
-      
+
       // Create the new branch
       const response = await github.git.createRef({
         owner,
@@ -302,7 +302,7 @@ mcp.addTool({
         ref: `refs/heads/${branch}`,
         sha: sourceRef.data.object.sha
       });
-      
+
       return {
         status: 'success',
         branch_name: branch,
@@ -328,17 +328,17 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, page, perPage } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.listBranches({
         owner,
         repo,
         page,
         per_page: perPage
       });
-      
+
       return {
         status: 'success',
         branches: response.data.map(branch => ({
@@ -366,10 +366,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, sha, page, perPage } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.listCommits({
         owner,
         repo,
@@ -377,7 +377,7 @@ mcp.addTool({
         page,
         per_page: perPage
       });
-      
+
       return {
         status: 'success',
         commits: response.data.map(commit => ({
@@ -415,10 +415,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { owner, repo, sha, page, perPage } = args;
     const { env, log } = context;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.getCommit({
         owner,
         repo,
@@ -426,7 +426,7 @@ mcp.addTool({
         page,
         per_page: perPage
       });
-      
+
       return {
         status: 'success',
         commit: {
@@ -463,7 +463,7 @@ app.post('/mcp', async (c) => {
   // Authorization check
   const authToken = c.req.header('X-API-Token');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return c.json({
       jsonrpc: '2.0',
@@ -475,7 +475,7 @@ app.post('/mcp', async (c) => {
       }
     }, 401);
   }
-  
+
   try {
     // Handle the MCP request
     const request = await c.req.json();
@@ -504,11 +504,11 @@ app.get('/sse', async (c) => {
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
-  
+
   // Authorization check
   const authToken = c.req.query('token') || c.req.header('Authorization')?.replace('Bearer ', '');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     const stream = new ReadableStream({
       start(controller) {
@@ -524,12 +524,12 @@ app.get('/sse', async (c) => {
       }
     });
   }
-  
+
   // Create SSE response
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
-  
+
   // Process incoming SSE commands
   const processSSECommand = async (data) => {
     try {
@@ -554,20 +554,20 @@ app.get('/sse', async (c) => {
       await writer.write(encoder.encode(errorEvent));
     }
   };
-  
+
   // Handle SSE connection
   const url = new URL(c.req.url);
   const initialCommand = url.searchParams.get('command');
-  
+
   if (initialCommand) {
     await processSSECommand(initialCommand);
   }
-  
+
   // Send ping every 30 seconds to keep connection alive
   const pingInterval = setInterval(async () => {
     await writer.write(encoder.encode('event: ping\ndata: {}\n\n'));
   }, 30000);
-  
+
   // Clean up when client disconnects
   c.executionCtx.waitUntil((async () => {
     try {
@@ -583,7 +583,7 @@ app.get('/sse', async (c) => {
       writer.close();
     }
   })());
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',

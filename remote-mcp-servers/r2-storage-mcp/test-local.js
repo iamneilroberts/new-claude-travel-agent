@@ -31,11 +31,11 @@ async function testInitialize() {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -45,11 +45,11 @@ async function testInitialize() {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -77,11 +77,11 @@ async function testListTools() {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -91,11 +91,11 @@ async function testListTools() {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -128,11 +128,11 @@ async function testCallTool(toolName, params) {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -142,11 +142,11 @@ async function testCallTool(toolName, params) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -158,15 +158,15 @@ async function runTests() {
     console.log('Testing initialize...');
     const initResult = await testInitialize();
     console.log(JSON.stringify(initResult, null, 2));
-    
+
     console.log('\nTesting tools/list...');
     const toolsResult = await testListTools();
     console.log(JSON.stringify(toolsResult, null, 2));
-    
+
     console.log('\nTesting r2_buckets_list...');
     const bucketsResult = await testCallTool('r2_buckets_list', {});
     console.log(JSON.stringify(bucketsResult, null, 2));
-    
+
     // Additional tests for specific tools can be added here
   } catch (error) {
     console.error('Test failed:', error);

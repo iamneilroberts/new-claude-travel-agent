@@ -196,15 +196,15 @@ const TOOLS = [
 // Tool implementation
 async function callTool(name, args, env) {
   const github = createGitHubClient(env);
-  
+
   switch (name) {
     case 'create_or_update_file': {
       const { owner, repo, path, content, message, branch, sha } = args;
-      
+
       try {
         // Base64 encode the content
         const encodedContent = btoa(unescape(encodeURIComponent(content)));
-        
+
         const params = {
           owner,
           repo,
@@ -213,14 +213,14 @@ async function callTool(name, args, env) {
           content: encodedContent,
           branch
         };
-        
+
         // If updating, include the SHA
         if (sha) {
           params.sha = sha;
         }
-        
+
         const response = await github.repos.createOrUpdateFileContents(params);
-        
+
         return {
           status: 'success',
           commit: {
@@ -238,10 +238,10 @@ async function callTool(name, args, env) {
         return handleError(error);
       }
     }
-    
+
     case 'push_files': {
       const { owner, repo, branch, files, message } = args;
-      
+
       try {
         // Get the current commit SHA for the branch
         const { data: ref } = await github.git.getRef({
@@ -250,7 +250,7 @@ async function callTool(name, args, env) {
           ref: `heads/${branch}`
         });
         const latestCommitSha = ref.object.sha;
-        
+
         // Get the tree SHA for the latest commit
         const { data: commit } = await github.git.getCommit({
           owner,
@@ -258,7 +258,7 @@ async function callTool(name, args, env) {
           commit_sha: latestCommitSha
         });
         const baseTreeSha = commit.tree.sha;
-        
+
         // Create blobs for each file
         const blobs = await Promise.all(
           files.map(async (file) => {
@@ -276,7 +276,7 @@ async function callTool(name, args, env) {
             };
           })
         );
-        
+
         // Create a new tree
         const { data: tree } = await github.git.createTree({
           owner,
@@ -284,7 +284,7 @@ async function callTool(name, args, env) {
           tree: blobs,
           base_tree: baseTreeSha
         });
-        
+
         // Create a new commit
         const { data: newCommit } = await github.git.createCommit({
           owner,
@@ -293,7 +293,7 @@ async function callTool(name, args, env) {
           tree: tree.sha,
           parents: [latestCommitSha]
         });
-        
+
         // Update the branch reference
         await github.git.updateRef({
           owner,
@@ -301,7 +301,7 @@ async function callTool(name, args, env) {
           ref: `heads/${branch}`,
           sha: newCommit.sha
         });
-        
+
         return {
           status: 'success',
           commit: {
@@ -316,17 +316,17 @@ async function callTool(name, args, env) {
         return handleError(error);
       }
     }
-    
+
     case 'search_repositories': {
       const { query, page, perPage } = args;
-      
+
       try {
         const response = await github.search.repos({
           q: query,
           page: page || 1,
           per_page: perPage || 30
         });
-        
+
         return {
           status: 'success',
           total_count: response.data.total_count,
@@ -351,22 +351,22 @@ async function callTool(name, args, env) {
         return handleError(error);
       }
     }
-    
+
     case 'get_file_contents': {
       const { owner, repo, path, branch } = args;
-      
+
       try {
         const params = { owner, repo, path };
         if (branch) {
           params.ref = branch;
         }
-        
+
         const response = await github.repos.getContent(params);
-        
+
         // Handle single file
         if (!Array.isArray(response.data)) {
           const file = response.data;
-          
+
           // Decode base64 content for files
           let decodedContent = null;
           if (file.type === 'file' && file.content) {
@@ -377,7 +377,7 @@ async function callTool(name, args, env) {
               decodedContent = '[Binary or invalid content]';
             }
           }
-          
+
           return {
             status: 'success',
             type: 'file',
@@ -391,7 +391,7 @@ async function callTool(name, args, env) {
             html_url: file.html_url
           };
         }
-        
+
         // Handle directory
         return {
           status: 'success',
@@ -410,17 +410,17 @@ async function callTool(name, args, env) {
         return handleError(error);
       }
     }
-    
+
     case 'get_pull_request': {
       const { owner, repo, pullNumber } = args;
-      
+
       try {
         const response = await github.pulls.get({
           owner,
           repo,
           pull_number: pullNumber
         });
-        
+
         return {
           status: 'success',
           number: response.data.number,
@@ -451,7 +451,7 @@ async function callTool(name, args, env) {
         return handleError(error);
       }
     }
-    
+
     default:
       return {
         status: 'error',
@@ -463,7 +463,7 @@ async function callTool(name, args, env) {
 // Process JSON-RPC request
 async function processJsonRpcRequest(request, env) {
   const { id, method, params } = request;
-  
+
   switch (method) {
     case 'initialize':
       return {
@@ -483,7 +483,7 @@ async function processJsonRpcRequest(request, env) {
           }
         }
       };
-      
+
     case 'tools/list':
       return {
         jsonrpc: '2.0',
@@ -492,7 +492,7 @@ async function processJsonRpcRequest(request, env) {
           tools: TOOLS
         }
       };
-      
+
     case 'tools/call':
       if (!params?.name || !params?.arguments) {
         return {
@@ -504,7 +504,7 @@ async function processJsonRpcRequest(request, env) {
           }
         };
       }
-      
+
       try {
         const result = await callTool(params.name, params.arguments, env);
         return {
@@ -528,7 +528,7 @@ async function processJsonRpcRequest(request, env) {
           }
         };
       }
-      
+
     default:
       return {
         jsonrpc: '2.0',
@@ -550,16 +550,16 @@ export default {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Token'
     };
-    
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: corsHeaders
       });
     }
-    
+
     // OAuth metadata endpoints
-    if (url.pathname === '/.well-known/oauth-metadata' || 
+    if (url.pathname === '/.well-known/oauth-metadata' ||
         url.pathname === '/sse/.well-known/oauth-metadata' ||
         url.pathname === '/sse/.well-known/openid-configuration') {
       return new Response(JSON.stringify(getOAuthMetadata(url.origin)), {
@@ -569,7 +569,7 @@ export default {
         }
       });
     }
-    
+
     // Handle persistent SSE endpoint
     if (url.pathname === '/sse' && request.method === 'POST') {
       // Check authorization
@@ -577,26 +577,26 @@ export default {
       if (env.MCP_AUTH_KEY && authHeader !== `Bearer ${env.MCP_AUTH_KEY}`) {
         return new Response('Unauthorized', { status: 401 });
       }
-      
+
       const sessionId = crypto.randomUUID();
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
-      
+
       // Create a TransformStream for bidirectional communication
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
-      
+
       // Send initial connected message
       await writer.write(encoder.encode(`data: ${JSON.stringify({
         jsonrpc: '2.0',
         method: 'connected',
         params: { sessionId }
       })}\n\n`));
-      
+
       // Handle the persistent connection
       ctx.waitUntil((async () => {
         let pingInterval;
-        
+
         try {
           // Set up ping interval to keep connection alive
           pingInterval = setInterval(async () => {
@@ -611,41 +611,41 @@ export default {
               clearInterval(pingInterval);
             }
           }, 25000); // Ping every 25 seconds
-          
+
           // Read incoming messages from the request body
           const reader = request.body.getReader();
           let buffer = '';
-          
+
           while (true) {
             const { done, value } = await reader.read();
-            
+
             if (done) {
               console.log('Client disconnected');
               break;
             }
-            
+
             // Append to buffer and process complete messages
             buffer += decoder.decode(value, { stream: true });
-            
+
             // Process each line in the buffer
             const lines = buffer.split('\n');
             buffer = lines.pop() || ''; // Keep incomplete line in buffer
-            
+
             for (const line of lines) {
               const trimmed = line.trim();
               if (!trimmed) continue;
-              
+
               try {
                 // Parse the JSON-RPC request
                 const jsonRequest = JSON.parse(trimmed);
                 console.log('Received request:', jsonRequest.method);
-                
+
                 // Handle the request
                 const response = await processJsonRpcRequest(jsonRequest, env);
-                
+
                 // Send the response
                 await writer.write(encoder.encode(`data: ${JSON.stringify(response)}\n\n`));
-                
+
               } catch (parseError) {
                 console.error('Parse error:', parseError, 'Line:', trimmed);
                 // Send error response
@@ -661,7 +661,7 @@ export default {
               }
             }
           }
-          
+
         } catch (error) {
           console.error('Connection error:', error);
         } finally {
@@ -674,7 +674,7 @@ export default {
           }
         }
       })());
-      
+
       // Return the SSE response
       return new Response(readable, {
         headers: {
@@ -686,13 +686,13 @@ export default {
         }
       });
     }
-    
+
     // Handle RPC endpoint
     if (url.pathname === '/rpc' && request.method === 'POST') {
       try {
         const json = await request.json();
         const response = await processJsonRpcRequest(json, env);
-        
+
         return new Response(JSON.stringify(response), {
           headers: {
             'Content-Type': 'application/json',
@@ -716,7 +716,7 @@ export default {
         });
       }
     }
-    
+
     // Health check endpoint
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
@@ -730,7 +730,7 @@ export default {
         }
       });
     }
-    
+
     // Default route
     if (url.pathname === '/') {
       return new Response(JSON.stringify({
@@ -744,8 +744,8 @@ export default {
         }
       });
     }
-    
-    return new Response('Not Found', { 
+
+    return new Response('Not Found', {
       status: 404,
       headers: corsHeaders
     });

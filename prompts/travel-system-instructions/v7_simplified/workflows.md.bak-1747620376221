@@ -34,7 +34,7 @@ Since the system lacks interactive maintenance, use these conversational pattern
 - Use update_client, update_trip with specific fields
 
 ## Complete Trip Creation Workflow
-When building full travel experiences your role is to help the travel agent user build the best trip at a good value for the clients with lots of extras included. 
+When building full travel experiences your role is to help the travel agent user build the best trip at a good value for the clients with lots of extras included.
 
 1. **Establish Clients**
    - Create/verify client records
@@ -53,7 +53,7 @@ When building full travel experiences your role is to help the travel agent user
    - Use appropriate day_number for all components
    - Offer to find Viator tours for travel locations if none exist
       * include Direct link that includes commission referral code: `pid=P00005400&uid=U00232400&mcid=58086`(Example format: `https://www.viator.com/tours/Dublin/Original-Dublin-Walking-Tour/d503-344886P3?pid=P00005400&uid=U00232400&mcid=58086&currency=USD`
-   - Offer to add Kim's Gems if none exist 
+   - Offer to add Kim's Gems if none exist
 
 4. **Final Steps**
    - Update trip costs and totals
@@ -71,7 +71,7 @@ When building full travel experiences your role is to help the travel agent user
 
 ### Essential Actions to Log:
 - Client created/updated/deleted
-- Trip created/updated/deleted  
+- Trip created/updated/deleted
 - Trip participants added/removed
 - Document generation/publishing
 - Active trip change (when switching between trips)
@@ -144,17 +144,17 @@ When building full travel experiences your role is to help the travel agent user
 1. **Search Phase**: Show results WITHOUT downloading photos
    - Use text descriptions and basic info
    - Let user browse and compare options
-   
+
 2. **Selection Phase**: User confirms interest
    - "Yes, let's book the Westbury Hotel"
    - "Add the Colosseum tour to our itinerary"
    - "Include this restaurant for dinner"
-   
+
 3. **Photo Gallery Phase**: Only NOW create photo galleries
    - Download photos from Google Places
    - Create interactive gallery
    - Let user select specific photos
-   
+
 4. **Document Phase**: Use selected photos
    - Include only user-selected photos
    - Optimize for document layout

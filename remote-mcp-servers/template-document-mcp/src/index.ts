@@ -11,14 +11,14 @@ export class TemplateDocumentMCP extends McpAgent {
   async init() {
     try {
       console.log("Initializing Template Document MCP server...");
-      
+
       const toolRegistry = await initializeTools();
-      
+
       // Register all tools with the MCP server using proper Zod schemas
       toolRegistry.tools.forEach(tool => {
         // Convert to basic schema for now - the tools expect simple parameters
         const basicSchema = {};
-        
+
         this.server.tool(
           tool.name,
           basicSchema,
@@ -27,24 +27,24 @@ export class TemplateDocumentMCP extends McpAgent {
             if (!handler) {
               throw new Error(`No handler found for tool: ${tool.name}`);
             }
-            
+
             console.log(`Executing ${tool.name} with params:`, JSON.stringify(params, null, 2));
             const result = await handler(params);
             console.log(`Successfully executed ${tool.name}`);
-            
+
             return result;
           }
         );
       });
-      
+
       console.log(`Successfully registered ${toolRegistry.tools.length} template document tools:`);
       toolRegistry.tools.forEach(tool => {
         console.log(`  - ${tool.name}: ${tool.description}`);
       });
-      
+
     } catch (error) {
       console.error('Failed to initialize Template Document MCP tools:', error);
-      
+
       // Register a fallback health check tool
       this.server.tool(
         "health_check",
@@ -66,7 +66,7 @@ export class TemplateDocumentMCP extends McpAgent {
 export default {
   fetch(request: Request, env: any, ctx: any) {
     const url = new URL(request.url);
-    
+
     // Health check endpoint
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
@@ -75,7 +75,7 @@ export default {
         version: '1.0.0',
         tools: [
           'generate_itinerary',
-          'generate_packing_list', 
+          'generate_packing_list',
           'generate_travel_budget',
           'generate_travel_checklist'
         ],
@@ -84,22 +84,22 @@ export default {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     // SSE endpoints (primary)
     if (url.pathname === "/sse" || url.pathname === "/sse/message") {
       return TemplateDocumentMCP.serveSSE("/sse").fetch(request, env, ctx);
     }
-    
+
     // MCP endpoint (fallback)
     if (url.pathname === "/mcp") {
       return TemplateDocumentMCP.serve("/mcp").fetch(request, env, ctx);
     }
-    
+
     // Default 404 response
     return new Response(JSON.stringify({
       error: "Not found",
       available_endpoints: ["/health", "/sse", "/mcp"]
-    }), { 
+    }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' }
     });

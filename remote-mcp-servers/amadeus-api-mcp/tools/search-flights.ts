@@ -23,8 +23,8 @@ export const searchFlightsTool = {
       date: { type: 'string', description: 'Departure date in YYYY-MM-DD format' },
       adults: { type: 'number', description: 'Number of adult passengers', default: 1 },
       returnDate: { type: 'string', description: 'Return date for round trips' },
-      travelClass: { 
-        type: 'string', 
+      travelClass: {
+        type: 'string',
         enum: ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'],
         description: 'Travel class'
       }
@@ -37,7 +37,7 @@ export const searchFlightsTool = {
       const validated = flightSearchSchema.parse(params);
       console.log('search_flights validated params:', JSON.stringify(validated));
       const result = await searchFlights(validated, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -46,7 +46,7 @@ export const searchFlightsTool = {
       };
     } catch (error: any) {
       console.error('Error in search_flights tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

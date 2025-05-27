@@ -4878,7 +4878,7 @@ var searchHotelsTool = {
 
 // src/services/poi-service.ts
 async function searchPOI(params, env) {
-  return `Sorry, the Points of Interest API has been decommissioned by Amadeus and is no longer available. 
+  return `Sorry, the Points of Interest API has been decommissioned by Amadeus and is no longer available.
 
 As an alternative, you can:
 1. Search for hotels in ${params.location} which includes nearby attractions

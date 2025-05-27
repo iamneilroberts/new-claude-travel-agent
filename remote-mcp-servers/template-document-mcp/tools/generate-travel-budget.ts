@@ -46,7 +46,7 @@ export const generateTravelBudgetSchema = z.object({
 
 export async function generateTravelBudget(params: z.infer<typeof generateTravelBudgetSchema>): Promise<any> {
   const { destination, duration, travelers, trip_style, currency, expenses } = params;
-  
+
   // Calculate totals
   const flightTotal = calculateFlightTotal(expenses.flights, travelers);
   const accommodationTotal = calculateAccommodationTotal(expenses.accommodation, duration);
@@ -55,11 +55,11 @@ export async function generateTravelBudget(params: z.infer<typeof generateTravel
   const transportationTotal = calculateTransportationTotal(expenses.transportation, duration);
   const shoppingTotal = expenses.shopping?.budget || 0;
   const miscTotal = calculateMiscTotal(expenses.miscellaneous, duration);
-  
+
   const grandTotal = flightTotal + accommodationTotal + foodTotal + activitiesTotal + transportationTotal + shoppingTotal + miscTotal;
   const perPersonTotal = grandTotal / travelers;
   const dailyBudget = grandTotal / duration;
-  
+
   const budgetDocument = `# Travel Budget for ${destination}
 
 ## Trip Overview
@@ -176,35 +176,35 @@ function formatExpenseSection(category: string, data: any, total: number, curren
   }
 
   let section = `- **Total**: ${formatCurrency(total, currency)}\n`;
-  
+
   if (data) {
     if (category === 'flights') {
       if (data.cost_per_person) section += `- **Cost per Person**: ${formatCurrency(data.cost_per_person, currency)}\n`;
     }
-    
+
     if (category === 'accommodation') {
       if (data.cost_per_night) section += `- **Cost per Night**: ${formatCurrency(data.cost_per_night, currency)}\n`;
       if (data.total_nights) section += `- **Total Nights**: ${data.total_nights}\n`;
       if (data.type) section += `- **Accommodation Type**: ${data.type}\n`;
     }
-    
+
     if (category === 'food') {
       if (data.daily_budget) section += `- **Daily Budget per Person**: ${formatCurrency(data.daily_budget, currency)}\n`;
       if (data.style) section += `- **Dining Style**: ${data.style.replace('_', ' ')}\n`;
     }
-    
+
     if (category === 'transportation') {
       if (data.daily_budget) section += `- **Daily Budget**: ${formatCurrency(data.daily_budget, currency)}\n`;
       if (data.type) section += `- **Primary Transportation**: ${data.type}\n`;
     }
-    
+
     if (category === 'miscellaneous') {
       if (data.daily_budget) section += `- **Daily Budget**: ${formatCurrency(data.daily_budget, currency)}\n`;
     }
-    
+
     if (data.notes) section += `- **Notes**: ${data.notes}\n`;
   }
-  
+
   return section.trim();
 }
 
@@ -212,15 +212,15 @@ function formatActivitiesSection(activities: any[] | undefined, total: number, c
   if (!activities || activities.length === 0) {
     return `- **Total**: ${formatCurrency(total, currency)} (No activities specified)`;
   }
-  
+
   let section = `- **Total**: ${formatCurrency(total, currency)}\n\n**Activity Breakdown:**\n`;
-  
+
   activities.forEach(activity => {
     const cost = activity.per_person ? activity.cost * travelers : activity.cost;
     const perPersonNote = activity.per_person ? ` (${formatCurrency(activity.cost, 'USD')} per person)` : ' (total cost)';
     section += `- ${activity.name}: ${formatCurrency(cost, currency)}${perPersonNote}\n`;
   });
-  
+
   return section.trim();
 }
 
@@ -253,7 +253,7 @@ function getBudgetRecommendations(style: string, destination: string, duration: 
   };
 
   const rec = recommendations[style as keyof typeof recommendations];
-  
+
   return `### ${style.replace('_', ' ').toUpperCase()} Travel Recommendations
 - **Accommodation**: ${rec.accommodation}
 - **Food**: ${rec.food}

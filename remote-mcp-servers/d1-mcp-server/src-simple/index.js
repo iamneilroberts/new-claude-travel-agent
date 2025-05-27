@@ -32,7 +32,7 @@ app.get('/', (c) => {
 // Process JSON-RPC requests
 async function processJsonRpcRequest(request, env) {
   const { DB } = env;
-  
+
   switch (request.method) {
     case 'initialize':
       return {
@@ -50,7 +50,7 @@ async function processJsonRpcRequest(request, env) {
         },
         id: request.id
       };
-      
+
     case 'tools/list':
       return {
         jsonrpc: '2.0',
@@ -59,10 +59,10 @@ async function processJsonRpcRequest(request, env) {
         },
         id: request.id
       };
-      
+
     case 'tools/call':
       return await handleToolCall(request.params, DB, request.id);
-      
+
     case 'prompts/list':
     case 'resources/list':
       return {
@@ -70,7 +70,7 @@ async function processJsonRpcRequest(request, env) {
         result: [],
         id: request.id
       };
-      
+
     default:
       return {
         jsonrpc: '2.0',
@@ -86,7 +86,7 @@ async function processJsonRpcRequest(request, env) {
 // Handle tool calls
 async function handleToolCall(params, DB, requestId) {
   const { name, arguments: args } = params;
-  
+
   try {
     switch (name) {
       case 'create_client':
@@ -158,7 +158,7 @@ async function createClient(params, DB, requestId) {
       passport_expiry, preferences, notes
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `;
-  
+
   const bindings = [
     params.first_name,
     params.last_name,
@@ -175,9 +175,9 @@ async function createClient(params, DB, requestId) {
     params.preferences || null,
     params.notes || null,
   ];
-  
+
   const { success, meta } = await DB.prepare(sql).bind(...bindings).run();
-  
+
   if (success && meta?.last_row_id) {
     return {
       jsonrpc: '2.0',
@@ -201,7 +201,7 @@ async function createClient(params, DB, requestId) {
 async function getClient(params, DB, requestId) {
   const sql = 'SELECT * FROM clients WHERE client_id = ?;';
   const client = await DB.prepare(sql).bind(params.client_id).first();
-  
+
   if (client) {
     return {
       jsonrpc: '2.0',
@@ -296,14 +296,14 @@ app.get('/sse', async (c) => {
   const encoder = new TextEncoder();
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
-  
+
   // Send initial connection event
   await writer.write(encoder.encode(`data: ${JSON.stringify({
     jsonrpc: '2.0',
     method: 'connected',
     params: { sessionId: uuidv4() }
   })}\n\n`));
-  
+
   // Process any pending request
   const requestBody = await c.req.text();
   if (requestBody) {
@@ -325,7 +325,7 @@ app.get('/sse', async (c) => {
       await writer.write(encoder.encode(`data: ${JSON.stringify(errorResponse)}\n\n`));
     }
   }
-  
+
   // Send pings to keep connection alive
   const pingInterval = setInterval(async () => {
     try {
@@ -338,7 +338,7 @@ app.get('/sse', async (c) => {
       clearInterval(pingInterval);
     }
   }, 30000); // Send ping every 30 seconds
-  
+
   // Clean up when connection closes
   c.executionCtx.waitUntil((async () => {
     try {
@@ -354,7 +354,7 @@ app.get('/sse', async (c) => {
       writer.close();
     }
   })());
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',

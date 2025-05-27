@@ -20,21 +20,21 @@ export const searchPOIBySquareTool = {
   schema: {
     type: 'object',
     properties: {
-      north: { 
+      north: {
         type: 'number',
-        description: 'North boundary latitude' 
+        description: 'North boundary latitude'
       },
-      west: { 
+      west: {
         type: 'number',
-        description: 'West boundary longitude' 
+        description: 'West boundary longitude'
       },
-      south: { 
+      south: {
         type: 'number',
-        description: 'South boundary latitude' 
+        description: 'South boundary latitude'
       },
-      east: { 
+      east: {
         type: 'number',
-        description: 'East boundary longitude' 
+        description: 'East boundary longitude'
       }
     },
     required: ['north', 'west', 'south', 'east']
@@ -42,7 +42,7 @@ export const searchPOIBySquareTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = poiSquareSchema.parse(params);
-      
+
       // Validate that coordinates make sense
       if (validated.north <= validated.south) {
         return {
@@ -53,7 +53,7 @@ export const searchPOIBySquareTool = {
           isError: true
         };
       }
-      
+
       if (validated.east <= validated.west) {
         return {
           content: [{
@@ -63,7 +63,7 @@ export const searchPOIBySquareTool = {
           isError: true
         };
       }
-      
+
       const amadeus = await getAmadeusClient(env);
       const response = await amadeus.get('/v1/reference-data/locations/pois/by-square', {
         north: validated.north,
@@ -84,21 +84,21 @@ export const searchPOIBySquareTool = {
       // Format the response for better readability
       let result = `## Points of Interest in Area\n`;
       result += `**Boundaries:** N:${validated.north}, W:${validated.west}, S:${validated.south}, E:${validated.east}\n\n`;
-      
+
       response.data.slice(0, 15).forEach((poi: any, index: number) => {
         result += `### ${index + 1}. ${poi.name}\n`;
         result += `**Category:** ${poi.category || 'General'}\n`;
         result += `**Rank:** ${poi.rank || 'N/A'} (1 = most popular)\n`;
         result += `**Location:** ${poi.geoCode?.latitude || 'N/A'}, ${poi.geoCode?.longitude || 'N/A'}\n`;
-        
+
         if (poi.tags && poi.tags.length > 0) {
           result += `**Tags:** ${poi.tags.slice(0, 8).join(', ')}\n`;
         }
-        
+
         if (poi.id) {
           result += `**ID:** ${poi.id}\n`;
         }
-        
+
         result += '\n---\n\n';
       });
 
@@ -106,7 +106,7 @@ export const searchPOIBySquareTool = {
       if (total > 15) {
         result += `*Showing first 15 of ${total} points of interest found.*\n\n`;
       }
-      
+
       result += '💡 **Categories:** SIGHTS, BEACH_PARK, HISTORICAL, NIGHTLIFE, RESTAURANT, SHOPPING\n';
       result += '📍 **Note:** Results are ranked by popularity (rank 1 = most famous/popular)';
 

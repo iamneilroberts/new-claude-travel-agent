@@ -21,7 +21,7 @@ export async function generatePackingList(params: z.infer<typeof generatePacking
   const documents = getDocumentItems();
   const specialItems = getSpecialActivityItems(params.special_activities || []);
   const travelerSpecific = getTravelerSpecificItems(params.travelers);
-  
+
   const packingList = `# Packing List for ${params.destination}
 
 ## Trip Details
@@ -193,7 +193,7 @@ function getElectronicsItems(): string[] {
 
 function getToiletriesItems(duration: number): string[] {
   const sizeNote = duration > 7 ? " (travel sizes or plan to buy locally)" : " (travel sizes)";
-  
+
   return [
     `Toothbrush and toothpaste${sizeNote}`,
     `Shampoo and conditioner${sizeNote}`,
@@ -213,37 +213,37 @@ function getToiletriesItems(duration: number): string[] {
 
 function getSpecialActivityItems(activities: string[]): string[] {
   const items: string[] = [];
-  
+
   activities.forEach(activity => {
     const lowerActivity = activity.toLowerCase();
-    
+
     if (lowerActivity.includes("swim") || lowerActivity.includes("beach") || lowerActivity.includes("pool")) {
       items.push("Swimwear", "Beach towel", "Waterproof phone case");
     }
-    
+
     if (lowerActivity.includes("hik") || lowerActivity.includes("trek") || lowerActivity.includes("trail")) {
       items.push("Hiking boots", "Backpack", "Water bottles", "Trail snacks");
     }
-    
+
     if (lowerActivity.includes("ski") || lowerActivity.includes("snow")) {
       items.push("Ski clothes", "Goggles", "Gloves", "Hand warmers");
     }
-    
+
     if (lowerActivity.includes("dive") || lowerActivity.includes("snorkel")) {
       items.push("Snorkel gear (or plan to rent)", "Underwater camera");
     }
-    
+
     if (lowerActivity.includes("business") || lowerActivity.includes("meeting") || lowerActivity.includes("conference")) {
       items.push("Business cards", "Laptop", "Professional attire", "Notebook");
     }
   });
-  
+
   return [...new Set(items)]; // Remove duplicates
 }
 
 function getTravelerSpecificItems(travelers: any[]): string[] {
   const items: string[] = [];
-  
+
   travelers.forEach(traveler => {
     if (traveler.type === "infant") {
       items.push(
@@ -254,7 +254,7 @@ function getTravelerSpecificItems(travelers: any[]): string[] {
         `${traveler.name}: Baby toys`
       );
     }
-    
+
     if (traveler.type === "child") {
       items.push(
         `${traveler.name}: Entertainment (tablets, games, books)`,
@@ -264,7 +264,7 @@ function getTravelerSpecificItems(travelers: any[]): string[] {
       );
     }
   });
-  
+
   return items;
 }
 
@@ -276,17 +276,17 @@ function getPackingTips(tripType: string, duration: number): string {
     "- Pack one complete outfit in your carry-on bag",
     "- Leave some space in your luggage for souvenirs"
   ];
-  
+
   if (duration > 7) {
     tips.push("- Plan to do laundry during your trip");
     tips.push("- Pack versatile pieces that mix and match");
   }
-  
+
   if (tripType === "business") {
     tips.push("- Pack wrinkle-resistant fabrics");
     tips.push("- Bring a steamer or travel iron");
   }
-  
+
   return tips.join('\n');
 }
 

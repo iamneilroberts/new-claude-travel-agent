@@ -36,7 +36,7 @@ export const searchAirportTransfersTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = transferSearchSchema.parse(params);
-      
+
       // For the Cloudflare Worker version, we'll implement the actual API call later
       // This is a placeholder response
       return {
@@ -47,7 +47,7 @@ export const searchAirportTransfersTool = {
       };
     } catch (error: any) {
       console.error('Error in search_airport_transfers tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

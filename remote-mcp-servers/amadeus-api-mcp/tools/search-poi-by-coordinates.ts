@@ -19,18 +19,18 @@ export const searchPOIByCoordinatesTool = {
   schema: {
     type: 'object',
     properties: {
-      latitude: { 
+      latitude: {
         type: 'number',
-        description: 'Latitude coordinate' 
+        description: 'Latitude coordinate'
       },
-      longitude: { 
+      longitude: {
         type: 'number',
-        description: 'Longitude coordinate' 
+        description: 'Longitude coordinate'
       },
-      radius: { 
-        type: 'number', 
+      radius: {
+        type: 'number',
         default: 1,
-        description: 'Search radius in kilometers (default: 1)' 
+        description: 'Search radius in kilometers (default: 1)'
       }
     },
     required: ['latitude', 'longitude']
@@ -38,7 +38,7 @@ export const searchPOIByCoordinatesTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = poiCoordinatesSchema.parse(params);
-      
+
       const amadeus = await getAmadeusClient(env);
       const response = await amadeus.get('/v1/reference-data/locations/pois', {
         latitude: validated.latitude,
@@ -57,21 +57,21 @@ export const searchPOIByCoordinatesTool = {
 
       // Format the response for better readability
       let result = `## Points of Interest Near (${validated.latitude}, ${validated.longitude})\n\n`;
-      
+
       response.data.slice(0, 15).forEach((poi: any, index: number) => {
         result += `### ${index + 1}. ${poi.name}\n`;
         result += `**Category:** ${poi.category || 'General'}\n`;
         result += `**Rank:** ${poi.rank || 'N/A'} (1 = most popular)\n`;
         result += `**Location:** ${poi.geoCode?.latitude || 'N/A'}, ${poi.geoCode?.longitude || 'N/A'}\n`;
-        
+
         if (poi.tags && poi.tags.length > 0) {
           result += `**Tags:** ${poi.tags.slice(0, 8).join(', ')}\n`;
         }
-        
+
         if (poi.id) {
           result += `**ID:** ${poi.id}\n`;
         }
-        
+
         result += '\n---\n\n';
       });
 
@@ -79,7 +79,7 @@ export const searchPOIByCoordinatesTool = {
       if (total > 15) {
         result += `*Showing first 15 of ${total} points of interest found.*\n\n`;
       }
-      
+
       result += '💡 **Categories:** SIGHTS, BEACH_PARK, HISTORICAL, NIGHTLIFE, RESTAURANT, SHOPPING\n';
       result += '📍 **Note:** Results are ranked by popularity (rank 1 = most famous/popular)';
 

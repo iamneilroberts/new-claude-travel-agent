@@ -53,10 +53,10 @@ app.use(cors());
 // Implement MCP protocol routes
 app.post('/mcp', async (c) => {
   const body = await c.req.json();
-  
+
   // Extract JSON-RPC request
   const { jsonrpc, id, method, params } = body;
-  
+
   // Validate JSON-RPC request
   if (jsonrpc !== '2.0' || !id) {
     return c.json({
@@ -68,7 +68,7 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // Initialize method - returns server information
   if (method === 'initialize') {
     return c.json({
@@ -84,7 +84,7 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // List tools method
   if (method === 'tools/list') {
     const tools = [
@@ -145,7 +145,7 @@ app.post('/mcp', async (c) => {
         }
       }
     ];
-    
+
     return c.json({
       jsonrpc: '2.0',
       id,
@@ -154,7 +154,7 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // Execute tool method
   if (method === 'tools/call') {
     // Check authentication
@@ -169,9 +169,9 @@ app.post('/mcp', async (c) => {
         }
       });
     }
-    
+
     const { name, arguments: args } = params || {};
-    
+
     if (!name) {
       return c.json({
         jsonrpc: '2.0',
@@ -182,23 +182,23 @@ app.post('/mcp', async (c) => {
         }
       });
     }
-    
+
     // Handle tools
     try {
       let result;
-      
+
       // Create image gallery
       if (name === 'create_image_gallery') {
         result = await createImageGallery(args, c.env);
-      } 
+      }
       // Get selected images
       else if (name === 'get_selected_images') {
         result = await getSelectedImages(args, c.env);
-      } 
+      }
       else {
         result = { success: false, error: `Tool ${name} not found` };
       }
-      
+
       return c.json({
         jsonrpc: '2.0',
         id,
@@ -215,7 +215,7 @@ app.post('/mcp', async (c) => {
       });
     }
   }
-  
+
   // Method not found
   return c.json({
     jsonrpc: '2.0',
@@ -252,7 +252,7 @@ async function createImageGallery(
       entity_name = '',
       trip_id = ''
     } = params;
-    
+
     // Validate input
     if (!query || query.trim() === '') {
       return {
@@ -260,10 +260,10 @@ async function createImageGallery(
         error: 'Search query is required'
       };
     }
-    
+
     // Generate a unique gallery ID
     const galleryId = `gallery_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-    
+
     // Create a gallery session (would normally be stored in D1)
     const gallerySession: GallerySession = {
       id: galleryId,
@@ -278,14 +278,14 @@ async function createImageGallery(
       expires_at: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
       image_count: count
     };
-    
+
     // For this demo, store session in KV or just return directly
     // In a real implementation, this would be stored in D1 database
-    
+
     // Generate the gallery URL
     const host = env.GALLERY_HOSTNAME || 'r2-storage-mcp.somotravel.workers.dev';
     const galleryUrl = `https://${host}/gallery/${galleryId}`;
-    
+
     return {
       success: true,
       galleryId,
@@ -320,7 +320,7 @@ async function getSelectedImages(
       waitForSelection = true,
       timeoutSeconds = 60
     } = params;
-    
+
     // Validate gallery ID
     if (!galleryId) {
       return {
@@ -328,14 +328,14 @@ async function getSelectedImages(
         error: 'Gallery ID is required'
       };
     }
-    
+
     // In a real implementation, we would fetch the gallery session and selections from D1
     // For this demo, we'll simulate the data
-    
+
     // Check if the gallery exists and has selections
     // In a real implementation, we'd check the database
     const hasSelections = Math.random() > 0.5; // Simulate whether selections exist
-    
+
     if (!waitForSelection || hasSelections) {
       // Return the selected images
       // In a real implementation, we'd fetch from the database
@@ -384,10 +384,10 @@ async function getSelectedImages(
 // Gallery UI routes
 app.get('/gallery/:id', async (c) => {
   const galleryId = c.req.param('id');
-  
+
   // In a real implementation, we would fetch the gallery session from D1
   // For this demo, we'll simply render the gallery UI
-  
+
   const html = `
   <!DOCTYPE html>
   <html lang="en">
@@ -407,47 +407,47 @@ app.get('/gallery/:id', async (c) => {
           --warning-color: #f39c12;
           --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
-        
+
         * {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
         }
-        
+
         body {
           font-family: var(--font-family);
           background-color: var(--bg-color);
           color: var(--text-color);
           line-height: 1.6;
         }
-        
+
         .gallery-header {
           background-color: var(--primary-color);
           color: white;
           padding: 1rem;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .brand {
           font-weight: bold;
           font-size: 1.2rem;
           margin-bottom: 0.5rem;
         }
-        
+
         .entity-info {
           margin: 1rem 0;
         }
-        
+
         .entity-info h1 {
           font-size: 1.5rem;
           margin-bottom: 0.5rem;
         }
-        
+
         .instructions {
           font-size: 0.9rem;
           opacity: 0.9;
         }
-        
+
         .gallery-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -455,7 +455,7 @@ app.get('/gallery/:id', async (c) => {
           padding: 1rem;
           margin-bottom: 4rem;
         }
-        
+
         .image-card {
           background: white;
           border-radius: 8px;
@@ -465,29 +465,29 @@ app.get('/gallery/:id', async (c) => {
           cursor: pointer;
           position: relative;
         }
-        
+
         .image-card:hover {
           transform: translateY(-5px);
           box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        
+
         .image-container {
           height: 200px;
           overflow: hidden;
           position: relative;
         }
-        
+
         .image-container img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           transition: transform 0.3s;
         }
-        
+
         .image-card:hover .image-container img {
           transform: scale(1.05);
         }
-        
+
         .selection-indicator {
           position: absolute;
           top: 10px;
@@ -503,32 +503,32 @@ app.get('/gallery/:id', async (c) => {
           border: 2px solid white;
           transition: all 0.2s;
         }
-        
+
         .selection-indicator.selected {
           background: var(--secondary-color);
           border-color: white;
         }
-        
+
         .selection-indicator.primary {
           background: var(--accent-color);
           border-color: gold;
         }
-        
+
         .image-details {
           padding: 0.75rem;
         }
-        
+
         .image-title {
           font-weight: 600;
           margin-bottom: 0.25rem;
           font-size: 0.9rem;
         }
-        
+
         .image-source {
           font-size: 0.8rem;
           color: #666;
         }
-        
+
         .action-bar {
           position: fixed;
           bottom: 0;
@@ -542,16 +542,16 @@ app.get('/gallery/:id', async (c) => {
           box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
           z-index: 100;
         }
-        
+
         .selection-count {
           font-size: 0.9rem;
         }
-        
+
         .actions {
           display: flex;
           gap: 1rem;
         }
-        
+
         .btn-primary, .btn-secondary {
           padding: 0.5rem 1rem;
           border-radius: 4px;
@@ -561,25 +561,25 @@ app.get('/gallery/:id', async (c) => {
           transition: all 0.2s;
           border: none;
         }
-        
+
         .btn-primary {
           background-color: var(--secondary-color);
           color: white;
         }
-        
+
         .btn-secondary {
           background-color: #e0e0e0;
           color: var(--text-color);
         }
-        
+
         .btn-primary:hover {
           background-color: #2980b9;
         }
-        
+
         .btn-secondary:hover {
           background-color: #d0d0d0;
         }
-        
+
         .modal {
           position: fixed;
           top: 0;
@@ -592,7 +592,7 @@ app.get('/gallery/:id', async (c) => {
           justify-content: center;
           z-index: 1000;
         }
-        
+
         .modal-content {
           background: white;
           border-radius: 8px;
@@ -603,7 +603,7 @@ app.get('/gallery/:id', async (c) => {
           display: flex;
           flex-direction: column;
         }
-        
+
         .close-btn {
           position: absolute;
           top: 10px;
@@ -620,31 +620,31 @@ app.get('/gallery/:id', async (c) => {
           justify-content: center;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        
+
         .modal-image-container {
           flex: 1;
           min-height: 300px;
           overflow: hidden;
         }
-        
+
         .modal-image-container img {
           width: 100%;
           height: 100%;
           object-fit: contain;
         }
-        
+
         .modal-details {
           padding: 1rem;
           border-top: 1px solid var(--border-color);
         }
-        
+
         .modal-actions {
           display: flex;
           justify-content: flex-end;
           gap: 1rem;
           margin-top: 1rem;
         }
-        
+
         .btn-highlight {
           background-color: var(--accent-color);
           color: white;
@@ -656,11 +656,11 @@ app.get('/gallery/:id', async (c) => {
           transition: all 0.2s;
           border: none;
         }
-        
+
         .btn-highlight:hover {
           background-color: #c0392b;
         }
-        
+
         .toast {
           position: fixed;
           bottom: 80px;
@@ -674,30 +674,30 @@ app.get('/gallery/:id', async (c) => {
           z-index: 1000;
           transition: all 0.3s;
         }
-        
+
         @media (max-width: 768px) {
           .gallery-grid {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
           }
-          
+
           .image-container {
             height: 150px;
           }
-          
+
           .action-bar {
             flex-direction: column;
             gap: 0.5rem;
           }
-          
+
           .actions {
             width: 100%;
           }
-          
+
           .btn-primary, .btn-secondary {
             flex: 1;
             text-align: center;
           }
-          
+
           .modal-content {
             width: 95%;
           }
@@ -712,11 +712,11 @@ app.get('/gallery/:id', async (c) => {
               <p class="instructions">Click to select images. Choose one primary image and any additional images you'd like to include.</p>
           </div>
       </header>
-      
+
       <main class="gallery-grid" id="image-grid">
           <!-- Images will be populated dynamically via JavaScript -->
       </main>
-      
+
       <footer class="action-bar">
           <div class="selection-count">Selected: <span id="selected-count">0</span> of <span id="total-count">0</span> images</div>
           <div class="actions">
@@ -724,7 +724,7 @@ app.get('/gallery/:id', async (c) => {
               <button id="submit-btn" class="btn-primary">Submit and Return</button>
           </div>
       </footer>
-      
+
       <div class="modal" id="image-modal" hidden>
           <div class="modal-content">
               <button class="close-btn" id="close-modal">&times;</button>
@@ -741,9 +741,9 @@ app.get('/gallery/:id', async (c) => {
               </div>
           </div>
       </div>
-      
+
       <div class="toast" id="notification" hidden></div>
-      
+
       <script>
         // Gallery state
         const state = {
@@ -753,7 +753,7 @@ app.get('/gallery/:id', async (c) => {
           primarySelection: null,
           currentImageId: null
         };
-        
+
         // DOM elements
         const imageGrid = document.getElementById('image-grid');
         const entityName = document.getElementById('entity-name');
@@ -769,7 +769,7 @@ app.get('/gallery/:id', async (c) => {
         const selectPrimaryBtn = document.getElementById('select-primary-btn');
         const selectIncludeBtn = document.getElementById('select-include-btn');
         const notification = document.getElementById('notification');
-        
+
         // Sample gallery data
         // In a real implementation, this would be fetched from the server
         const galleryData = {
@@ -820,19 +820,19 @@ app.get('/gallery/:id', async (c) => {
             }
           ]
         };
-        
+
         // Initialize the gallery
         function initGallery() {
           // Set entity name
           entityName.textContent = galleryData.entity_name;
-          
+
           // Set state
           state.images = galleryData.images;
           totalCount.textContent = state.images.length;
-          
+
           // Render images
           renderImages();
-          
+
           // Add event listeners
           resetBtn.addEventListener('click', resetSelections);
           submitBtn.addEventListener('click', submitSelections);
@@ -840,19 +840,19 @@ app.get('/gallery/:id', async (c) => {
           selectPrimaryBtn.addEventListener('click', selectAsPrimary);
           selectIncludeBtn.addEventListener('click', toggleSelection);
         }
-        
+
         // Render images in the grid
         function renderImages() {
           imageGrid.innerHTML = '';
-          
+
           state.images.forEach(image => {
             const isPrimary = state.primarySelection === image.id;
             const isSelected = isPrimary || state.selections.includes(image.id);
-            
+
             const card = document.createElement('div');
             card.className = 'image-card';
             card.dataset.id = image.id;
-            
+
             card.innerHTML = \`
               <div class="image-container">
                 <img src="\${image.url}" alt="\${image.title}">
@@ -865,123 +865,123 @@ app.get('/gallery/:id', async (c) => {
                 <div class="image-source">\${image.source}</div>
               </div>
             \`;
-            
+
             card.addEventListener('click', () => openImageModal(image.id));
-            
+
             imageGrid.appendChild(card);
           });
-          
+
           // Update selection count
           updateSelectionCount();
         }
-        
+
         // Open image modal
         function openImageModal(imageId) {
           const image = state.images.find(img => img.id === imageId);
           if (!image) return;
-          
+
           state.currentImageId = imageId;
-          
+
           modalImage.src = image.url;
           modalTitle.textContent = image.title;
           modalSource.textContent = \`Source: \${image.source}\`;
-          
+
           const isPrimary = state.primarySelection === imageId;
           const isSelected = isPrimary || state.selections.includes(imageId);
-          
+
           selectPrimaryBtn.textContent = isPrimary ? 'Remove Primary' : 'Select as Primary';
           selectIncludeBtn.textContent = isSelected ? 'Remove from Selection' : 'Include in Gallery';
-          
+
           imageModal.hidden = false;
         }
-        
+
         // Close image modal
         function closeImageModal() {
           imageModal.hidden = true;
           state.currentImageId = null;
         }
-        
+
         // Select as primary image
         function selectAsPrimary() {
           const imageId = state.currentImageId;
           if (!imageId) return;
-          
+
           if (state.primarySelection === imageId) {
             // Unselect as primary
             state.primarySelection = null;
-            
+
             // Show notification
             showNotification('Primary image removed');
           } else {
             // Set as primary
             state.primarySelection = imageId;
-            
+
             // Add to selections if not already included
             if (!state.selections.includes(imageId)) {
               state.selections.push(imageId);
             }
-            
+
             // Show notification
             showNotification('Primary image selected');
           }
-          
+
           // Update modal buttons
           const isPrimary = state.primarySelection === imageId;
           selectPrimaryBtn.textContent = isPrimary ? 'Remove Primary' : 'Select as Primary';
-          
+
           // Re-render images
           renderImages();
         }
-        
+
         // Toggle selection for an image
         function toggleSelection() {
           const imageId = state.currentImageId;
           if (!imageId) return;
-          
+
           const index = state.selections.indexOf(imageId);
-          
+
           if (index !== -1) {
             // If it's the primary image, don't remove from selections
             if (state.primarySelection === imageId) {
               showNotification('Cannot remove primary image from selection');
               return;
             }
-            
+
             // Remove from selections
             state.selections.splice(index, 1);
-            
+
             // Update button text
             selectIncludeBtn.textContent = 'Include in Gallery';
-            
+
             // Show notification
             showNotification('Image removed from selection');
           } else {
             // Add to selections
             state.selections.push(imageId);
-            
+
             // Update button text
             selectIncludeBtn.textContent = 'Remove from Selection';
-            
+
             // Show notification
             showNotification('Image added to selection');
           }
-          
+
           // Re-render images
           renderImages();
         }
-        
+
         // Reset all selections
         function resetSelections() {
           state.selections = [];
           state.primarySelection = null;
-          
+
           // Re-render images
           renderImages();
-          
+
           // Show notification
           showNotification('All selections reset');
         }
-        
+
         // Submit selections
         function submitSelections() {
           // Validate selections
@@ -989,56 +989,56 @@ app.get('/gallery/:id', async (c) => {
             showNotification('Please select at least one image');
             return;
           }
-          
+
           if (!state.primarySelection) {
             showNotification('Please select a primary image');
             return;
           }
-          
+
           // In a real implementation, send the selections to the server
           // For this demo, just show a success message
-          
+
           showNotification('Selections submitted successfully!');
-          
+
           // Simulate returning to Claude
           setTimeout(() => {
             window.close();
           }, 2000);
         }
-        
+
         // Update selection count
         function updateSelectionCount() {
           selectedCount.textContent = state.selections.length;
         }
-        
+
         // Show notification
         function showNotification(message) {
           notification.textContent = message;
           notification.hidden = false;
-          
+
           // Hide after 3 seconds
           setTimeout(() => {
             notification.hidden = true;
           }, 3000);
         }
-        
+
         // Initialize the gallery when the page loads
         window.addEventListener('DOMContentLoaded', initGallery);
       </script>
   </body>
   </html>
   `;
-  
+
   return c.html(html);
 });
 
 // API endpoint to get gallery data
 app.get('/api/gallery/:id', async (c) => {
   const galleryId = c.req.param('id');
-  
+
   // In a real implementation, we would fetch the gallery session and images from D1
   // For this demo, we'll return dummy data
-  
+
   return c.json({
     id: galleryId,
     entity_name: 'Image Gallery',
@@ -1068,10 +1068,10 @@ app.get('/api/gallery/:id', async (c) => {
 app.post('/api/gallery/:id/selections', async (c) => {
   const galleryId = c.req.param('id');
   const body = await c.req.json();
-  
+
   // In a real implementation, we would save the selections to D1 and process the images
   // For this demo, we'll just return a success response
-  
+
   return c.json({
     success: true,
     galleryId,
@@ -1082,10 +1082,10 @@ app.post('/api/gallery/:id/selections', async (c) => {
 // Serve static assets
 app.get('/static/*', (c) => {
   const path = c.req.path.replace('/static/', '');
-  
+
   // In a real implementation, we would serve files from R2 or use Cloudflare Assets
   // For this demo, we'll return a 404
-  
+
   return c.text('Static file not found', 404);
 });
 

@@ -19,7 +19,7 @@ export const searchHotelsTool = {
   execute: async (params, env) => {
     try {
       const result = await searchHotels(params, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -28,7 +28,7 @@ export const searchHotelsTool = {
       };
     } catch (error) {
       console.error('Error in search_hotels tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

@@ -7,7 +7,7 @@ OUTPUT_FILE="current_instructions.md"
 # Define the input files in order.
 FILES_TO_CONCATENATE=(
     "core_instructions.md"
-    "tools_reference.md" 
+    "tools_reference.md"
     "fetch_reference.md"
     "document_consent.md"
     "workflows.md"
@@ -34,7 +34,7 @@ first_file=true
 for file in "${FILES_TO_CONCATENATE[@]}"; do
     if [ -f "$file" ]; then
         echo "- Processing $file"
-        
+
         # Read file content
         FILE_CONTENT=$(cat "$file")
 

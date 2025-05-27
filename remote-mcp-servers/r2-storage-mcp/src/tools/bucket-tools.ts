@@ -30,14 +30,14 @@ export async function r2_buckets_list(_params: any, env: Env) {
 export async function r2_bucket_create(params: { bucket_name: string }, env: Env) {
   try {
     const { bucket_name } = params;
-    
+
     // To create a bucket, you would typically make an API call to Cloudflare
     // This would require additional authentication and permissions
     // For demonstration, we'll simulate a success
-    
+
     // In production, use the Cloudflare API to create the bucket
     // const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets`, {...});
-    
+
     return {
       success: true,
       bucket: {
@@ -59,7 +59,7 @@ export async function r2_bucket_create(params: { bucket_name: string }, env: Env
 export async function r2_bucket_get(params: { bucket_name: string }, env: Env) {
   try {
     const { bucket_name } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // For a real implementation, fetch additional details like object count
@@ -73,7 +73,7 @@ export async function r2_bucket_get(params: { bucket_name: string }, env: Env) {
         }
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -92,11 +92,11 @@ export async function r2_bucket_get(params: { bucket_name: string }, env: Env) {
 export async function r2_bucket_delete(params: { bucket_name: string }, env: Env) {
   try {
     const { bucket_name } = params;
-    
+
     // To delete a bucket, you would typically make an API call to Cloudflare
     // This would require additional authentication and permissions
     // For demonstration, we'll simulate a success for a non-bound bucket
-    
+
     // Check if we're trying to delete a bucket with a binding
     if (bucket_name === 'travel-media') {
       return {
@@ -104,10 +104,10 @@ export async function r2_bucket_delete(params: { bucket_name: string }, env: Env
         error: `Cannot delete bucket '${bucket_name}' as it has active bindings`
       };
     }
-    
+
     // In production, use the Cloudflare API to delete the bucket
     // const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket_name}`, {...});
-    
+
     return {
       success: true
     };

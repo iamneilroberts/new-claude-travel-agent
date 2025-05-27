@@ -29,12 +29,12 @@ async function flightChoicePrediction(params: z.infer<typeof inputSchema>, env: 
     const predictions = response.data.map((prediction: any, index: number) => {
       const choiceProb = prediction.choiceProbability || 0;
       const confidence = choiceProb > 0.7 ? 'High' : choiceProb > 0.4 ? 'Medium' : 'Low';
-      
+
       return {
         flightOfferIndex: index,
         choiceProbability: choiceProb,
         confidenceLevel: confidence,
-        recommendation: choiceProb > 0.6 ? 
+        recommendation: choiceProb > 0.6 ?
           'Highly likely to be chosen - great option for booking' :
           choiceProb > 0.3 ?
           'Moderate choice probability - consider comparing alternatives' :

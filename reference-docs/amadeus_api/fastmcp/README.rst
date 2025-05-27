@@ -39,8 +39,8 @@ application <https://developers.amadeus.com/my-apps/>`__.
 
     try:
         response = amadeus.shopping.flight_offers_search.get(
-            originLocationCode='MAD', 
-            destinationLocationCode='ATH', 
+            originLocationCode='MAD',
+            destinationLocationCode='ATH',
             departureDate='2024-11-01',
             adults=1)
         print(response.data)
@@ -278,7 +278,7 @@ List of supported endpoints
     # Hotel Booking v2
     # The offerId comes from the hotel_offer above
     amadeus.booking.hotel_orders.post(
-        guests=guests, 
+        guests=guests,
         travel_agent=travel_agent,
         room_associations=room_associations,
         payment=payment)

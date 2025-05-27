@@ -6,7 +6,7 @@ const AUTH_TOKEN = 'github-mcp-auth-key-2025';
 
 async function testEndpoint(endpoint, method = 'GET', body = null) {
   console.log(`\nTesting ${method} ${endpoint}`);
-  
+
   const options = {
     method,
     headers: {
@@ -14,18 +14,18 @@ async function testEndpoint(endpoint, method = 'GET', body = null) {
       'Content-Type': 'application/json'
     }
   };
-  
+
   if (body) {
     options.body = JSON.stringify(body);
   }
-  
+
   try {
     const response = await fetch(`${WORKER_URL}${endpoint}`, options);
     const text = await response.text();
-    
+
     console.log(`Status: ${response.status}`);
     console.log(`Response: ${text}`);
-    
+
     return { status: response.status, data: text };
   } catch (error) {
     console.error(`Error: ${error.message}`);
@@ -36,14 +36,14 @@ async function testEndpoint(endpoint, method = 'GET', body = null) {
 async function runTests() {
   console.log('Starting GitHub MCP Server Tests');
   console.log('================================');
-  
+
   // Test OAuth metadata
   await testEndpoint('/.well-known/oauth-metadata');
   await testEndpoint('/sse/.well-known/oauth-metadata');
-  
+
   // Test health check
   await testEndpoint('/health');
-  
+
   // Test initialize
   await testEndpoint('/sse', 'POST', {
     jsonrpc: '2.0',
@@ -51,7 +51,7 @@ async function runTests() {
     params: {},
     id: 1
   });
-  
+
   // Test list tools
   await testEndpoint('/sse', 'POST', {
     jsonrpc: '2.0',
@@ -59,7 +59,7 @@ async function runTests() {
     params: {},
     id: 2
   });
-  
+
   // Test RPC endpoint
   await testEndpoint('/rpc', 'POST', {
     jsonrpc: '2.0',
@@ -67,7 +67,7 @@ async function runTests() {
     params: {},
     id: 3
   });
-  
+
   console.log('\n================================');
   console.log('Tests completed');
 }

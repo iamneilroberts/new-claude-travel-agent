@@ -22,7 +22,7 @@ const corsHeaders = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
@@ -30,9 +30,9 @@ export default {
 
     // Return 404 for ALL OAuth discovery endpoints (even without auth)
     if (url.pathname.includes('/.well-known/')) {
-      return new Response('Not found', { 
+      return new Response('Not found', {
         status: 404,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
 
@@ -44,11 +44,11 @@ export default {
     // Simple authorization check for other endpoints
     const authHeader = request.headers.get('Authorization');
     const expectedAuth = env.MCP_AUTH_KEY || 'amadeus-mcp-auth-key-2025';
-    
+
     if (authHeader !== `Bearer ${expectedAuth}`) {
-      return new Response('Unauthorized', { 
+      return new Response('Unauthorized', {
         status: 401,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
 
@@ -58,9 +58,9 @@ export default {
     } else if (url.pathname === '/mcp' || url.pathname === '/rpc') {
       return await handleJsonRpc(request, env);
     } else {
-      return new Response('Not found', { 
+      return new Response('Not found', {
         status: 404,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
   }
@@ -86,7 +86,7 @@ async function handleJsonRpc(request, env) {
   try {
     const body = await request.json();
     const response = await processJsonRpcRequest(body, env);
-    
+
     return new Response(JSON.stringify(response), {
       headers: {
         'Content-Type': 'application/json',
@@ -114,14 +114,14 @@ async function handleJsonRpc(request, env) {
 // Handle SSE (Server-Sent Events)
 async function handleSSE(request, env, ctx) {
   const url = new URL(request.url);
-  
+
   // Handle incoming messages via POST to /sse/message
   if (url.pathname === '/sse/message' && request.method === 'POST') {
     try {
       const body = await request.json();
       const callbackUrl = url.searchParams.get('callback');
       const response = await processJsonRpcRequest(body, env);
-      
+
       // If we have a callback URL, send the response there
       if (callbackUrl) {
         try {
@@ -133,7 +133,7 @@ async function handleSSE(request, env, ctx) {
             },
             body: JSON.stringify(response)
           });
-          
+
           return new Response('OK', {
             status: 200,
             headers: corsHeaders
@@ -142,7 +142,7 @@ async function handleSSE(request, env, ctx) {
           console.error('Callback failed:', callbackError);
         }
       }
-      
+
       // Fallback to direct response
       return new Response(JSON.stringify(response), {
         headers: {
@@ -167,20 +167,20 @@ async function handleSSE(request, env, ctx) {
       });
     }
   }
-  
+
   // For POST requests to /sse endpoint, return 404 to trigger SSE-only fallback
   if (url.pathname === '/sse' && request.method === 'POST') {
-    return new Response('Not found', { 
+    return new Response('Not found', {
       status: 404,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
-  
+
   // Handle SSE connection (GET to /sse)
   if (url.pathname === '/sse' && request.method === 'GET') {
     const sessionId = uuidv4();
     const callbackUrl = url.searchParams.get('callback');
-    
+
     // Create a TransformStream for SSE
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
@@ -190,12 +190,12 @@ async function handleSSE(request, env, ctx) {
     const connectionData = {
       jsonrpc: '2.0',
       method: 'connected',
-      params: { 
+      params: {
         sessionId,
         ...(callbackUrl && { callbackUrl })
       }
     };
-    
+
     writer.write(encoder.encode(`data: ${JSON.stringify(connectionData)}\n\n`));
 
     // Set up keep-alive
@@ -220,17 +220,17 @@ async function handleSSE(request, env, ctx) {
       }
     });
   }
-  
-  return new Response('Not found', { 
+
+  return new Response('Not found', {
     status: 404,
-    headers: corsHeaders 
+    headers: corsHeaders
   });
 }
 
 // Process JSON-RPC requests
 async function processJsonRpcRequest(request, env) {
   const { method, params, id } = request;
-  
+
   switch (method) {
     case 'initialize':
       return {
@@ -247,7 +247,7 @@ async function processJsonRpcRequest(request, env) {
         },
         id
       };
-      
+
     case 'tools/list':
       const toolRegistry = await initializeTools(env);
       return {
@@ -257,10 +257,10 @@ async function processJsonRpcRequest(request, env) {
         },
         id
       };
-      
+
     case 'tools/call':
       return await handleToolCall(params, env, id);
-      
+
     default:
       return {
         jsonrpc: '2.0',
@@ -276,11 +276,11 @@ async function processJsonRpcRequest(request, env) {
 // Handle tool calls
 async function handleToolCall(params, env, requestId) {
   const { name, arguments: args } = params;
-  
+
   try {
     const toolRegistry = await initializeTools(env);
     const handler = toolRegistry.handlers.get(name);
-    
+
     if (!handler) {
       return {
         jsonrpc: '2.0',
@@ -291,9 +291,9 @@ async function handleToolCall(params, env, requestId) {
         id: requestId
       };
     }
-    
+
     const result = await handler(args);
-    
+
     return {
       jsonrpc: '2.0',
       result,

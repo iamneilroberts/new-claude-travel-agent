@@ -270,10 +270,10 @@ const TOOLS = [
 // Tool handlers
 async function handleCreateOrUpdateFile(args, env) {
   const { owner, repo, path, content, message, branch, sha } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     const response = await github.repos.createOrUpdateFileContents({
       owner,
       repo,
@@ -283,7 +283,7 @@ async function handleCreateOrUpdateFile(args, env) {
       branch,
       sha
     });
-    
+
     return {
       status: 'success',
       commit: response.data.commit,
@@ -300,17 +300,17 @@ async function handleCreateOrUpdateFile(args, env) {
 
 async function handleGetFileContents(args, env) {
   const { owner, repo, path, branch } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     const response = await github.repos.getContent({
       owner,
       repo,
       path,
       ref: branch
     });
-    
+
     // Handle file
     if (!Array.isArray(response.data)) {
       const content = Buffer.from(response.data.content, 'base64').toString();
@@ -323,7 +323,7 @@ async function handleGetFileContents(args, env) {
         url: response.data.html_url
       };
     }
-    
+
     // Handle directory
     return {
       status: 'success',
@@ -344,19 +344,19 @@ async function handleGetFileContents(args, env) {
 
 async function handlePushFiles(args, env) {
   const { owner, repo, branch, files, message } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     // Get the latest commit on the branch to use as base
     const branchData = await github.repos.getBranch({
       owner,
       repo,
       branch
     });
-    
+
     const baseTree = branchData.data.commit.sha;
-    
+
     // Create blobs for each file
     const blobs = await Promise.all(
       files.map(async file => {
@@ -366,7 +366,7 @@ async function handlePushFiles(args, env) {
           content: Buffer.from(file.content).toString('base64'),
           encoding: 'base64'
         });
-        
+
         return {
           path: file.path,
           mode: '100644', // Regular file
@@ -375,7 +375,7 @@ async function handlePushFiles(args, env) {
         };
       })
     );
-    
+
     // Create a new tree with the blobs
     const tree = await github.git.createTree({
       owner,
@@ -383,7 +383,7 @@ async function handlePushFiles(args, env) {
       base_tree: baseTree,
       tree: blobs
     });
-    
+
     // Create a commit
     const commit = await github.git.createCommit({
       owner,
@@ -392,7 +392,7 @@ async function handlePushFiles(args, env) {
       tree: tree.data.sha,
       parents: [baseTree]
     });
-    
+
     // Update the branch reference
     await github.git.updateRef({
       owner,
@@ -400,7 +400,7 @@ async function handlePushFiles(args, env) {
       ref: `heads/${branch}`,
       sha: commit.data.sha
     });
-    
+
     return {
       status: 'success',
       commit: {
@@ -417,10 +417,10 @@ async function handlePushFiles(args, env) {
 
 async function handleCreateBranch(args, env) {
   const { owner, repo, branch, from_branch } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     // Get the default branch if from_branch not specified
     let sourceBranch = from_branch;
     if (!sourceBranch) {
@@ -430,14 +430,14 @@ async function handleCreateBranch(args, env) {
       });
       sourceBranch = repoData.data.default_branch;
     }
-    
+
     // Get the commit SHA of the source branch
     const sourceRef = await github.git.getRef({
       owner,
       repo,
       ref: `heads/${sourceBranch}`
     });
-    
+
     // Create the new branch
     const response = await github.git.createRef({
       owner,
@@ -445,7 +445,7 @@ async function handleCreateBranch(args, env) {
       ref: `refs/heads/${branch}`,
       sha: sourceRef.data.object.sha
     });
-    
+
     return {
       status: 'success',
       branch_name: branch,
@@ -460,17 +460,17 @@ async function handleCreateBranch(args, env) {
 
 async function handleListBranches(args, env) {
   const { owner, repo, page, perPage } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     const response = await github.repos.listBranches({
       owner,
       repo,
       page,
       per_page: perPage
     });
-    
+
     return {
       status: 'success',
       branches: response.data.map(branch => ({
@@ -486,10 +486,10 @@ async function handleListBranches(args, env) {
 
 async function handleListCommits(args, env) {
   const { owner, repo, sha, page, perPage } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     const response = await github.repos.listCommits({
       owner,
       repo,
@@ -497,7 +497,7 @@ async function handleListCommits(args, env) {
       page,
       per_page: perPage
     });
-    
+
     return {
       status: 'success',
       commits: response.data.map(commit => ({
@@ -523,10 +523,10 @@ async function handleListCommits(args, env) {
 
 async function handleGetCommit(args, env) {
   const { owner, repo, sha, page, perPage } = args;
-  
+
   try {
     const github = createGitHubClient(env);
-    
+
     const response = await github.repos.getCommit({
       owner,
       repo,
@@ -534,7 +534,7 @@ async function handleGetCommit(args, env) {
       page,
       per_page: perPage
     });
-    
+
     return {
       status: 'success',
       commit: {
@@ -583,7 +583,7 @@ async function processJsonRpcRequest(request, env) {
       return {
         jsonrpc: '2.0',
         result: {
-          protocolVersion: '2025-03-26',
+          protocolVersion: '2024-11-05',
           capabilities: {
             tools: {
               listChanged: true
@@ -596,18 +596,18 @@ async function processJsonRpcRequest(request, env) {
         },
         id: request.id
       };
-      
+
     case 'tools/list':
       return {
         jsonrpc: '2.0',
         result: { tools: TOOLS },
         id: request.id
       };
-      
+
     case 'tools/call':
       const { name, arguments: args } = request.params;
       const handler = TOOL_HANDLERS.get(name);
-      
+
       if (!handler) {
         return {
           jsonrpc: '2.0',
@@ -618,7 +618,7 @@ async function processJsonRpcRequest(request, env) {
           id: request.id
         };
       }
-      
+
       try {
         const result = await handler(args, env);
         return {
@@ -643,7 +643,7 @@ async function processJsonRpcRequest(request, env) {
           id: request.id
         };
       }
-      
+
     default:
       return {
         jsonrpc: '2.0',
@@ -686,9 +686,9 @@ export default {
 
     try {
       const url = new URL(request.url);
-      
+
       // OAuth metadata endpoints - public access
-      if (url.pathname === '/.well-known/oauth-metadata' || 
+      if (url.pathname === '/.well-known/oauth-metadata' ||
           url.pathname === '/.well-known/openid-configuration' ||
           url.pathname === '/sse/.well-known/oauth-metadata' ||
           url.pathname === '/sse/.well-known/openid-configuration') {
@@ -701,22 +701,22 @@ export default {
           }
         });
       }
-      
+
       // For MCP endpoints, check authorization
       const authHeader = request.headers.get('Authorization');
       let isAuthenticated = false;
-      
+
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
-        
+
         // Simple bearer token authentication
         if (token === env.MCP_AUTH_KEY) {
           isAuthenticated = true;
         }
       }
-      
+
       if (!isAuthenticated) {
-        return new Response('Unauthorized', { 
+        return new Response('Unauthorized', {
           status: 401,
           headers: {
             'WWW-Authenticate': 'Bearer',
@@ -730,7 +730,7 @@ export default {
         // Generate session ID and return endpoint URL
         const sessionId = crypto.randomUUID();
         const endpointUrl = `${url.origin}/sse/message?sessionId=${sessionId}`;
-        
+
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
           start(controller) {
@@ -738,7 +738,7 @@ export default {
             controller.enqueue(encoder.encode(`event: endpoint\ndata: ${endpointUrl}\n\n`));
           }
         });
-        
+
         return new Response(stream, {
           headers: {
             'Content-Type': 'text/event-stream',
@@ -752,13 +752,13 @@ export default {
           }
         });
       }
-      
+
       // Handle SSE message endpoint - POST for message handling
       if (url.pathname.startsWith('/sse/message') && request.method === 'POST') {
         try {
           const json = await request.json();
           const response = await processJsonRpcRequest(json, env);
-          
+
           const encoder = new TextEncoder();
           const stream = new ReadableStream({
             start(controller) {
@@ -767,7 +767,7 @@ export default {
               controller.close();
             }
           });
-          
+
           return new Response(stream, {
             status: 202,
             headers: {
@@ -790,7 +790,7 @@ export default {
             },
             id: null
           };
-          
+
           const encoder = new TextEncoder();
           const stream = new ReadableStream({
             start(controller) {
@@ -798,7 +798,7 @@ export default {
               controller.close();
             }
           });
-          
+
           return new Response(stream, {
             status: 202,
             headers: {
@@ -809,13 +809,13 @@ export default {
           });
         }
       }
-      
+
       // Handle RPC endpoint
       if (url.pathname === '/rpc' && request.method === 'POST') {
         try {
           const json = await request.json();
           const response = await processJsonRpcRequest(json, env);
-          
+
           return new Response(JSON.stringify(response), {
             headers: {
               'Content-Type': 'application/json',
@@ -839,7 +839,7 @@ export default {
           });
         }
       }
-      
+
       // Health check endpoint
       if (url.pathname === '/health') {
         return new Response(JSON.stringify({
@@ -853,7 +853,7 @@ export default {
           }
         });
       }
-      
+
       // Default route
       if (url.pathname === '/') {
         return new Response(JSON.stringify({
@@ -867,10 +867,10 @@ export default {
           }
         });
       }
-      
-      return new Response('Not Found', { 
+
+      return new Response('Not Found', {
         status: 404,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     } catch (error) {
       console.error('Worker error:', error);

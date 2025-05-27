@@ -22,7 +22,7 @@ export const getTravelRecommendationsTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = recommendationsSchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

@@ -24,7 +24,7 @@ export const searchPOITool = {
     try {
       const validated = poiSearchSchema.parse(params);
       const result = await searchPOI(validated, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -33,7 +33,7 @@ export const searchPOITool = {
       };
     } catch (error: any) {
       console.error('Error in search_poi tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

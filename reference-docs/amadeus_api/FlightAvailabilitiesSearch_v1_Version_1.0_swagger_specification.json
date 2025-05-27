@@ -19,7 +19,7 @@
   },
   "host": "test.api.amadeus.com",
   "basePath": "/v1",
-  "schemes": [  
+  "schemes": [
     "https"
   ],
   "consumes": [

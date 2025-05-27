@@ -19,10 +19,10 @@ app.use(cors());
 // Implement MCP protocol routes
 app.post('/mcp', async (c) => {
   const body = await c.req.json();
-  
+
   // Extract JSON-RPC request
   const { jsonrpc, id, method, params } = body;
-  
+
   // Validate JSON-RPC request
   if (jsonrpc !== '2.0' || !id) {
     return c.json({
@@ -34,7 +34,7 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // Initialize method - returns server information
   if (method === 'initialize') {
     return c.json({
@@ -50,12 +50,12 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // List tools method
   if (method === 'tools/list') {
     const tools = [];
     registerR2Tools(tools, c.env);
-    
+
     return c.json({
       jsonrpc: '2.0',
       id,
@@ -64,7 +64,7 @@ app.post('/mcp', async (c) => {
       }
     });
   }
-  
+
   // Execute tool method
   if (method === 'tools/call') {
     // Check authentication
@@ -79,9 +79,9 @@ app.post('/mcp', async (c) => {
         }
       });
     }
-    
+
     const { name, arguments: args } = params || {};
-    
+
     if (!name) {
       return c.json({
         jsonrpc: '2.0',
@@ -92,12 +92,12 @@ app.post('/mcp', async (c) => {
         }
       });
     }
-    
+
     // Handle tools - implement this part based on registerR2Tools implementation
     try {
       // This is a simplified implementation
       let result;
-      
+
       // Bucket operations
       if (name === 'r2_buckets_list') {
         result = { success: true, buckets: ['travel-media'] };
@@ -117,7 +117,7 @@ app.post('/mcp', async (c) => {
               prefix: args.prefix || '',
               limit: args.limit || 100
             });
-            
+
             result = {
               success: true,
               bucket: args.bucket_name,
@@ -131,16 +131,16 @@ app.post('/mcp', async (c) => {
               cursor: list.cursor
             };
           } else {
-            result = { 
-              success: false, 
-              error: `Bucket '${args.bucket_name}' not found or not accessible` 
+            result = {
+              success: false,
+              error: `Bucket '${args.bucket_name}' not found or not accessible`
             };
           }
         } catch (error) {
           console.error('R2 list error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else if (name === 'r2_object_get') {
@@ -148,11 +148,11 @@ app.post('/mcp', async (c) => {
           // Use the real R2 bucket
           if (args.bucket_name === 'travel-media' && c.env.TRAVEL_MEDIA_BUCKET) {
             const object = await c.env.TRAVEL_MEDIA_BUCKET.get(args.key);
-            
+
             if (!object) {
-              result = { 
-                success: false, 
-                error: `Object '${args.key}' not found in bucket '${args.bucket_name}'` 
+              result = {
+                success: false,
+                error: `Object '${args.key}' not found in bucket '${args.bucket_name}'`
               };
             } else {
               // If the object is text-based, include its content
@@ -162,7 +162,7 @@ app.post('/mcp', async (c) => {
                   object.httpMetadata?.contentType?.includes('xml')) {
                 content = await object.text();
               }
-              
+
               result = {
                 success: true,
                 object: {
@@ -177,16 +177,16 @@ app.post('/mcp', async (c) => {
               };
             }
           } else {
-            result = { 
-              success: false, 
-              error: `Bucket '${args.bucket_name}' not found or not accessible` 
+            result = {
+              success: false,
+              error: `Bucket '${args.bucket_name}' not found or not accessible`
             };
           }
         } catch (error) {
           console.error('R2 get error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else if (name === 'r2_object_put') {
@@ -197,12 +197,12 @@ app.post('/mcp', async (c) => {
             const httpMetadata: R2HTTPMetadata = {
               contentType: args.content_type || 'text/plain'
             };
-            
+
             // Upload the object
             await c.env.TRAVEL_MEDIA_BUCKET.put(args.key, args.body, {
               httpMetadata
             });
-            
+
             result = {
               success: true,
               key: args.key,
@@ -210,16 +210,16 @@ app.post('/mcp', async (c) => {
               contentType: httpMetadata.contentType
             };
           } else {
-            result = { 
-              success: false, 
-              error: `Bucket '${args.bucket_name}' not found or not accessible` 
+            result = {
+              success: false,
+              error: `Bucket '${args.bucket_name}' not found or not accessible`
             };
           }
         } catch (error) {
           console.error('R2 put error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else if (name === 'r2_object_delete') {
@@ -228,22 +228,22 @@ app.post('/mcp', async (c) => {
           if (args.bucket_name === 'travel-media' && c.env.TRAVEL_MEDIA_BUCKET) {
             // Delete the object
             await c.env.TRAVEL_MEDIA_BUCKET.delete(args.key);
-            
+
             result = {
               success: true,
               message: `Object '${args.key}' deleted from bucket '${args.bucket_name}'`
             };
           } else {
-            result = { 
-              success: false, 
-              error: `Bucket '${args.bucket_name}' not found or not accessible` 
+            result = {
+              success: false,
+              error: `Bucket '${args.bucket_name}' not found or not accessible`
             };
           }
         } catch (error) {
           console.error('R2 delete error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else if (name === 'r2_generate_presigned_url') {
@@ -253,10 +253,10 @@ app.post('/mcp', async (c) => {
           const expiresIn = args.expires_in || 3600; // Default: 1 hour
           const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
           const method = args.method || 'GET';     // Default: GET
-          
+
           // Generate a URL that points to your worker as a proxy to access the object
           const publicUrl = `https://r2-storage-mcp.somotravel.workers.dev/proxy/${args.bucket_name}/${args.key}?expires=${Date.now() + expiresIn * 1000}&token=${c.env.MCP_AUTH_KEY.slice(0, 8)}`;
-          
+
           result = {
             success: true,
             url: publicUrl,
@@ -266,9 +266,9 @@ app.post('/mcp', async (c) => {
           };
         } catch (error) {
           console.error('R2 presigned URL error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else if (name === 'r2_upload_image') {
@@ -277,15 +277,15 @@ app.post('/mcp', async (c) => {
           result = await r2_upload_image(args, c.env);
         } catch (error) {
           console.error('Image upload error:', error);
-          result = { 
-            success: false, 
-            error: error instanceof Error ? error.message : String(error) 
+          result = {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       } else {
         result = { success: false, error: `Tool ${name} not found` };
       }
-      
+
       return c.json({
         jsonrpc: '2.0',
         id,
@@ -302,7 +302,7 @@ app.post('/mcp', async (c) => {
       });
     }
   }
-  
+
   // Method not found
   return c.json({
     jsonrpc: '2.0',
@@ -329,33 +329,33 @@ app.get('/proxy/:bucket/:key*', async (c) => {
   const bucket = c.req.param('bucket');
   let key = c.req.param('key');
   const restPath = c.req.param('0');
-  
+
   // Handle wildcard paths properly
   if (restPath) {
     key = key + restPath;
   }
-  
+
   console.log('Proxy request for:', { bucket, key });
-  
+
   const expires = c.req.query('expires');
   const token = c.req.query('token');
   const method = c.req.query('method') || 'GET';
-  
+
   // Check if URL has expired
   if (expires && parseInt(expires) < Date.now()) {
     console.log('Link expired:', expires);
     return c.text('Link expired', 410);
   }
-  
+
   // Validate the token - secure token validation
-  const isValidToken = validateSecureToken(bucket, key, method, 
+  const isValidToken = validateSecureToken(bucket, key, method,
     parseInt(expires || '0'), token || '', c.env.MCP_AUTH_KEY || 'default-key');
-  
+
   if (!isValidToken) {
     console.log('Invalid or unauthorized token:', token);
     return c.text('Unauthorized', 401);
   }
-  
+
   // Get the object
   if (bucket === 'travel-media' && c.env.TRAVEL_MEDIA_BUCKET) {
     try {
@@ -363,18 +363,18 @@ app.get('/proxy/:bucket/:key*', async (c) => {
       if (method === 'GET') {
         console.log('Fetching from R2:', key);
         const object = await c.env.TRAVEL_MEDIA_BUCKET.get(key);
-        
+
         if (!object) {
           console.log('Object not found:', key);
           return c.text(`Object not found: ${key}`, 404);
         }
-        
+
         console.log('Object found:', {
           key,
           size: object.size,
           contentType: object.httpMetadata?.contentType
         });
-        
+
         // Return the object with appropriate content type
         return new Response(object.body, {
           headers: {
@@ -394,21 +394,21 @@ app.get('/proxy/:bucket/:key*', async (c) => {
           body: c.req.raw.body,
           duplex: 'half'
         });
-          
+
         if (!requestInit.body) {
           return c.text('No content provided for PUT request', 400);
         }
-          
+
         // Get content type from request headers
         const contentType = c.req.header('Content-Type') || 'application/octet-stream';
-          
+
         // Upload to R2
         await c.env.TRAVEL_MEDIA_BUCKET.put(key, requestInit.body, {
           httpMetadata: {
             contentType: contentType
           }
         });
-          
+
         return c.json({
           success: true,
           message: `File ${key} uploaded successfully`,
@@ -430,7 +430,7 @@ app.get('/proxy/:bucket/:key*', async (c) => {
       return c.text(`Internal Server Error: ${error instanceof Error ? error.message : String(error)}`, 500);
     }
   }
-  
+
   console.log('Bucket not found or not accessible:', bucket);
   return c.text(`Bucket not found: ${bucket}`, 404);
 });
@@ -448,7 +448,7 @@ function validateSecureToken(
 ): boolean {
   // This should match the token creation logic in presigned-url-tools.ts
   const data = `${bucketName}:${key}:${method}:${expiry}`;
-  
+
   // Create a simple hash of the data with the key
   let hash = 0;
   const combinedStr = data + hmacKey;
@@ -457,7 +457,7 @@ function validateSecureToken(
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32bit integer
   }
-  
+
   // Convert to a hex string and compare
   const expectedToken = Math.abs(hash).toString(16).padStart(8, '0');
   return token === expectedToken;
@@ -470,20 +470,20 @@ app.put('/direct-upload', async (c) => {
   if (!authToken || authToken !== c.env.MCP_AUTH_KEY) {
     return c.text('Unauthorized', 401);
   }
-  
+
   // Get filename from header
   const filename = c.req.header('X-Filename');
   if (!filename) {
     return c.text('Missing X-Filename header', 400);
   }
-  
+
   // Get content type
   const contentType = c.req.header('Content-Type') || 'application/octet-stream';
-  
+
   try {
     // Get binary data from request
     const data = await c.req.arrayBuffer();
-    
+
     // Upload to R2
     if (c.env.TRAVEL_MEDIA_BUCKET) {
       await c.env.TRAVEL_MEDIA_BUCKET.put(filename, data, {
@@ -491,7 +491,7 @@ app.put('/direct-upload', async (c) => {
           contentType: contentType
         }
       });
-      
+
       return c.json({
         success: true,
         message: `File ${filename} uploaded successfully`,

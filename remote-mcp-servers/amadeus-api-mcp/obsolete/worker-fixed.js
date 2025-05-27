@@ -54,7 +54,7 @@ class AmadeusAPI {
   async request(endpoint, params = {}) {
     const token = await this.getAccessToken();
     const url = new URL(`${this.baseUrl}${endpoint}`);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         url.searchParams.append(key, value);
@@ -93,7 +93,7 @@ export class AmadeusMCP extends McpAgent {
         try {
           const amadeus = new AmadeusAPI(this.env);
           await amadeus.getAccessToken();
-          
+
           return {
             content: [{ type: "text", text: "Successfully connected to Amadeus API!" }]
           };
@@ -132,13 +132,13 @@ export class AmadeusMCP extends McpAgent {
             currencyCode: 'USD',
             max: 10
           };
-          
+
           if (returnDate) {
             params.returnDate = returnDate;
           }
-          
+
           const data = await amadeus.request('/shopping/flight-offers', params);
-          
+
           // Format the results
           const flights = data.data.map(offer => ({
             id: offer.id,
@@ -151,7 +151,7 @@ export class AmadeusMCP extends McpAgent {
               stops: itinerary.segments.length - 1
             }))
           }));
-          
+
           return {
             content: [{
               type: 'text',
@@ -183,19 +183,19 @@ export class AmadeusMCP extends McpAgent {
       async ({ city, check_in, check_out, adults = 1, radius = 5 }) => {
         try {
           const amadeus = new AmadeusAPI(this.env);
-          
+
           // First, get city coordinates
           const cityData = await amadeus.request('/reference-data/locations', {
             keyword: city,
             subType: 'CITY'
           });
-          
+
           if (!cityData.data || cityData.data.length === 0) {
             throw new Error(`City not found: ${city}`);
           }
-          
+
           const { latitude, longitude } = cityData.data[0].geoCode;
-          
+
           // Search hotels
           const hotelData = await amadeus.request('/shopping/hotel-offers', {
             latitude,
@@ -206,7 +206,7 @@ export class AmadeusMCP extends McpAgent {
             adults,
             currency: 'USD'
           });
-          
+
           // Format results
           const hotels = hotelData.data.map(hotel => ({
             name: hotel.hotel.name,
@@ -214,7 +214,7 @@ export class AmadeusMCP extends McpAgent {
             price: hotel.offers[0]?.price?.total,
             currency: hotel.offers[0]?.price?.currency
           }));
-          
+
           return {
             content: [{
               type: 'text',

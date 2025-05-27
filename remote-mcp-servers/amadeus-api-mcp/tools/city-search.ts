@@ -49,7 +49,7 @@ async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promis
 
     const cities = response.data.map((city: any) => {
       const timeZone = city.timeZoneOffset ? `UTC${city.timeZoneOffset >= 0 ? '+' : ''}${city.timeZoneOffset}` : null;
-      
+
       return {
         id: city.id,
         name: city.name,

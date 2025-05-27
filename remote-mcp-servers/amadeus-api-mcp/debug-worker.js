@@ -15,7 +15,7 @@ export default {
       });
 
       const result = await response.text();
-      
+
       return new Response(JSON.stringify({
         status: response.status,
         statusText: response.statusText,

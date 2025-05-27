@@ -33,12 +33,12 @@ async function testMCP() {
 
   const reader = initResponse.body;
   const chunks = [];
-  
+
   for await (const chunk of reader) {
     chunks.push(chunk);
     const text = Buffer.concat(chunks).toString();
     const lines = text.split('\n');
-    
+
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         try {
@@ -71,12 +71,12 @@ async function testMCP() {
 
   const toolsReader = toolsResponse.body;
   const toolsChunks = [];
-  
+
   for await (const chunk of toolsReader) {
     toolsChunks.push(chunk);
     const text = Buffer.concat(toolsChunks).toString();
     const lines = text.split('\n');
-    
+
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         try {
@@ -116,12 +116,12 @@ async function testMCP() {
 
   const toolReader = toolResponse.body;
   const toolChunks = [];
-  
+
   for await (const chunk of toolReader) {
     toolChunks.push(chunk);
     const text = Buffer.concat(toolChunks).toString();
     const lines = text.split('\n');
-    
+
     for (const line of lines) {
       if (line.startsWith('data: ')) {
         try {

@@ -4876,7 +4876,7 @@ var searchHotelsTool = {
 
 // src/services/poi-service.ts
 async function searchPOI(params, env) {
-  return `Sorry, the Points of Interest API has been decommissioned by Amadeus and is no longer available. 
+  return `Sorry, the Points of Interest API has been decommissioned by Amadeus and is no longer available.
 
 As an alternative, you can:
 1. Search for hotels in ${params.location} which includes nearby attractions
@@ -5442,12 +5442,12 @@ var index_default = {
         return handleToken(request, env);
       }
       const authHeader = request.headers.get("Authorization");
-      const mcpAuthToken = request.headers.get("X-MCP-Auth-Token") || 
+      const mcpAuthToken = request.headers.get("X-MCP-Auth-Token") ||
                           request.headers.get("MCP-Auth-Token") ||
                           request.headers.get("x-mcp-auth-token");
-      
+
       let isAuthenticated = false;
-      
+
       // Check Bearer token (existing method)
       if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.substring(7);
@@ -5456,17 +5456,17 @@ var index_default = {
           isAuthenticated = true;
         }
       }
-      
+
       // Check MCP_AUTH_TOKEN (new method to match D1)
       if (!isAuthenticated && mcpAuthToken && mcpAuthToken === env.MCP_AUTH_KEY) {
         isAuthenticated = true;
       }
-      
+
       // Also check if MCP_AUTH_TOKEN is passed as Bearer token by mcp-remote
       if (!isAuthenticated && authHeader === `Bearer ${env.MCP_AUTH_KEY}`) {
         isAuthenticated = true;
       }
-      
+
       if (!isAuthenticated) {
         return new Response("Unauthorized", {
           status: 401,
@@ -5524,4 +5524,3 @@ export {
   index_default as default
 };
 //# sourceMappingURL=index.js.map
-

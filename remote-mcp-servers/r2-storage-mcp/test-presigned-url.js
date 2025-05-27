@@ -2,13 +2,13 @@
 
 /**
  * R2 Storage MCP Presigned URL Test Script
- * 
+ *
  * This script specifically tests the presigned URL functionality of the R2 Storage MCP:
  * 1. Creates a test object
  * 2. Generates a presigned URL for the object
  * 3. Tries to access the object via the presigned URL
  * 4. Cleans up by deleting the test object
- * 
+ *
  * Run with: node test-presigned-url.js [mode]
  * Where mode is one of:
  * - local (default): Tests against local development server
@@ -81,11 +81,11 @@ async function jsonRpcRequest(method, params = {}) {
   return new Promise((resolve, reject) => {
     const req = requestFn(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -95,11 +95,11 @@ async function jsonRpcRequest(method, params = {}) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -116,22 +116,22 @@ async function callTool(toolName, params = {}) {
 // Helper function to validate a response
 function validateResponse(response, description) {
   console.log(`\n${description}:`);
-  
+
   if (response.error) {
     console.error(`❌ ERROR: ${JSON.stringify(response.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.error) {
     console.error(`❌ TOOL ERROR: ${JSON.stringify(response.result.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.success === false) {
     console.error(`❌ OPERATION FAILED: ${JSON.stringify(response.result)}`);
     return false;
   }
-  
+
   console.log(`✅ SUCCESS: ${JSON.stringify(response.result, null, 2)}`);
   return true;
 }
@@ -143,17 +143,17 @@ async function runTests() {
     console.log('\n============================================');
     console.log('PART 1: Initialize and check available tools');
     console.log('============================================');
-    
+
     const initResult = await jsonRpcRequest('initialize');
     validateResponse(initResult, 'Initialize MCP connection');
-    
+
     const toolsResult = await jsonRpcRequest('tools/list');
     validateResponse(toolsResult, 'List available tools');
-    
+
     if (toolsResult.result && toolsResult.result.tools) {
       const tools = toolsResult.result.tools;
       console.log(`\nFound ${tools.length} tools`);
-      
+
       // Check if r2_generate_presigned_url tool is available
       const presignedUrlTool = tools.find(tool => tool.name === 'r2_generate_presigned_url');
       if (presignedUrlTool) {
@@ -163,12 +163,12 @@ async function runTests() {
         process.exit(1);
       }
     }
-    
+
     // Part 2: Create test object
     console.log('\n===============================');
     console.log('PART 2: Create a test object');
     console.log('===============================');
-    
+
     // Create test file
     const testObjectKey = `test-presigned-${Date.now()}.txt`;
     const putObjectResult = await callTool('r2_object_put', {
@@ -178,12 +178,12 @@ async function runTests() {
       content_type: 'text/plain'
     });
     validateResponse(putObjectResult, `Put object ${testObjectKey}`);
-    
+
     // Part 3: Generate presigned URL
     console.log('\n===============================');
     console.log('PART 3: Generate presigned URL');
     console.log('===============================');
-    
+
     // Generate presigned URL for GET
     const presignedUrlResult = await callTool('r2_generate_presigned_url', {
       bucket_name: config.testBucket,
@@ -192,14 +192,14 @@ async function runTests() {
       method: 'GET'
     });
     validateResponse(presignedUrlResult, `Generate presigned URL for ${testObjectKey}`);
-    
+
     if (presignedUrlResult.result?.url) {
       console.log(`✅ Presigned URL generated: ${presignedUrlResult.result.url}`);
-      
+
       // Try to access the URL
       try {
         console.log(`Testing presigned URL access...`);
-        
+
         // Use HTTP or HTTPS depending on the protocol
         let fetchData;
         if (mode === 'deployed') {
@@ -221,17 +221,17 @@ async function runTests() {
             path: fetchUrl.pathname + fetchUrl.search,
             headers: {}
           };
-          
+
           const fetchFn = fetchUrl.protocol === 'https:' ? https : http;
-          
+
           fetchData = await new Promise((resolve, reject) => {
             const req = fetchFn.request(fetchOptions, (res) => {
               let data = '';
-              
+
               res.on('data', (chunk) => {
                 data += chunk;
               });
-              
+
               res.on('end', () => {
                 if (res.statusCode >= 200 && res.statusCode < 300) {
                   resolve(data);
@@ -240,15 +240,15 @@ async function runTests() {
                 }
               });
             });
-            
+
             req.on('error', (e) => {
               reject(e);
             });
-            
+
             req.end();
           });
         }
-        
+
         // Verify the content
         if (fetchData === TEST_DATA) {
           console.log(`✅ Successfully accessed object via presigned URL`);
@@ -261,12 +261,12 @@ async function runTests() {
       } catch (e) {
         console.error(`❌ Failed to access presigned URL: ${e.message}`);
       }
-      
+
       // Part 4: Generate presigned URL for PUT
       console.log('\n=========================================');
       console.log('PART 4: Generate presigned URL for PUT');
       console.log('=========================================');
-      
+
       const uploadKey = `test-presigned-upload-${Date.now()}.txt`;
       const putUrlResult = await callTool('r2_generate_presigned_url', {
         bucket_name: config.testBucket,
@@ -275,15 +275,15 @@ async function runTests() {
         method: 'PUT'
       });
       validateResponse(putUrlResult, `Generate presigned PUT URL for ${uploadKey}`);
-      
+
       if (putUrlResult.result?.url) {
         console.log(`✅ Presigned PUT URL generated: ${putUrlResult.result.url}`);
-        
+
         // Try to upload the file
         try {
           console.log(`Testing presigned URL for uploading...`);
           const uploadData = `Test upload via presigned URL at ${new Date().toISOString()}`;
-          
+
           if (mode === 'deployed') {
             // For deployed worker, use curl for simplicity
             try {
@@ -306,17 +306,17 @@ async function runTests() {
                 'Content-Length': Buffer.byteLength(uploadData)
               }
             };
-            
+
             const fetchFn = uploadUrl.protocol === 'https:' ? https : http;
-            
+
             const uploadResponse = await new Promise((resolve, reject) => {
               const req = fetchFn.request(uploadOptions, (res) => {
                 let data = '';
-                
+
                 res.on('data', (chunk) => {
                   data += chunk;
                 });
-                
+
                 res.on('end', () => {
                   if (res.statusCode >= 200 && res.statusCode < 300) {
                     resolve({
@@ -328,25 +328,25 @@ async function runTests() {
                   }
                 });
               });
-              
+
               req.on('error', (e) => {
                 reject(e);
               });
-              
+
               req.write(uploadData);
               req.end();
             });
-            
+
             console.log(`✅ Upload response: ${JSON.stringify(uploadResponse)}`);
           }
-          
+
           // Verify the uploaded content
           const getUploadedResult = await callTool('r2_object_get', {
             bucket_name: config.testBucket,
             key: uploadKey
           });
           validateResponse(getUploadedResult, `Get uploaded object ${uploadKey}`);
-          
+
           if (getUploadedResult.result?.object?.content === uploadData) {
             console.log(`✅ Successfully uploaded and verified object via presigned URL`);
           } else {
@@ -354,7 +354,7 @@ async function runTests() {
             console.log(`Expected:\n${uploadData}`);
             console.log(`Stored:\n${getUploadedResult.result?.object?.content}`);
           }
-          
+
           // Clean up the uploaded object
           const deleteUploadedResult = await callTool('r2_object_delete', {
             bucket_name: config.testBucket,
@@ -366,29 +366,29 @@ async function runTests() {
         }
       }
     }
-    
+
     // Part 5: Cleanup
     console.log('\n==================');
     console.log('PART 5: Cleanup');
     console.log('==================');
-    
+
     // Delete object
     const deleteOriginalResult = await callTool('r2_object_delete', {
       bucket_name: config.testBucket,
       key: testObjectKey
     });
     validateResponse(deleteOriginalResult, `Delete object ${testObjectKey}`);
-    
+
     // Clean up test file
     fs.unlinkSync(TEST_DATA_FILE);
     console.log(`Deleted local test file ${TEST_DATA_FILE}`);
-    
+
     // Final summary
     console.log('\n================================');
     console.log('TESTING COMPLETE');
     console.log('================================');
     console.log('Presigned URL operations tested successfully!');
-    
+
   } catch (error) {
     console.error('Test failed with error:', error);
     process.exit(1);

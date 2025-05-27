@@ -17,9 +17,9 @@ export const getPOIByIdTool = {
   schema: {
     type: 'object',
     properties: {
-      poiId: { 
+      poiId: {
         type: 'string',
-        description: 'Point of Interest ID (e.g., "AF57D529B2")' 
+        description: 'Point of Interest ID (e.g., "AF57D529B2")'
       }
     },
     required: ['poiId']
@@ -27,7 +27,7 @@ export const getPOIByIdTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = poiByIdSchema.parse(params);
-      
+
       const amadeus = await getAmadeusClient(env);
       const response = await amadeus.get(`/v1/reference-data/locations/pois/${validated.poiId}`);
 
@@ -41,7 +41,7 @@ export const getPOIByIdTool = {
       }
 
       const poi = response.data;
-      
+
       // Format the detailed response
       let result = `## Point of Interest Details\n\n`;
       result += `### ${poi.name || 'Unknown POI'}\n\n`;
@@ -50,19 +50,19 @@ export const getPOIByIdTool = {
       result += `**SubType:** ${poi.subType || 'N/A'}\n`;
       result += `**Category:** ${poi.category || 'General'}\n`;
       result += `**Rank:** ${poi.rank || 'N/A'} (1 = most popular)\n`;
-      
+
       if (poi.geoCode) {
         result += `**Location:** ${poi.geoCode.latitude}, ${poi.geoCode.longitude}\n`;
       }
-      
+
       if (poi.tags && poi.tags.length > 0) {
         result += `**Tags:** ${poi.tags.join(', ')}\n`;
       }
-      
+
       if (poi.self && poi.self.href) {
         result += `**API URL:** ${poi.self.href}\n`;
       }
-      
+
       result += '\n💡 **Categories:** SIGHTS, BEACH_PARK, HISTORICAL, NIGHTLIFE, RESTAURANT, SHOPPING\n';
       result += '📍 **Note:** This POI can be used for further searches or recommendations';
 

@@ -16,11 +16,11 @@ export class GooglePlacesMCP extends McpAgent {
 
   async init() {
     const env = this.env as Env;
-    
+
     try {
       // Create Google Places Client using Fetch API
       const placesClient = new GooglePlacesFetchClient(env.GOOGLE_MAPS_API_KEY);
-      
+
       // Find Place Tool
       this.server.tool(
         'find_place',
@@ -125,16 +125,16 @@ export class GooglePlacesMCP extends McpAgent {
           }
         }
       );
-      
+
       console.log(`Registered 3 Google Places tools`);
     } catch (error) {
       console.error('Failed to initialize Google Places tools:', error);
-      
+
       // Fallback to basic tools if initialization fails
       this.server.tool("test_connection", {}, async () => ({
-        content: [{ 
-          type: "text", 
-          text: "Tool initialization failed. Please check Google Maps API key." 
+        content: [{
+          type: "text",
+          text: "Tool initialization failed. Please check Google Maps API key."
         }],
         isError: true
       }));
@@ -145,16 +145,16 @@ export class GooglePlacesMCP extends McpAgent {
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
-    
+
     // Standard MCP HTTP endpoints
     if (url.pathname === "/sse" || url.pathname === "/sse/message") {
       return GooglePlacesMCP.serveSSE("/sse").fetch(request, env, ctx);
     }
-    
+
     if (url.pathname === "/mcp") {
       return GooglePlacesMCP.serve("/mcp").fetch(request, env, ctx);
     }
-    
+
     // Health check endpoint
     if (url.pathname === "/health") {
       return new Response(JSON.stringify({
@@ -166,11 +166,11 @@ export default {
         headers: { "Content-Type": "application/json" }
       });
     }
-    
+
     return new Response(JSON.stringify({
       error: "Not found",
       available_endpoints: ["/sse", "/mcp", "/health"]
-    }), { 
+    }), {
       status: 404,
       headers: { "Content-Type": "application/json" }
     });

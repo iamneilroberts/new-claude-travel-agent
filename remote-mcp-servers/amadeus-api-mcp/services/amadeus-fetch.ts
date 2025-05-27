@@ -63,7 +63,7 @@ export class AmadeusFetchClient {
 
   async get(endpoint: string, params: Record<string, any> = {}): Promise<any> {
     const token = await this.getAccessToken();
-    
+
     // Determine the base URL based on the endpoint
     let baseURL = this.baseURL;
     if (endpoint.startsWith('/')) {

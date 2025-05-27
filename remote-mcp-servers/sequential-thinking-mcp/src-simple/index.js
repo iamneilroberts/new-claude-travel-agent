@@ -16,12 +16,12 @@ app.use('*', cors({
 const MCPServer = {
   name: 'Sequential Thinking MCP Server',
   version: '1.0.0',
-  
+
   // Handle JSON-RPC 2.0 requests
   async handleRequest(request, context) {
     const { id, method, params = {} } = request;
     const { env, log } = context;
-    
+
     try {
       // Initialize method
       if (method === 'initialize') {
@@ -29,15 +29,22 @@ const MCPServer = {
           jsonrpc: '2.0',
           id,
           result: {
-            name: this.name,
-            version: this.version,
-            protocol_version: '0.3.0'
+            protocolVersion: '2024-11-05',
+            capabilities: {
+              tools: {
+                listChanged: false
+              }
+            },
+            serverInfo: {
+              name: this.name,
+              version: this.version
+            }
           }
         };
       }
-      
+
       // List tools method
-      if (method === 'listTools') {
+      if (method === 'tools/list') {
         return {
           jsonrpc: '2.0',
           id,
@@ -46,7 +53,7 @@ const MCPServer = {
               {
                 name: 'sequential_thinking',
                 description: 'Perform structured, step-by-step reasoning about complex problems',
-                schema: {
+                inputSchema: {
                   type: 'object',
                   properties: {
                     problem: {
@@ -71,21 +78,22 @@ const MCPServer = {
                       enum: ['markdown', 'text', 'structured']
                     }
                   },
-                  required: ['problem']
+                  required: ['problem'],
+                  additionalProperties: false
                 }
               }
             ]
           }
         };
       }
-      
+
       // Tool execution
-      if (method.startsWith('tools/')) {
-        const toolName = method.substring(6);
-        
+      if (method === 'tools/call') {
+        const { name: toolName, arguments: toolArgs } = params;
+
         if (toolName === 'sequential_thinking') {
           // Check required parameters
-          if (!params.problem) {
+          if (!toolArgs.problem) {
             return {
               jsonrpc: '2.0',
               id,
@@ -95,20 +103,20 @@ const MCPServer = {
               }
             };
           }
-          
+
           // Parse options
-          const problem = params.problem;
-          const context = params.context || '';
-          const steps = params.steps || 5;
-          const format = params.format || 'markdown';
-          
+          const problem = toolArgs.problem;
+          const context = toolArgs.context || '';
+          const steps = toolArgs.steps || 5;
+          const format = toolArgs.format || 'markdown';
+
           // Mock sequential thinking process
           const thinking = {
             problem,
             context,
             steps: []
           };
-          
+
           // Generate mock steps
           for (let i = 1; i <= steps; i++) {
             thinking.steps.push({
@@ -117,56 +125,61 @@ const MCPServer = {
               content: `This is simulated content for step ${i} of the sequential thinking process. In a real implementation, this would contain actual reasoning about the problem based on previous steps.`
             });
           }
-          
+
           // Format the output
           let result;
-          
+
           if (format === 'structured') {
             // Return structured JSON
             result = thinking;
           } else if (format === 'markdown') {
             // Format as markdown
             let markdown = `# Analysis: ${problem}\n\n`;
-            
+
             if (context) {
               markdown += `## Context\n${context}\n\n`;
             }
-            
+
             markdown += `## Sequential Analysis\n\n`;
-            
+
             for (const step of thinking.steps) {
               markdown += `### ${step.title}\n${step.content}\n\n`;
             }
-            
+
             markdown += `## Conclusion\nBased on the step-by-step analysis above, we can conclude that... (this is a simplified mock implementation).`;
-            
+
             result = markdown;
           } else {
             // Plain text format
             let text = `ANALYSIS: ${problem}\n\n`;
-            
+
             if (context) {
               text += `CONTEXT:\n${context}\n\n`;
             }
-            
+
             text += `SEQUENTIAL ANALYSIS:\n\n`;
-            
+
             for (const step of thinking.steps) {
               text += `${step.title}\n${step.content}\n\n`;
             }
-            
+
             text += `CONCLUSION:\nBased on the step-by-step analysis above, we can conclude that... (this is a simplified mock implementation).`;
-            
+
             result = text;
           }
-          
+
           return {
             jsonrpc: '2.0',
             id,
-            result
+            result: {
+              content: [{
+                type: 'text',
+                text: result
+              }]
+            }
           };
         }
-        
+
         // Unknown tool
         return {
           jsonrpc: '2.0',
@@ -177,7 +190,7 @@ const MCPServer = {
           }
         };
       }
-      
+
       // Unknown method
       return {
         jsonrpc: '2.0',
@@ -189,7 +202,7 @@ const MCPServer = {
       };
     } catch (error) {
       console.error('Error handling request:', error);
-      
+
       return {
         jsonrpc: '2.0',
         id,
@@ -207,10 +220,10 @@ const MCPServer = {
 function createMcpHandler(path) {
   app.post(path, async (c) => {
     // Authorization check
-    const authToken = c.req.header('Authorization')?.replace('Bearer ', '') || 
+    const authToken = c.req.header('Authorization')?.replace('Bearer ', '') ||
                       c.req.header('X-API-Token');
     const expectedToken = c.env.MCP_AUTH_KEY;
-    
+
     if (expectedToken && authToken !== expectedToken) {
       return c.json({
         jsonrpc: '2.0',
@@ -222,7 +235,7 @@ function createMcpHandler(path) {
         }
       }, 401);
     }
-    
+
     try {
       const request = await c.req.json();
       const response = await MCPServer.handleRequest(request, {
@@ -255,15 +268,15 @@ app.get('/sse', async (c) => {
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
-  
+
   // Authorization check
-  const authToken = c.req.query('token') || 
+  const authToken = c.req.query('token') ||
                     c.req.header('Authorization')?.replace('Bearer ', '');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return new Response(
-      'event: error\ndata: {"message":"Unauthorized"}\n\n', 
+      'event: error\ndata: {"message":"Unauthorized"}\n\n',
       {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -275,19 +288,19 @@ app.get('/sse', async (c) => {
       }
     );
   }
-  
+
   // Create response stream
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
-  
+
   // Send initial open event
   writer.write(encoder.encode('event: open\ndata: {}\n\n'));
-  
+
   // Handle command if provided
   const url = new URL(c.req.url);
   const command = url.searchParams.get('command');
-  
+
   if (command) {
     try {
       const request = JSON.parse(command);
@@ -310,7 +323,7 @@ app.get('/sse', async (c) => {
       writer.write(encoder.encode(errorEvent));
     }
   }
-  
+
   // Send pings to keep connection alive
   let pingInterval = setInterval(() => {
     writer.write(encoder.encode('event: ping\ndata: {}\n\n'))
@@ -318,7 +331,7 @@ app.get('/sse', async (c) => {
         clearInterval(pingInterval);
       });
   }, 30000);
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',
@@ -337,6 +350,18 @@ app.get('/', (c) => {
     description: 'MCP server for structured step-by-step reasoning'
   });
 });
+
+// Durable Object for SequentialThinkingMCP
+export class SequentialThinkingMCP {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    return new Response('SequentialThinkingMCP Durable Object');
+  }
+}
 
 // Worker setup
 export default {

@@ -22,7 +22,7 @@ export const searchActivitiesByCoordinatesTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = activitiesSchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

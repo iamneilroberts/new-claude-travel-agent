@@ -1,8 +1,20 @@
 // Minimal R2 Storage MCP Server
+// Dummy durable object class for wrangler.toml compatibility
+export class MyMCP {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    return new Response("MCP Durable Object", { status: 200 });
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -14,9 +26,9 @@ export default {
         }
       });
     }
-    
+
     // OAuth metadata endpoints
-    if (url.pathname === '/.well-known/oauth-metadata' || 
+    if (url.pathname === '/.well-known/oauth-metadata' ||
         url.pathname === '/sse/.well-known/oauth-metadata') {
       return new Response(JSON.stringify({
         issuer: url.origin,
@@ -37,7 +49,7 @@ export default {
         }
       });
     }
-    
+
     // SSE endpoint - GET for initial connection
     if (url.pathname === '/sse' && request.method === 'GET') {
       // Check authorization
@@ -45,11 +57,11 @@ export default {
       if (env.MCP_AUTH_KEY && authHeader !== `Bearer ${env.MCP_AUTH_KEY}`) {
         return new Response('Unauthorized', { status: 401 });
       }
-      
+
       // Generate session ID and return endpoint URL
       const sessionId = crypto.randomUUID();
       const endpointUrl = `${url.origin}/sse/message?sessionId=${sessionId}`;
-      
+
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
@@ -57,7 +69,7 @@ export default {
           controller.enqueue(encoder.encode(`event: endpoint\ndata: ${endpointUrl}\n\n`));
         }
       });
-      
+
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -71,7 +83,7 @@ export default {
         }
       });
     }
-    
+
     // SSE message endpoint - POST for message handling
     if (url.pathname.startsWith('/sse/message') && request.method === 'POST') {
       // Check authorization
@@ -79,11 +91,11 @@ export default {
       if (env.MCP_AUTH_KEY && authHeader !== `Bearer ${env.MCP_AUTH_KEY}`) {
         return new Response('Unauthorized', { status: 401 });
       }
-      
+
       try {
         const json = await request.json();
         const response = await handleRequest(json, env);
-        
+
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
           start(controller) {
@@ -92,7 +104,7 @@ export default {
             controller.close();
           }
         });
-        
+
         return new Response(stream, {
           status: 202,
           headers: {
@@ -116,7 +128,7 @@ export default {
             data: error.message
           }
         };
-        
+
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
           start(controller) {
@@ -124,7 +136,7 @@ export default {
             controller.close();
           }
         });
-        
+
         return new Response(stream, {
           status: 202,
           headers: {
@@ -135,7 +147,7 @@ export default {
         });
       }
     }
-    
+
     return new Response('R2 Storage MCP Server', {
       headers: {
         'Content-Type': 'text/plain',
@@ -147,14 +159,14 @@ export default {
 
 async function handleRequest(request, env) {
   const { id, method, params } = request;
-  
+
   switch (method) {
     case 'initialize':
       return {
         jsonrpc: '2.0',
         id,
         result: {
-          protocolVersion: '2025-03-26',
+          protocolVersion: '2024-11-05',
           serverInfo: {
             name: 'r2-storage-mcp',
             version: '1.0.0'
@@ -166,7 +178,7 @@ async function handleRequest(request, env) {
           }
         }
       };
-      
+
     case 'tools/list':
       return {
         jsonrpc: '2.0',
@@ -280,17 +292,17 @@ async function handleRequest(request, env) {
           ]
         }
       };
-      
+
     case 'tools/call':
       const toolName = params?.name;
       const args = params?.arguments || {};
-      
+
       if (toolName === 'list_objects') {
         const mockObjects = [
           { key: 'images/hotel-1.jpg', size: 245000, lastModified: new Date().toISOString() },
           { key: 'images/hotel-2.jpg', size: 189000, lastModified: new Date().toISOString() }
         ];
-        
+
         return {
           jsonrpc: '2.0',
           id,
@@ -298,8 +310,8 @@ async function handleRequest(request, env) {
             content: [{
               type: 'text',
               text: JSON.stringify({
-                objects: args.prefix ? 
-                  mockObjects.filter(o => o.key.startsWith(args.prefix)) : 
+                objects: args.prefix ?
+                  mockObjects.filter(o => o.key.startsWith(args.prefix)) :
                   mockObjects,
                 truncated: false,
                 cursor: null
@@ -308,7 +320,7 @@ async function handleRequest(request, env) {
           }
         };
       }
-      
+
       if (toolName === 'upload_object') {
         return {
           jsonrpc: '2.0',
@@ -326,10 +338,10 @@ async function handleRequest(request, env) {
           }
         };
       }
-      
+
       if (toolName === 'get_presigned_url') {
         const presignedUrl = `https://${env.R2_PUBLIC_HOSTNAME || 'r2-storage-mcp.somotravel.workers.dev'}/presigned/${args.key}?signature=${crypto.randomUUID().substring(0, 16)}&expires=${Date.now() + (args.expires_in || 3600) * 1000}`;
-        
+
         return {
           jsonrpc: '2.0',
           id,
@@ -345,7 +357,7 @@ async function handleRequest(request, env) {
           }
         };
       }
-      
+
       if (toolName === 'get_object') {
         return {
           jsonrpc: '2.0',
@@ -365,7 +377,7 @@ async function handleRequest(request, env) {
           }
         };
       }
-      
+
       if (toolName === 'delete_object') {
         return {
           jsonrpc: '2.0',
@@ -382,7 +394,7 @@ async function handleRequest(request, env) {
           }
         };
       }
-      
+
       return {
         jsonrpc: '2.0',
         id,
@@ -391,7 +403,7 @@ async function handleRequest(request, env) {
           message: `Unknown tool: ${toolName}`
         }
       };
-      
+
     default:
       return {
         jsonrpc: '2.0',

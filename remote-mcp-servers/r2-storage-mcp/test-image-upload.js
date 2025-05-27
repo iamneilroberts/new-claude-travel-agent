@@ -2,13 +2,13 @@
 
 /**
  * R2 Storage MCP Image Upload Test Script
- * 
+ *
  * This script tests the image upload functionality provided by the r2_upload_image tool:
  * 1. Converts a local image to base64
  * 2. Uploads the base64 image to R2 storage
  * 3. Verifies the upload by creating a presigned URL
  * 4. Cleans up by deleting the test image
- * 
+ *
  * Run with: node test-image-upload.js [mode] [path/to/image.jpg]
  * Where mode is one of:
  * - local (default): Tests against local development server
@@ -53,7 +53,7 @@ const imagePath = process.argv[3] || path.join(__dirname, 'test-image.jpg');
 if (!fs.existsSync(imagePath)) {
   console.error(`Image not found: ${imagePath}`);
   console.log('Creating a simple test image...');
-  
+
   // Create a simple test image using a command-line tool
   try {
     if (process.platform === 'win32') {
@@ -120,11 +120,11 @@ async function jsonRpcRequest(method, params = {}) {
   return new Promise((resolve, reject) => {
     const req = requestFn(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -134,11 +134,11 @@ async function jsonRpcRequest(method, params = {}) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -155,22 +155,22 @@ async function callTool(toolName, params = {}) {
 // Helper function to validate a response
 function validateResponse(response, description) {
   console.log(`\n${description}:`);
-  
+
   if (response.error) {
     console.error(`❌ ERROR: ${JSON.stringify(response.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.error) {
     console.error(`❌ TOOL ERROR: ${JSON.stringify(response.result.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.success === false) {
     console.error(`❌ OPERATION FAILED: ${JSON.stringify(response.result)}`);
     return false;
   }
-  
+
   console.log(`✅ SUCCESS: ${JSON.stringify(response.result, null, 2)}`);
   return true;
 }
@@ -182,17 +182,17 @@ async function runTests() {
     console.log('\n=============================================');
     console.log('PART 1: Initialize and check available tools');
     console.log('=============================================');
-    
+
     const initResult = await jsonRpcRequest('initialize');
     validateResponse(initResult, 'Initialize MCP connection');
-    
+
     const toolsResult = await jsonRpcRequest('tools/list');
     validateResponse(toolsResult, 'List available tools');
-    
+
     if (toolsResult.result && toolsResult.result.tools) {
       const tools = toolsResult.result.tools;
       console.log(`\nFound ${tools.length} tools`);
-      
+
       // Check if r2_upload_image tool is available
       const uploadImageTool = tools.find(tool => tool.name === 'r2_upload_image');
       if (uploadImageTool) {
@@ -202,20 +202,20 @@ async function runTests() {
         process.exit(1);
       }
     }
-    
+
     // Part 2: Read and convert image to base64
     console.log('\n=========================================');
     console.log('PART 2: Read and convert image to base64');
     console.log('=========================================');
-    
+
     let imageBuffer;
     let base64Image;
     let contentType;
-    
+
     try {
       imageBuffer = fs.readFileSync(imagePath);
       base64Image = imageBuffer.toString('base64');
-      
+
       // Determine content type based on file extension
       if (imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg')) {
         contentType = 'image/jpeg';
@@ -228,7 +228,7 @@ async function runTests() {
       } else {
         contentType = 'image/jpeg'; // Default
       }
-      
+
       console.log(`✅ Read image file: ${imagePath}`);
       console.log(`Content Type: ${contentType}`);
       console.log(`Size: ${imageBuffer.length} bytes`);
@@ -237,14 +237,14 @@ async function runTests() {
       console.error(`❌ Failed to read or convert image: ${error.message}`);
       process.exit(1);
     }
-    
+
     // Part 3: Upload image to R2
     console.log('\n===============================');
     console.log('PART 3: Upload image to R2');
     console.log('===============================');
-    
+
     const testImageKey = `test-upload-${Date.now()}.${contentType.split('/')[1]}`;
-    
+
     // Upload image with presigned URL generation
     const uploadResult = await callTool('r2_upload_image', {
       bucket_name: config.testBucket,
@@ -254,15 +254,15 @@ async function runTests() {
       generate_presigned_url: true,
       expires_in: 60 // 1 minute
     });
-    
+
     validateResponse(uploadResult, `Upload image as ${testImageKey}`);
-    
+
     if (uploadResult.result && uploadResult.result.success) {
       console.log(`✅ Successfully uploaded image to ${config.testBucket}/${testImageKey}`);
-      
+
       if (uploadResult.result.presigned_url) {
         console.log(`✅ Generated presigned URL: ${uploadResult.result.presigned_url}`);
-        
+
         // Try to access the URL
         if (mode === 'deployed') {
           console.log(`\nAttempting to access the image via presigned URL...`);
@@ -270,7 +270,7 @@ async function runTests() {
             // For deployed worker, use curl to check the URL works
             const curlCmd = `curl -s -I "${uploadResult.result.presigned_url}"`;
             const response = execSync(curlCmd).toString();
-            
+
             if (response.includes('200 OK')) {
               console.log(`✅ Successfully accessed image via presigned URL`);
             } else {
@@ -280,32 +280,32 @@ async function runTests() {
           } catch (e) {
             console.error(`❌ Failed to test presigned URL: ${e.message}`);
           }
-          
+
           // Display the URL for manual verification
           console.log(`\nYou can manually verify the image by visiting:\n${uploadResult.result.presigned_url}`);
         }
       }
     }
-    
+
     // Part 4: Cleanup
     console.log('\n==================');
     console.log('PART 4: Cleanup');
     console.log('==================');
-    
+
     // Delete the uploaded image
     const deleteResult = await callTool('r2_object_delete', {
       bucket_name: config.testBucket,
       key: testImageKey
     });
-    
+
     validateResponse(deleteResult, `Delete uploaded image ${testImageKey}`);
-    
+
     // Final summary
     console.log('\n================================');
     console.log('TESTING COMPLETE');
     console.log('================================');
     console.log('Image upload functionality tested successfully!');
-    
+
   } catch (error) {
     console.error('Test failed with error:', error);
     process.exit(1);

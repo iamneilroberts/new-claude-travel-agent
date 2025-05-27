@@ -14,4 +14,3 @@ new_sqlite_classes = [ "AmadeusMCP" ]
 
 [vars]
 MCP_AUTH_KEY = "amadeus-mcp-auth-key-2025"
-

@@ -11,8 +11,8 @@ export const searchFlightsTool = {
       date: { type: 'string', description: 'Departure date in YYYY-MM-DD format' },
       adults: { type: 'number', description: 'Number of adult passengers', default: 1 },
       returnDate: { type: 'string', description: 'Return date for round trips' },
-      travelClass: { 
-        type: 'string', 
+      travelClass: {
+        type: 'string',
         enum: ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'],
         description: 'Travel class'
       }
@@ -22,7 +22,7 @@ export const searchFlightsTool = {
   execute: async (params, env) => {
     try {
       const result = await searchFlights(params, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -31,7 +31,7 @@ export const searchFlightsTool = {
       };
     } catch (error) {
       console.error('Error in search_flights tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

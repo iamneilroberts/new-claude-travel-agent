@@ -15,7 +15,7 @@ export class AmadeusMCP extends McpAgent {
     if (!jsonSchema || !jsonSchema.properties) {
       return {};
     }
-    
+
     const zodProps = {};
     for (const [key, prop] of Object.entries(jsonSchema.properties)) {
       if (prop.type === 'string') {
@@ -27,29 +27,29 @@ export class AmadeusMCP extends McpAgent {
       } else if (prop.type === 'number') {
         zodProps[key] = z.number();
       }
-      
+
       // Make optional if not in required array
       if (!jsonSchema.required || !jsonSchema.required.includes(key)) {
         zodProps[key] = zodProps[key].optional();
       }
     }
-    
+
     return zodProps;
   }
 
   async init() {
     const env = this.env;
-    
+
     try {
       // Initialize the tool registry
       const toolRegistry = await initializeTools(env);
-      
+
       // Register search_flights tool with proper Zod schema
       this.server.tool(
         "search_flights",
         {
           origin: z.string(),
-          destination: z.string(), 
+          destination: z.string(),
           date: z.string(),
           adults: z.number().optional(),
           returnDate: z.string().optional(),
@@ -63,7 +63,7 @@ export class AmadeusMCP extends McpAgent {
           return await handler(params, env);
         }
       );
-      
+
       // Register other tools with basic schema for now
       toolRegistry.tools.forEach(tool => {
         if (tool.name !== "search_flights") {
@@ -80,16 +80,16 @@ export class AmadeusMCP extends McpAgent {
           );
         }
       });
-      
+
       console.log(`Registered ${toolRegistry.tools.length} tools`);
     } catch (error) {
       console.error('Failed to initialize tools:', error);
-      
+
       // Fallback to basic tools if initialization fails
       this.server.tool("test_connection", {}, async () => ({
-        content: [{ 
-          type: "text", 
-          text: "Tool initialization failed. Please check Amadeus API credentials." 
+        content: [{
+          type: "text",
+          text: "Tool initialization failed. Please check Amadeus API credentials."
         }],
         isError: true
       }));
@@ -100,7 +100,7 @@ export class AmadeusMCP extends McpAgent {
 export default {
   fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Health check endpoint
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
@@ -113,17 +113,17 @@ export default {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     // SSE endpoints
     if (url.pathname === "/sse" || url.pathname === "/sse/message") {
       return AmadeusMCP.serveSSE("/sse").fetch(request, env, ctx);
     }
-    
+
     // MCP endpoint
     if (url.pathname === "/mcp") {
       return AmadeusMCP.serve("/mcp").fetch(request, env, ctx);
     }
-    
+
     return new Response("Not found", { status: 404 });
   },
 };

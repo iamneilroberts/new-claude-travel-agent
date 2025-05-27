@@ -38,6 +38,17 @@ Thumbs.db
 *.temp
 .cache/
 
+# Python virtual environments
+test_env/
+venv/
+env/
+.venv/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # Cloudflare
 .dev.vars
 wrangler.toml

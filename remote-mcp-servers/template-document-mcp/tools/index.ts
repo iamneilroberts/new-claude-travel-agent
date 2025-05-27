@@ -17,7 +17,7 @@ export async function initializeTools(): Promise<ToolRegistry> {
     tools: [],
     handlers: new Map(),
   };
-  
+
   // All template document generation tools
   const tools = [
     generateItineraryTool,
@@ -25,7 +25,7 @@ export async function initializeTools(): Promise<ToolRegistry> {
     generateTravelBudgetTool,
     generateTravelChecklistTool
   ];
-  
+
   // Register each tool
   tools.forEach(tool => {
     registry.tools.push({
@@ -33,7 +33,7 @@ export async function initializeTools(): Promise<ToolRegistry> {
       description: tool.description,
       inputSchema: tool.schema
     });
-    
+
     registry.handlers.set(tool.name, async (params) => {
       try {
         return await tool.execute(params);
@@ -49,9 +49,9 @@ export async function initializeTools(): Promise<ToolRegistry> {
       }
     });
   });
-  
+
   console.log(`Registered ${tools.length} template document tools`);
-  
+
   return registry;
 }
 

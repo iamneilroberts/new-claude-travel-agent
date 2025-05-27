@@ -22,7 +22,7 @@ export const analyzeFlightPricesTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = priceAnalysisSchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

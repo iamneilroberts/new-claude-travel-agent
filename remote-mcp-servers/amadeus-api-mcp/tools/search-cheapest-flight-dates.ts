@@ -22,7 +22,7 @@ export const searchCheapestFlightDatesTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = cheapestDatesSchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

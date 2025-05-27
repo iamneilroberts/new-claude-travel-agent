@@ -15,7 +15,7 @@ export const searchPOITool = {
   execute: async (params, env) => {
     try {
       const result = await searchPOI(params, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -24,7 +24,7 @@ export const searchPOITool = {
       };
     } catch (error) {
       console.error('Error in search_poi tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

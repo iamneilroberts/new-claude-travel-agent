@@ -12,11 +12,11 @@ export const flightCheckInLinksTool = {
   schema: {
     type: 'object',
     properties: {
-      airlineCode: { 
-        type: 'string', 
-        minLength: 2, 
-        maxLength: 2, 
-        description: '2-letter IATA airline code (e.g., "AA" for American Airlines, "DL" for Delta)' 
+      airlineCode: {
+        type: 'string',
+        minLength: 2,
+        maxLength: 2,
+        description: '2-letter IATA airline code (e.g., "AA" for American Airlines, "DL" for Delta)'
       }
     },
     required: ['airlineCode']
@@ -25,10 +25,10 @@ export const flightCheckInLinksTool = {
     try {
       const validated = flightCheckInSchema.parse(params);
       const amadeus = await getAmadeusClient(env);
-      
+
       // Call Amadeus Flight Check-in Links API
       const response = await amadeus.get(`/v2/reference-data/airlines/${validated.airlineCode}/check-in-links`);
-      
+
       if (!response.data || response.data.length === 0) {
         return {
           content: [{
@@ -37,18 +37,18 @@ export const flightCheckInLinksTool = {
           }]
         };
       }
-      
+
       // Format the response
       const checkInData = response.data[0];
       const parameters = checkInData.parameters || {};
-      
+
       let summary = `✈️ Check-in Information for ${validated.airlineCode.toUpperCase()}\n\n`;
-      
+
       // Basic check-in URL
       if (checkInData.href) {
         summary += `🔗 Direct Check-in Link:\n${checkInData.href}\n\n`;
       }
-      
+
       // Channel information
       if (checkInData.channel) {
         summary += `📱 Available Channels:\n`;
@@ -57,11 +57,11 @@ export const flightCheckInLinksTool = {
         });
         summary += `\n`;
       }
-      
+
       // Parameters needed for check-in
       if (Object.keys(parameters).length > 0) {
         summary += `📋 Required Information for Check-in:\n`;
-        
+
         if (parameters.lastNameRequired) {
           summary += `• Last Name: Required\n`;
         }
@@ -80,27 +80,27 @@ export const flightCheckInLinksTool = {
         if (parameters.phoneNumberRequired) {
           summary += `• Phone Number: Required\n`;
         }
-        
+
         summary += `\n`;
       }
-      
+
       // Additional notes
       summary += `💡 Tips:\n`;
       summary += `• Check-in typically opens 24 hours before departure\n`;
       summary += `• Mobile boarding passes may be available\n`;
       summary += `• Arrive at airport with sufficient time before departure\n`;
       summary += `• Some airlines offer seat selection during online check-in`;
-      
+
       return {
         content: [{
           type: 'text',
           text: summary
         }]
       };
-      
+
     } catch (error: any) {
       console.error('Error in flight_check_in_links:', error);
-      
+
       // Handle specific error cases
       if (error.message?.includes('404') || error.message?.includes('not found')) {
         return {
@@ -111,7 +111,7 @@ export const flightCheckInLinksTool = {
           isError: true
         };
       }
-      
+
       return {
         content: [{
           type: 'text',

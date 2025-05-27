@@ -1,7 +1,7 @@
 # Rename this file to .dev.vars and replace with your actual values
 # These values are used during development with `wrangler dev`
 
-# OAuth credentials for Cloudflare 
+# OAuth credentials for Cloudflare
 CLOUDFLARE_CLIENT_ID=your_cloudflare_client_id
 CLOUDFLARE_CLIENT_SECRET=your_cloudflare_client_secret
 

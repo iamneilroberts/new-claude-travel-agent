@@ -51,7 +51,7 @@ export class MCPToolRegistry {
     description: string;
     inputSchema: object;
   }> = [];
-  
+
   public handlers: Map<string, (params: any, env: Env) => Promise<any>> = new Map();
 
   constructor() {}
@@ -68,7 +68,7 @@ export class MCPToolRegistry {
       description,
       inputSchema,
     });
-    
+
     this.handlers.set(name, handler);
   }
 

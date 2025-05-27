@@ -20,7 +20,7 @@ const corsHeaders = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
@@ -29,9 +29,9 @@ export default {
     // Return 404 for ALL OAuth discovery endpoints (even without auth)
     // This prevents mcp-remote from trying OAuth flow
     if (url.pathname.includes('/.well-known/')) {
-      return new Response('Not found', { 
+      return new Response('Not found', {
         status: 404,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
 
@@ -43,11 +43,11 @@ export default {
     // Simple authorization check for other endpoints
     const authHeader = request.headers.get('Authorization');
     const expectedAuth = env.MCP_AUTH_KEY || 'amadeus-mcp-auth-key-2025';
-    
+
     if (authHeader !== `Bearer ${expectedAuth}`) {
-      return new Response('Unauthorized', { 
+      return new Response('Unauthorized', {
         status: 401,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
 
@@ -59,9 +59,9 @@ export default {
     } else if (url.pathname === '/mcp' || url.pathname === '/rpc') {
       return await handleJsonRpc(request, env);
     } else {
-      return new Response('Not found', { 
+      return new Response('Not found', {
         status: 404,
-        headers: corsHeaders 
+        headers: corsHeaders
       });
     }
   }
@@ -87,7 +87,7 @@ async function handleJsonRpc(request, env) {
   try {
     const body = await request.json();
     const response = await processJsonRpcRequest(body, env);
-    
+
     return new Response(JSON.stringify(response), {
       headers: {
         'Content-Type': 'application/json',
@@ -115,17 +115,17 @@ async function handleJsonRpc(request, env) {
 // Handle SSE (Server-Sent Events)
 async function handleSSE(request, env, ctx) {
   const url = new URL(request.url);
-  
+
   // Handle incoming messages via POST to /sse/message
   if (url.pathname === '/sse/message' && request.method === 'POST') {
     try {
       const body = await request.json();
-      
+
       // Extract callback URL from query parameters
       const callbackUrl = url.searchParams.get('callback');
-      
+
       const response = await processJsonRpcRequest(body, env);
-      
+
       // If we have a callback URL, send the response there
       if (callbackUrl) {
         try {
@@ -137,7 +137,7 @@ async function handleSSE(request, env, ctx) {
             },
             body: JSON.stringify(response)
           });
-          
+
           // Return 200 to acknowledge we received and forwarded the message
           return new Response('OK', {
             status: 200,
@@ -148,7 +148,7 @@ async function handleSSE(request, env, ctx) {
           console.error('Callback failed:', callbackError);
         }
       }
-      
+
       // Fallback to direct response
       return new Response(JSON.stringify(response), {
         headers: {
@@ -173,22 +173,22 @@ async function handleSSE(request, env, ctx) {
       });
     }
   }
-  
+
   // For POST requests to /sse endpoint, return 404 to trigger SSE-only fallback
   if (url.pathname === '/sse' && request.method === 'POST') {
-    return new Response('Not found', { 
+    return new Response('Not found', {
       status: 404,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
-  
+
   // Handle SSE connection (GET to /sse)
   if (url.pathname === '/sse' && request.method === 'GET') {
     const sessionId = uuidv4();
-    
+
     // Extract callback URL from query parameters
     const callbackUrl = url.searchParams.get('callback');
-    
+
     // Create a TransformStream for SSE
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
@@ -198,12 +198,12 @@ async function handleSSE(request, env, ctx) {
     const connectionData = {
       jsonrpc: '2.0',
       method: 'connected',
-      params: { 
+      params: {
         sessionId,
         ...(callbackUrl && { callbackUrl })
       }
     };
-    
+
     writer.write(encoder.encode(`data: ${JSON.stringify(connectionData)}\n\n`));
 
     // Set up keep-alive
@@ -228,18 +228,18 @@ async function handleSSE(request, env, ctx) {
       }
     });
   }
-  
+
   // Fallback for other methods/paths
-  return new Response('Not found', { 
+  return new Response('Not found', {
     status: 404,
-    headers: corsHeaders 
+    headers: corsHeaders
   });
 }
 
 // Process JSON-RPC requests
 async function processJsonRpcRequest(request, env) {
   const { method, params, id } = request;
-  
+
   switch (method) {
     case 'initialize':
       return {
@@ -256,7 +256,7 @@ async function processJsonRpcRequest(request, env) {
         },
         id
       };
-      
+
     case 'tools/list':
       return {
         jsonrpc: '2.0',
@@ -265,10 +265,10 @@ async function processJsonRpcRequest(request, env) {
         },
         id
       };
-      
+
     case 'tools/call':
       return await handleToolCall(params, env, id);
-      
+
     default:
       return {
         jsonrpc: '2.0',
@@ -368,23 +368,23 @@ function getAmadeusTools() {
 // Handle tool calls
 async function handleToolCall(params, env, requestId) {
   const { name, arguments: args } = params;
-  
+
   try {
     let result;
-    
+
     switch (name) {
       case 'test_connection':
         result = await testAmadeusConnection(env);
         break;
-        
+
       case 'search_flights':
         result = await searchFlights(args, env);
         break;
-        
+
       case 'search_hotels':
         result = await searchHotels(args, env);
         break;
-        
+
       default:
         return {
           jsonrpc: '2.0',
@@ -395,7 +395,7 @@ async function handleToolCall(params, env, requestId) {
           id: requestId
         };
     }
-    
+
     return {
       jsonrpc: '2.0',
       result,
@@ -466,7 +466,7 @@ class AmadeusAPI {
   async request(endpoint, params = {}) {
     const token = await this.getAccessToken();
     const url = new URL(`${this.baseUrl}${endpoint}`);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         url.searchParams.append(key, value);
@@ -494,7 +494,7 @@ async function testAmadeusConnection(env) {
   try {
     const amadeus = new AmadeusAPI(env);
     await amadeus.getAccessToken();
-    
+
     return {
       content: [{
         type: 'text',
@@ -515,7 +515,7 @@ async function testAmadeusConnection(env) {
 async function searchFlights(args, env) {
   const amadeus = new AmadeusAPI(env);
   const { origin, destination, date, adults = 1, returnDate, travelClass } = args;
-  
+
   try {
     const params = {
       originLocationCode: origin,
@@ -526,13 +526,13 @@ async function searchFlights(args, env) {
       currencyCode: 'USD',
       max: 10
     };
-    
+
     if (returnDate) {
       params.returnDate = returnDate;
     }
-    
+
     const data = await amadeus.request('/v2/shopping/flight-offers', params);
-    
+
     // Format the results
     const flights = data.data.map(offer => ({
       id: offer.id,
@@ -545,7 +545,7 @@ async function searchFlights(args, env) {
         stops: itinerary.segments.length - 1
       }))
     }));
-    
+
     return {
       content: [{
         type: 'text',
@@ -566,34 +566,34 @@ async function searchFlights(args, env) {
 async function searchHotels(args, env) {
   const amadeus = new AmadeusAPI(env);
   const { city, check_in, check_out, adults = 1, radius = 5 } = args;
-  
+
   try {
     // First, get city IATA code
     const cityData = await amadeus.request('/v1/reference-data/locations', {
       keyword: city,
       subType: 'CITY'
     });
-    
+
     if (!cityData.data || cityData.data.length === 0) {
       throw new Error(`City not found: ${city}`);
     }
-    
+
     const cityCode = cityData.data[0].iataCode;
-    
+
     // Get hotel IDs in the city
     const hotelListData = await amadeus.request('/v1/reference-data/locations/hotels/by-city', {
       cityCode: cityCode,
       radius: radius || 5,
       radiusUnit: 'KM'
     });
-    
+
     if (!hotelListData.data || hotelListData.data.length === 0) {
       throw new Error(`No hotels found in: ${city}`);
     }
-    
+
     // Get hotel IDs (limit to first 20 for API efficiency)
     const hotelIds = hotelListData.data.slice(0, 20).map(hotel => hotel.hotelId).join(',');
-    
+
     // Search hotel offers
     const hotelData = await amadeus.request('/v3/shopping/hotel-offers', {
       hotelIds: hotelIds,
@@ -603,7 +603,7 @@ async function searchHotels(args, env) {
       roomQuantity: 1,
       currency: 'USD'
     });
-    
+
     // Format results
     const hotels = hotelData.data.map(hotelOffer => ({
       name: hotelOffer.hotel.name,
@@ -615,7 +615,7 @@ async function searchHotels(args, env) {
       checkIn: hotelOffer.offers?.[0]?.checkInDate,
       checkOut: hotelOffer.offers?.[0]?.checkOutDate
     }));
-    
+
     return {
       content: [{
         type: 'text',

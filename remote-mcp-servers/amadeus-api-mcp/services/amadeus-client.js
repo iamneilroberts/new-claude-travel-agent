@@ -54,7 +54,7 @@ export class AmadeusAPI {
   async request(endpoint, params = {}) {
     const token = await this.getAccessToken();
     const url = new URL(`${this.baseUrl}${endpoint}`);
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         url.searchParams.append(key, value);
@@ -71,7 +71,7 @@ export class AmadeusAPI {
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `Amadeus API error (${response.status}): ${errorText}`;
-      
+
       try {
         const errorJson = JSON.parse(errorText);
         if (errorJson.fault) {
@@ -86,7 +86,7 @@ export class AmadeusAPI {
       } catch (parseError) {
         // If parsing fails, stick with the original error text
       }
-      
+
       throw new Error(errorMessage);
     }
 

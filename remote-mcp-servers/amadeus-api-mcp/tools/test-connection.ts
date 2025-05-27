@@ -13,13 +13,13 @@ export const testConnectionTool = {
   execute: async (_params: any, env: Env) => {
     try {
       const amadeus = await getAmadeusClient(env);
-      
+
       // Test the connection with a simple API call
       const response = await amadeus.get('/reference-data/locations', {
         keyword: 'JFK',
         subType: 'AIRPORT'
       });
-      
+
       if (response.data && response.data.length > 0) {
         return {
           content: [{
@@ -37,15 +37,15 @@ export const testConnectionTool = {
       }
     } catch (error: any) {
       console.error('Test connection error:', error);
-      
+
       let errorMessage = 'Error testing connection: ';
-      
+
       if (error.message?.includes('Authentication failed')) {
         errorMessage += 'Authentication failed. Please check your API credentials.';
       } else {
         errorMessage += error.message || 'Unknown error';
       }
-      
+
       return {
         content: [{
           type: 'text',

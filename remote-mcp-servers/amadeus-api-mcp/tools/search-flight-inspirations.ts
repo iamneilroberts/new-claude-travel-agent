@@ -20,7 +20,7 @@ export const searchFlightInspirationsTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = flightInspirationsSchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

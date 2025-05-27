@@ -24,10 +24,10 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
     tools: [],
     handlers: new Map()
   };
-  
+
   // Create Google Places Client using Fetch API
   const placesClient = new GooglePlacesFetchClient(env.GOOGLE_MAPS_API_KEY);
-  
+
   // Find Place Tool
   registry.tools.push({
     name: 'find_place',
@@ -66,7 +66,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       required: ['query']
     }
   });
-  
+
   registry.handlers.set('find_place', async (args) => {
     try {
       const result = await placesClient.findPlace({
@@ -82,7 +82,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       return { status: "error", message: error instanceof Error ? error.message : 'Unknown error' };
     }
   });
-  
+
   // Get Place Details Tool
   registry.tools.push({
     name: 'get_place_details',
@@ -114,7 +114,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       required: ['place_id']
     }
   });
-  
+
   registry.handlers.set('get_place_details', async (args) => {
     try {
       const result = await placesClient.getPlaceDetails({
@@ -129,7 +129,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       return { status: "error", message: error instanceof Error ? error.message : 'Unknown error' };
     }
   });
-  
+
   // Get Place Photo URL Tool
   registry.tools.push({
     name: 'get_place_photo_url',
@@ -153,7 +153,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       required: ['photo_reference']
     }
   });
-  
+
   registry.handlers.set('get_place_photo_url', (args) => {
     try {
       const result = placesClient.getPlacePhotoUrl({
@@ -167,6 +167,6 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
       return { status: "error", message: error instanceof Error ? error.message : 'Unknown error' };
     }
   });
-  
+
   return registry;
 }

@@ -19,9 +19,13 @@ This project provides a travel agent assistant powered by Claude Desktop, utiliz
 new-claude-travel-agent/
 ├── remote-mcp-servers/     # Cloudflare Worker MCP servers
 │   └── d1-mcp-server/      # D1 database MCP server
+├── doc/                    # Documentation guides
+│   ├── claude-code-tdd-guide.md      # TDD with Claude Code
+│   ├── documentation-automation-guide.md  # Doc automation
+│   └── SYSTEM_DESCRIPTION.md         # System architecture
 ├── setup/                  # Setup guides and documentation
 │   └── MCP_SETUP.md        # Detailed MCP setup instructions
-├── cloudflare_developer_reference/  # Cloudflare documentation
+├── reference-docs/         # External API documentation
 ├── claude-desktop-config.example.json  # Example config for Claude Desktop
 └── README.md              # This file
 ```
@@ -84,6 +88,10 @@ new-claude-travel-agent/
 
 ### Local Development
 See [setup/MCP_SETUP.md](setup/MCP_SETUP.md) for detailed development instructions.
+
+### Development Workflows
+- **Test-Driven Development**: See [doc/claude-code-tdd-guide.md](doc/claude-code-tdd-guide.md)
+- **Documentation Automation**: See [doc/documentation-automation-guide.md](doc/documentation-automation-guide.md)
 
 ## Security
 

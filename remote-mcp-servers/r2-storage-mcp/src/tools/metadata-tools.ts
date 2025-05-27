@@ -9,19 +9,19 @@ export async function r2_object_metadata_get(
 ) {
   try {
     const { bucket_name, key } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // Get the object metadata only (head request)
       const object = await env.TRAVEL_MEDIA_BUCKET.head(key);
-      
+
       if (!object) {
         return {
           success: false,
           error: `Object '${key}' not found in bucket '${bucket_name}'`
         };
       }
-      
+
       return {
         success: true,
         metadata: {
@@ -35,7 +35,7 @@ export async function r2_object_metadata_get(
         }
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -52,9 +52,9 @@ export async function r2_object_metadata_get(
  * Set object metadata
  */
 export async function r2_object_metadata_put(
-  params: { 
-    bucket_name: string; 
-    key: string; 
+  params: {
+    bucket_name: string;
+    key: string;
     metadata: {
       contentType?: string;
       contentLanguage?: string;
@@ -62,25 +62,25 @@ export async function r2_object_metadata_put(
       contentEncoding?: string;
       cacheControl?: string;
       customMetadata?: Record<string, string>;
-    } 
+    }
   },
   env: Env
 ) {
   try {
     const { bucket_name, key, metadata } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // First, get the existing object
       const existingObject = await env.TRAVEL_MEDIA_BUCKET.get(key);
-      
+
       if (!existingObject) {
         return {
           success: false,
           error: `Object '${key}' not found in bucket '${bucket_name}'`
         };
       }
-      
+
       // Prepare HTTP metadata
       const httpMetadata: R2HTTPMetadata = {
         contentType: metadata.contentType || existingObject.httpMetadata?.contentType,
@@ -89,19 +89,19 @@ export async function r2_object_metadata_put(
         contentEncoding: metadata.contentEncoding || existingObject.httpMetadata?.contentEncoding,
         cacheControl: metadata.cacheControl || existingObject.httpMetadata?.cacheControl,
       };
-      
+
       // Prepare custom metadata
       const customMetadata = {
         ...(existingObject.customMetadata || {}),
         ...(metadata.customMetadata || {})
       };
-      
+
       // Update the object with new metadata
       await env.TRAVEL_MEDIA_BUCKET.put(key, existingObject.body, {
         httpMetadata,
         customMetadata
       });
-      
+
       return {
         success: true,
         message: `Metadata updated for object '${key}' in bucket '${bucket_name}'`,
@@ -111,7 +111,7 @@ export async function r2_object_metadata_put(
         }
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`

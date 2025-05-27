@@ -1,6 +1,6 @@
 /**
  * Combined R2 Storage and Image Gallery MCP Worker
- * 
+ *
  * This file combines both the R2 Storage MCP and the Unified Image Gallery MCP
  * into a single Cloudflare Worker application.
  */

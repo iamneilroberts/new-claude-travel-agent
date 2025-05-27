@@ -17,7 +17,7 @@ export const getHotelRatingsTool = {
   schema: {
     type: 'object',
     properties: {
-      hotelIds: { 
+      hotelIds: {
         type: 'string',
         description: 'Comma-separated list of hotel IDs (e.g., "TELONMFS,ADNYCCTB")'
       }
@@ -27,7 +27,7 @@ export const getHotelRatingsTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = hotelRatingsSchema.parse(params);
-      
+
       const amadeus = await getAmadeusClient(env);
       const response = await amadeus.get('/v2/e-reputation/hotel-sentiments', {
         hotelIds: validated.hotelIds
@@ -44,13 +44,13 @@ export const getHotelRatingsTool = {
 
       // Format the response for better readability
       let result = '## Hotel Ratings and Sentiment Analysis\n\n';
-      
+
       response.data.forEach((hotel: any) => {
         result += `### Hotel: ${hotel.hotelId}\n`;
         result += `- **Overall Rating**: ${hotel.overallRating}/100\n`;
         result += `- **Number of Reviews**: ${hotel.numberOfReviews}\n`;
         result += `- **Number of Ratings**: ${hotel.numberOfRatings}\n\n`;
-        
+
         if (hotel.sentiments) {
           result += '**Detailed Sentiments:**\n';
           Object.entries(hotel.sentiments).forEach(([category, score]) => {

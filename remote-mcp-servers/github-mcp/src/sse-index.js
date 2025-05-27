@@ -58,26 +58,26 @@ app.post('/sse', async (c) => {
   if (c.env.MCP_AUTH_KEY && authHeader !== `Bearer ${c.env.MCP_AUTH_KEY}`) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   const sessionId = crypto.randomUUID();
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  
+
   // Create a TransformStream for bidirectional communication
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
-  
+
   // Send initial connected message
   await writer.write(encoder.encode(`data: ${JSON.stringify({
     jsonrpc: '2.0',
     method: 'connected',
     params: { sessionId }
   })}\n\n`));
-  
+
   // Handle the persistent connection
   c.executionCtx.waitUntil((async () => {
     let pingInterval;
-    
+
     try {
       // Set up ping interval to keep connection alive
       pingInterval = setInterval(async () => {
@@ -92,44 +92,44 @@ app.post('/sse', async (c) => {
           clearInterval(pingInterval);
         }
       }, 25000); // Ping every 25 seconds
-      
+
       // Read incoming messages from the request body
       const reader = c.req.raw.body.getReader();
       let buffer = '';
-      
+
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) {
           console.log('Client disconnected');
           break;
         }
-        
+
         // Append to buffer and process complete messages
         buffer += decoder.decode(value, { stream: true });
-        
+
         // Process each line in the buffer
         const lines = buffer.split('\n');
         buffer = lines.pop() || ''; // Keep incomplete line in buffer
-        
+
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed) continue;
-          
+
           try {
             // Parse the JSON-RPC request
             const jsonRequest = JSON.parse(trimmed);
             console.log('Received request:', jsonRequest.method);
-            
+
             // Handle the request
             const response = await mcp.handleRequest(jsonRequest, {
               log: console,
               env: c.env
             });
-            
+
             // Send the response
             await writer.write(encoder.encode(`data: ${JSON.stringify(response)}\n\n`));
-            
+
           } catch (parseError) {
             console.error('Parse error:', parseError, 'Line:', trimmed);
             // Send error response
@@ -145,7 +145,7 @@ app.post('/sse', async (c) => {
           }
         }
       }
-      
+
     } catch (error) {
       console.error('Connection error:', error);
     } finally {
@@ -158,7 +158,7 @@ app.post('/sse', async (c) => {
       }
     }
   })());
-  
+
   // Return the SSE response
   return new Response(readable, {
     headers: {
@@ -190,11 +190,11 @@ const mcp = new FastMCP({
 // Helper function to create GitHub client
 const createGitHubClient = (env) => {
   const token = env.GITHUB_TOKEN || env.GITHUB_PAT;
-  
+
   if (!token) {
     throw new Error('GitHub token not configured. Please set GITHUB_TOKEN or GITHUB_PAT environment variable.');
   }
-  
+
   return new Octokit({
     auth: token,
     baseUrl: 'https://api.github.com',
@@ -205,7 +205,7 @@ const createGitHubClient = (env) => {
 // Helper function to handle errors
 const handleError = (error, log) => {
   log.error('GitHub API error:', error);
-  
+
   if (error.status === 401) {
     return {
       status: 'error',
@@ -213,7 +213,7 @@ const handleError = (error, log) => {
       code: 'AUTH_FAILED'
     };
   }
-  
+
   if (error.status === 404) {
     return {
       status: 'error',
@@ -221,7 +221,7 @@ const handleError = (error, log) => {
       code: 'NOT_FOUND'
     };
   }
-  
+
   if (error.status === 403) {
     return {
       status: 'error',
@@ -234,7 +234,7 @@ const handleError = (error, log) => {
       } : undefined
     };
   }
-  
+
   return {
     status: 'error',
     message: error.message || 'An unexpected error occurred',
@@ -251,11 +251,11 @@ mcp.addTool({
   }),
   execute: async (args, context) => {
     const { log, env } = context;
-    
+
     try {
       const github = createGitHubClient(env);
       const response = await github.users.getAuthenticated();
-      
+
       return {
         status: 'success',
         user: {
@@ -290,7 +290,7 @@ mcp.addTool({
   }),
   execute: async (args, context) => {
     const { log, env } = context;
-    
+
     try {
       const github = createGitHubClient(env);
       const response = await github.repos.createForAuthenticatedUser({
@@ -299,7 +299,7 @@ mcp.addTool({
         private: args.private || false,
         auto_init: args.autoInit || false
       });
-      
+
       return {
         status: 'success',
         repository: {
@@ -334,13 +334,13 @@ mcp.addTool({
   execute: async (args, context) => {
     const { log, env } = context;
     const { owner, repo, path, content, message, branch, sha } = args;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       // Base64 encode the content
       const encodedContent = btoa(content);
-      
+
       const params = {
         owner,
         repo,
@@ -349,14 +349,14 @@ mcp.addTool({
         content: encodedContent,
         branch
       };
-      
+
       // If updating, include the SHA
       if (sha) {
         params.sha = sha;
       }
-      
+
       const response = await github.repos.createOrUpdateFileContents(params);
-      
+
       return {
         status: 'success',
         commit: {
@@ -388,21 +388,21 @@ mcp.addTool({
   execute: async (args, context) => {
     const { log, env } = context;
     const { owner, repo, path, branch } = args;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const params = { owner, repo, path };
       if (branch) {
         params.ref = branch;
       }
-      
+
       const response = await github.repos.getContent(params);
-      
+
       // Handle single file
       if (!Array.isArray(response.data)) {
         const file = response.data;
-        
+
         // Decode base64 content for files
         let decodedContent = null;
         if (file.type === 'file' && file.content) {
@@ -412,7 +412,7 @@ mcp.addTool({
             log.warn('Failed to decode file content:', e);
           }
         }
-        
+
         return {
           status: 'success',
           type: 'file',
@@ -426,7 +426,7 @@ mcp.addTool({
           html_url: file.html_url
         };
       }
-      
+
       // Handle directory
       return {
         status: 'success',
@@ -463,10 +463,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { log, env } = context;
     const { owner, repo, branch, files, message } = args;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       // Get the current commit SHA for the branch
       const { data: ref } = await github.git.getRef({
         owner,
@@ -474,7 +474,7 @@ mcp.addTool({
         ref: `heads/${branch}`
       });
       const latestCommitSha = ref.object.sha;
-      
+
       // Get the tree SHA for the latest commit
       const { data: commit } = await github.git.getCommit({
         owner,
@@ -482,7 +482,7 @@ mcp.addTool({
         commit_sha: latestCommitSha
       });
       const baseTreeSha = commit.tree.sha;
-      
+
       // Create blobs for each file
       const blobs = await Promise.all(
         files.map(async (file) => {
@@ -500,7 +500,7 @@ mcp.addTool({
           };
         })
       );
-      
+
       // Create a new tree
       const { data: tree } = await github.git.createTree({
         owner,
@@ -508,7 +508,7 @@ mcp.addTool({
         tree: blobs,
         base_tree: baseTreeSha
       });
-      
+
       // Create a new commit
       const { data: newCommit } = await github.git.createCommit({
         owner,
@@ -517,7 +517,7 @@ mcp.addTool({
         tree: tree.sha,
         parents: [latestCommitSha]
       });
-      
+
       // Update the branch reference
       await github.git.updateRef({
         owner,
@@ -525,7 +525,7 @@ mcp.addTool({
         ref: `heads/${branch}`,
         sha: newCommit.sha
       });
-      
+
       return {
         status: 'success',
         commit: {
@@ -555,10 +555,10 @@ mcp.addTool({
   execute: async (args, context) => {
     const { log, env } = context;
     const { owner, repo, sha, page, perPage } = args;
-    
+
     try {
       const github = createGitHubClient(env);
-      
+
       const response = await github.repos.getCommit({
         owner,
         repo,
@@ -566,7 +566,7 @@ mcp.addTool({
         page,
         per_page: perPage
       });
-      
+
       return {
         status: 'success',
         commit: {
@@ -603,7 +603,7 @@ app.post('/mcp', async (c) => {
   // Authorization check
   const authToken = c.req.header('X-API-Token');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return c.json({
       jsonrpc: '2.0',
@@ -615,7 +615,7 @@ app.post('/mcp', async (c) => {
       }
     }, 401);
   }
-  
+
   try {
     // Handle the MCP request
     const request = await c.req.json();

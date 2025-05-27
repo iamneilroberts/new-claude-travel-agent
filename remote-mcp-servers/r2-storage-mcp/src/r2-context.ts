@@ -2,33 +2,33 @@
 export interface Env {
   // R2 bucket bindings - add more as needed
   TRAVEL_MEDIA_BUCKET?: R2Bucket;
-  
+
   // D1 database for gallery and image data
   GALLERY_DB?: D1Database;
-  
+
   // KV namespace for caching
   CACHE: KVNamespace;
-  
+
   // OAuth credentials
   CLOUDFLARE_CLIENT_ID: string;
   CLOUDFLARE_CLIENT_SECRET: string;
-  
+
   // MCP server authentication
   MCP_AUTH_KEY: string;
-  
+
   // Server metadata
   MCP_SERVER_NAME: string;
   MCP_SERVER_VERSION: string;
-  
+
   // R2 public hostname for presigned URLs
   R2_PUBLIC_HOSTNAME?: string;
-  
+
   // Gallery UI hostname
   GALLERY_HOSTNAME?: string;
-  
+
   // Google Places API key (for image search)
   GOOGLE_PLACES_API_KEY?: string;
-  
+
   // Optional metrics endpoint
   MCP_METRICS?: string;
 }

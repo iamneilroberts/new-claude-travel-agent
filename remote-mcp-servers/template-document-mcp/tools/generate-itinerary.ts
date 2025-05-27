@@ -37,7 +37,7 @@ export const generateItinerarySchema = z.object({
 export async function generateItinerary(params: z.infer<typeof generateItinerarySchema>): Promise<any> {
   const duration = calculateDuration(params.start_date, params.end_date);
   const travelerCount = params.travelers.length;
-  
+
   const itinerary = `# ${params.title}
 
 ## Trip Overview
@@ -110,7 +110,7 @@ function generateDailySchedule(activities: any[], startDate: string, endDate: st
   const start = new Date(startDate);
   const end = new Date(endDate);
   const days: string[] = [];
-  
+
   const activitiesByDate = activities.reduce((acc, activity) => {
     if (!acc[activity.date]) {
       acc[activity.date] = [];
@@ -118,23 +118,23 @@ function generateDailySchedule(activities: any[], startDate: string, endDate: st
     acc[activity.date].push(activity);
     return acc;
   }, {} as Record<string, any[]>);
-  
+
   let currentDate = new Date(start);
   while (currentDate <= end) {
     const dateStr = currentDate.toISOString().split('T')[0];
     const dayActivities = activitiesByDate[dateStr] || [];
-    
+
     days.push(`### ${formatDate(dateStr)}
-${dayActivities.length > 0 
-  ? dayActivities.map((a: any) => 
+${dayActivities.length > 0
+  ? dayActivities.map((a: any) =>
       `- **${a.time ? a.time + ' - ' : ''}${a.title}**${a.location ? ` at ${a.location}` : ''}${a.description ? `\n  ${a.description}` : ''}${a.cost ? `\n  *Cost: ${a.cost}*` : ''}`
     ).join('\n')
   : '- Free day / Travel day'
 }`);
-    
+
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  
+
   return days.join('\n\n');
 }
 

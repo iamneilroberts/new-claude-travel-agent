@@ -53,7 +53,7 @@ async function locationScore(params: z.infer<typeof inputSchema>, env: Env): Pro
         categoryScores: area.categoryScores || {},
         overallScore,
         rating,
-        recommendation: overallScore >= 70 ? 
+        recommendation: overallScore >= 70 ?
           'Highly recommended area with great amenities and attractions' :
           overallScore >= 40 ?
           'Good area with decent options for travelers' :
@@ -66,7 +66,7 @@ async function locationScore(params: z.infer<typeof inputSchema>, env: Env): Pro
       };
     });
 
-    const bestArea = scores.reduce((best: any, current: any) => 
+    const bestArea = scores.reduce((best: any, current: any) =>
       current.overallScore > best.overallScore ? current : best
     );
 
@@ -81,7 +81,7 @@ async function locationScore(params: z.infer<typeof inputSchema>, env: Env): Pro
       interpretation: {
         'SIGHTS': 'Tourist attractions and landmarks',
         'NIGHTLIFE': 'Bars, clubs, and evening entertainment',
-        'RESTAURANT': 'Dining options and food venues', 
+        'RESTAURANT': 'Dining options and food venues',
         'SHOPPING': 'Retail stores and shopping centers'
       }
     };

@@ -32,7 +32,7 @@ export const searchHotelsTool = {
     try {
       const validated = hotelSearchSchema.parse(params);
       const result = await searchHotels(validated, env);
-      
+
       return {
         content: [{
           type: 'text',
@@ -41,7 +41,7 @@ export const searchHotelsTool = {
       };
     } catch (error: any) {
       console.error('Error in search_hotels tool:', error);
-      
+
       return {
         content: [{
           type: 'text',

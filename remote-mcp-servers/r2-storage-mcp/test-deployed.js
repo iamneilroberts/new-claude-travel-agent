@@ -17,7 +17,7 @@ async function testInitialize() {
   });
 
   const url = new URL(`${URL}/mcp`);
-  
+
   const options = {
     hostname: url.hostname,
     path: url.pathname,
@@ -32,11 +32,11 @@ async function testInitialize() {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -46,11 +46,11 @@ async function testInitialize() {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -65,7 +65,7 @@ async function testListTools() {
   });
 
   const url = new URL(`${URL}/mcp`);
-  
+
   const options = {
     hostname: url.hostname,
     path: url.pathname,
@@ -80,11 +80,11 @@ async function testListTools() {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -94,11 +94,11 @@ async function testListTools() {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -117,7 +117,7 @@ async function testCallTool(toolName, params) {
   });
 
   const url = new URL(`${URL}/mcp`);
-  
+
   const options = {
     hostname: url.hostname,
     path: url.pathname,
@@ -132,11 +132,11 @@ async function testCallTool(toolName, params) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -146,11 +146,11 @@ async function testCallTool(toolName, params) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -162,15 +162,15 @@ async function runTests() {
     console.log('Testing initialize...');
     const initResult = await testInitialize();
     console.log(JSON.stringify(initResult, null, 2));
-    
+
     console.log('\nTesting tools/list...');
     const toolsResult = await testListTools();
     console.log(JSON.stringify(toolsResult, null, 2));
-    
+
     console.log('\nTesting r2_buckets_list...');
     const bucketsResult = await testCallTool('r2_buckets_list', {});
     console.log(JSON.stringify(bucketsResult, null, 2));
-    
+
     // Test putting an object
     console.log('\nTesting r2_object_put...');
     const putResult = await testCallTool('r2_object_put', {
@@ -180,14 +180,14 @@ async function runTests() {
       content_type: 'text/plain'
     });
     console.log(JSON.stringify(putResult, null, 2));
-    
+
     // Test listing objects
     console.log('\nTesting r2_objects_list...');
     const listResult = await testCallTool('r2_objects_list', {
       bucket_name: 'travel-media'
     });
     console.log(JSON.stringify(listResult, null, 2));
-    
+
     // Test getting the object
     console.log('\nTesting r2_object_get...');
     const getResult = await testCallTool('r2_object_get', {
@@ -195,7 +195,7 @@ async function runTests() {
       key: 'test-object.txt'
     });
     console.log(JSON.stringify(getResult, null, 2));
-    
+
     // Test generating a presigned URL
     console.log('\nTesting r2_generate_presigned_url...');
     const urlResult = await testCallTool('r2_generate_presigned_url', {
@@ -203,7 +203,7 @@ async function runTests() {
       key: 'test-object.txt'
     });
     console.log(JSON.stringify(urlResult, null, 2));
-    
+
   } catch (error) {
     console.error('Test failed:', error);
   }

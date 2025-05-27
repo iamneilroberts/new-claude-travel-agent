@@ -2,7 +2,7 @@
 
 /**
  * R2 Storage MCP Comprehensive Test Script
- * 
+ *
  * This script tests all the major operations provided by the R2 Storage MCP:
  * - List buckets
  * - Create bucket
@@ -10,7 +10,7 @@
  * - Object operations (put, get, list, delete)
  * - Presigned URL generation
  * - Metadata operations
- * 
+ *
  * Run with: node test-r2-operations.js [mode]
  * Where mode is one of:
  * - local (default): Tests against local development server
@@ -83,11 +83,11 @@ async function jsonRpcRequest(method, params = {}) {
   return new Promise((resolve, reject) => {
     const req = requestFn(options, (res) => {
       let responseData = '';
-      
+
       res.on('data', (chunk) => {
         responseData += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const parsed = JSON.parse(responseData);
@@ -97,11 +97,11 @@ async function jsonRpcRequest(method, params = {}) {
         }
       });
     });
-    
+
     req.on('error', (e) => {
       reject(e);
     });
-    
+
     req.write(data);
     req.end();
   });
@@ -118,22 +118,22 @@ async function callTool(toolName, params = {}) {
 // Helper function to validate a response
 function validateResponse(response, description) {
   console.log(`\n${description}:`);
-  
+
   if (response.error) {
     console.error(`❌ ERROR: ${JSON.stringify(response.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.error) {
     console.error(`❌ TOOL ERROR: ${JSON.stringify(response.result.error)}`);
     return false;
   }
-  
+
   if (response.result && response.result.success === false) {
     console.error(`❌ OPERATION FAILED: ${JSON.stringify(response.result)}`);
     return false;
   }
-  
+
   console.log(`✅ SUCCESS: ${JSON.stringify(response.result, null, 2)}`);
   return true;
 }
@@ -157,17 +157,17 @@ async function runTests() {
     console.log('\n=============================================');
     console.log('PART 1: Initialize and check available tools');
     console.log('=============================================');
-    
+
     const initResult = await jsonRpcRequest('initialize');
     validateResponse(initResult, 'Initialize MCP connection');
-    
+
     const toolsResult = await jsonRpcRequest('tools/list');
     validateResponse(toolsResult, 'List available tools');
-    
+
     if (toolsResult.result && toolsResult.result.tools) {
       const tools = toolsResult.result.tools;
       console.log(`\nFound ${tools.length} tools`);
-      
+
       // Check for required tools
       const requiredTools = [
         'r2_buckets_list',
@@ -183,42 +183,42 @@ async function runTests() {
         'r2_object_metadata_get',
         'r2_object_metadata_put'
       ];
-      
+
       let allToolsPresent = true;
       for (const toolName of requiredTools) {
         allToolsPresent = validateToolPresence(tools, toolName) && allToolsPresent;
       }
-      
+
       if (!allToolsPresent) {
         console.error('\n❌ Not all required tools are available!');
         process.exit(1);
       }
     }
-    
+
     // Part 2: Bucket operations
     console.log('\n=========================');
     console.log('PART 2: Bucket operations');
     console.log('=========================');
-    
+
     const listBucketsResult = await callTool('r2_buckets_list');
     validateResponse(listBucketsResult, 'List buckets');
-    
+
     const testNewBucketName = `test-bucket-${Date.now()}`;
     const createBucketResult = await callTool('r2_bucket_create', {
       bucket_name: testNewBucketName
     });
     validateResponse(createBucketResult, `Create bucket ${testNewBucketName}`);
-    
+
     const getBucketResult = await callTool('r2_bucket_get', {
       bucket_name: config.testBucket
     });
     validateResponse(getBucketResult, `Get bucket ${config.testBucket}`);
-    
+
     // Part 3: Object operations
     console.log('\n=========================');
     console.log('PART 3: Object operations');
     console.log('=========================');
-    
+
     // Create test file
     const testObjectKey = `test-object-${Date.now()}.txt`;
     const putObjectResult = await callTool('r2_object_put', {
@@ -228,14 +228,14 @@ async function runTests() {
       content_type: 'text/plain'
     });
     validateResponse(putObjectResult, `Put object ${testObjectKey}`);
-    
+
     // List objects
     const listObjectsResult = await callTool('r2_objects_list', {
       bucket_name: config.testBucket,
       prefix: 'test-object-'
     });
     validateResponse(listObjectsResult, 'List objects with prefix test-object-');
-    
+
     // Verify object is in list
     const objectList = listObjectsResult.result?.objects || [];
     const objectFound = objectList.some(obj => obj.key === testObjectKey);
@@ -244,14 +244,14 @@ async function runTests() {
     } else {
       console.error(`❌ Object ${testObjectKey} NOT found in list`);
     }
-    
+
     // Get object
     const getObjectResult = await callTool('r2_object_get', {
       bucket_name: config.testBucket,
       key: testObjectKey
     });
     validateResponse(getObjectResult, `Get object ${testObjectKey}`);
-    
+
     // Verify object content
     if (getObjectResult.result?.object?.content === TEST_DATA) {
       console.log(`✅ Object content matches expected data`);
@@ -260,7 +260,7 @@ async function runTests() {
       console.log('Expected:', TEST_DATA);
       console.log('Got:', getObjectResult.result?.object?.content);
     }
-    
+
     // Copy object
     const copyObjectKey = `${testObjectKey}-copy`;
     const copyObjectResult = await callTool('r2_object_copy', {
@@ -270,19 +270,19 @@ async function runTests() {
       destination_key: copyObjectKey
     });
     validateResponse(copyObjectResult, `Copy object to ${copyObjectKey}`);
-    
+
     // Part 4: Metadata operations
     console.log('\n============================');
     console.log('PART 4: Metadata operations');
     console.log('============================');
-    
+
     // Get object metadata
     const getMetadataResult = await callTool('r2_object_metadata_get', {
       bucket_name: config.testBucket,
       key: testObjectKey
     });
     validateResponse(getMetadataResult, `Get metadata for ${testObjectKey}`);
-    
+
     // Update metadata
     const newMetadata = {
       contentType: 'text/markdown',
@@ -293,26 +293,26 @@ async function runTests() {
         'timestamp': Date.now().toString()
       }
     };
-    
+
     const updateMetadataResult = await callTool('r2_object_metadata_put', {
       bucket_name: config.testBucket,
       key: testObjectKey,
       metadata: newMetadata
     });
     validateResponse(updateMetadataResult, `Update metadata for ${testObjectKey}`);
-    
+
     // Verify updated metadata
     const verifyMetadataResult = await callTool('r2_object_metadata_get', {
       bucket_name: config.testBucket,
       key: testObjectKey
     });
     validateResponse(verifyMetadataResult, `Verify updated metadata for ${testObjectKey}`);
-    
+
     // Part 5: Presigned URL
     console.log('\n========================');
     console.log('PART 5: Presigned URLs');
     console.log('========================');
-    
+
     // Generate presigned URL
     const presignedUrlResult = await callTool('r2_generate_presigned_url', {
       bucket_name: config.testBucket,
@@ -321,17 +321,17 @@ async function runTests() {
       method: 'GET'
     });
     validateResponse(presignedUrlResult, `Generate presigned URL for ${testObjectKey}`);
-    
+
     if (presignedUrlResult.result?.url) {
       console.log(`✅ Presigned URL generated: ${presignedUrlResult.result.url}`);
-      
+
       // Try to access the URL if this is a real deployment
       if (mode === 'deployed') {
         try {
           console.log(`Testing presigned URL access...`);
           const curlCmd = `curl -s "${presignedUrlResult.result.url}"`;
           const response = execSync(curlCmd).toString();
-          
+
           if (response === TEST_DATA) {
             console.log(`✅ Successfully accessed object via presigned URL`);
           } else {
@@ -342,42 +342,42 @@ async function runTests() {
         }
       }
     }
-    
+
     // Part 6: Cleanup
     console.log('\n==================');
     console.log('PART 6: Cleanup');
     console.log('==================');
-    
+
     // Delete objects
     const deleteOriginalResult = await callTool('r2_object_delete', {
       bucket_name: config.testBucket,
       key: testObjectKey
     });
     validateResponse(deleteOriginalResult, `Delete object ${testObjectKey}`);
-    
+
     const deleteCopyResult = await callTool('r2_object_delete', {
       bucket_name: config.testBucket,
       key: copyObjectKey
     });
     validateResponse(deleteCopyResult, `Delete object ${copyObjectKey}`);
-    
+
     // Try to delete test bucket (should fail if it's bound to the worker)
     console.log('\nAttempting to delete test bucket (expected to fail if it has bindings)...');
     const deleteBucketResult = await callTool('r2_bucket_delete', {
       bucket_name: testNewBucketName
     });
     console.log(JSON.stringify(deleteBucketResult.result, null, 2));
-    
+
     // Clean up test file
     fs.unlinkSync(TEST_DATA_FILE);
     console.log(`Deleted local test file ${TEST_DATA_FILE}`);
-    
+
     // Final summary
     console.log('\n================================');
     console.log('TESTING COMPLETE');
     console.log('================================');
     console.log('All R2 Storage MCP operations tested successfully!');
-    
+
   } catch (error) {
     console.error('Test failed with error:', error);
     process.exit(1);

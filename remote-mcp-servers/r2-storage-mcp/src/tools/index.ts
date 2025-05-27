@@ -216,7 +216,7 @@ export function registerR2Tools(tools: MCPTool[], env: Env) {
       required: ['bucket_name', 'key']
     }
   });
-  
+
   // Image upload tool
   tools.push({
     name: 'r2_upload_image',

@@ -41,7 +41,7 @@ first_file=true
 for file in "${FILES_TO_CONCATENATE[@]}"; do
     if [ -f "$file" ]; then
         echo "- Processing $file"
-        
+
         # Read file content
         FILE_CONTENT=$(cat "$file")
 

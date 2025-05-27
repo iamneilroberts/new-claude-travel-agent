@@ -16,11 +16,11 @@ export const generateTravelChecklistSchema = z.object({
 
 export async function generateTravelChecklist(params: z.infer<typeof generateTravelChecklistSchema>): Promise<any> {
   const { trip_type, destination, departure_date, duration, travelers, special_requirements, activities } = params;
-  
+
   const departureDate = new Date(departure_date);
   const today = new Date();
   const daysUntilDeparture = Math.ceil((departureDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   const checklist = `# Travel Checklist for ${destination}
 
 ## Trip Overview
@@ -141,7 +141,7 @@ function getPreTravelTasks(tripType: string, travelers: any[], specialRequiremen
       const expiryDate = new Date(traveler.passport_expiry);
       const today = new Date();
       const monthsUntilExpiry = (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30);
-      
+
       if (monthsUntilExpiry < 6) {
         tasks.push(`URGENT: ${traveler.name}'s passport expires ${traveler.passport_expiry} - renew immediately`);
       }
@@ -241,26 +241,26 @@ function getDocumentChecklist(tripType: string, travelers: any[]): string {
 
 function getActivityPreparations(activities: string[]): string {
   const preparations: string[] = [];
-  
+
   activities.forEach(activity => {
     const lowerActivity = activity.toLowerCase();
-    
+
     if (lowerActivity.includes('museum') || lowerActivity.includes('gallery')) {
       preparations.push(`Book tickets for ${activity} in advance`);
     }
-    
+
     if (lowerActivity.includes('tour')) {
       preparations.push(`Confirm meeting point and time for ${activity}`);
     }
-    
+
     if (lowerActivity.includes('restaurant') || lowerActivity.includes('dining')) {
       preparations.push(`Make reservations for ${activity}`);
     }
-    
+
     if (lowerActivity.includes('hik') || lowerActivity.includes('outdoor')) {
       preparations.push(`Check weather and pack appropriate gear for ${activity}`);
     }
-    
+
     if (lowerActivity.includes('theater') || lowerActivity.includes('show') || lowerActivity.includes('concert')) {
       preparations.push(`Print tickets for ${activity}`);
     }

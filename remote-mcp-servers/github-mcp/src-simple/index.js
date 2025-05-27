@@ -511,12 +511,12 @@ const MOCK_GET_COMMIT_RESPONSE = (id, params) => ({
 const MCPServer = {
   name: 'GitHub API MCP Server',
   version: '1.0.0',
-  
+
   // Handle JSON-RPC 2.0 requests
   async handleRequest(request, context) {
     const { id, method, params = {} } = request;
     const { env, log } = context;
-    
+
     try {
       // Initialize method
       if (method === 'initialize') {
@@ -533,7 +533,7 @@ const MCPServer = {
           }
         };
       }
-      
+
       // List tools method
       if (method === 'tools/list') {
         return {
@@ -544,34 +544,34 @@ const MCPServer = {
           }
         };
       }
-      
+
       // Tool execution
       if (method.startsWith('tools/')) {
         const toolName = method.substring(6);
-        
+
         // In a simplified version, we'll return mock responses
         switch (toolName) {
           case 'create_or_update_file':
             return MOCK_CREATE_OR_UPDATE_FILE_RESPONSE(id, params);
-            
+
           case 'get_file_contents':
             return MOCK_GET_FILE_CONTENTS_RESPONSE(id, params);
-            
+
           case 'push_files':
             return MOCK_PUSH_FILES_RESPONSE(id, params);
-            
+
           case 'create_branch':
             return MOCK_CREATE_BRANCH_RESPONSE(id, params);
-            
+
           case 'list_branches':
             return MOCK_LIST_BRANCHES_RESPONSE(id, params);
-            
+
           case 'list_commits':
             return MOCK_LIST_COMMITS_RESPONSE(id, params);
-            
+
           case 'get_commit':
             return MOCK_GET_COMMIT_RESPONSE(id, params);
-            
+
           default:
             return {
               jsonrpc: '2.0',
@@ -583,7 +583,7 @@ const MCPServer = {
             };
         }
       }
-      
+
       // Unknown method
       return {
         jsonrpc: '2.0',
@@ -595,7 +595,7 @@ const MCPServer = {
       };
     } catch (error) {
       console.error('Error handling request:', error);
-      
+
       return {
         jsonrpc: '2.0',
         id,
@@ -613,10 +613,10 @@ const MCPServer = {
 function createMcpHandler(path) {
   app.post(path, async (c) => {
   // Authorization check
-  const authToken = c.req.header('Authorization')?.replace('Bearer ', '') || 
+  const authToken = c.req.header('Authorization')?.replace('Bearer ', '') ||
                     c.req.header('X-API-Token');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return c.json({
       jsonrpc: '2.0',
@@ -628,7 +628,7 @@ function createMcpHandler(path) {
       }
     }, 401);
   }
-  
+
   try {
     const request = await c.req.json();
     const response = await MCPServer.handleRequest(request, {
@@ -661,15 +661,15 @@ app.get('/sse', async (c) => {
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
-  
+
   // Authorization check
-  const authToken = c.req.query('token') || 
+  const authToken = c.req.query('token') ||
                     c.req.header('Authorization')?.replace('Bearer ', '');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return new Response(
-      'event: error\ndata: {"message":"Unauthorized"}\n\n', 
+      'event: error\ndata: {"message":"Unauthorized"}\n\n',
       {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -681,12 +681,12 @@ app.get('/sse', async (c) => {
       }
     );
   }
-  
+
   // Create response stream
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
-  
+
   // Send initial open event
   try {
     await writer.write(encoder.encode('event: open\ndata: {}\n\n'));
@@ -694,11 +694,11 @@ app.get('/sse', async (c) => {
     console.error('Error writing to SSE stream:', error);
     // Optionally, close the writer or stream if a critical write fails
   }
-  
+
   // Handle command if provided
   const url = new URL(c.req.url);
   const command = url.searchParams.get('command');
-  
+
   if (command) {
     try {
       const request = JSON.parse(command);
@@ -729,7 +729,7 @@ app.get('/sse', async (c) => {
       }
     }
   }
-  
+
   // Send pings to keep connection alive
   let pingInterval = setInterval(async () => {
     try {
@@ -739,7 +739,7 @@ app.get('/sse', async (c) => {
       clearInterval(pingInterval);
     }
   }, 30000);
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',
@@ -756,13 +756,13 @@ app.post('/sse', async (c) => {
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
-  
+
   // Authorization check
   // For POST, token and command could be in body, but mirroring GET for now.
   const authToken = c.req.query('token') ||
                     c.req.header('Authorization')?.replace('Bearer ', '');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return new Response(
       'event: error\ndata: {"message":"Unauthorized"}\n\n',
@@ -777,12 +777,12 @@ app.post('/sse', async (c) => {
       }
     );
   }
-  
+
   // Create response stream
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
-  
+
   // Send initial open event
   try {
     await writer.write(encoder.encode('event: open\ndata: {}\n\n'));
@@ -790,12 +790,12 @@ app.post('/sse', async (c) => {
     console.error('Error writing to SSE stream:', error);
     // Optionally, close the writer or stream if a critical write fails
   }
-  
+
   // Handle command if provided
   // For POST, command could be in body, but mirroring GET for now.
   const url = new URL(c.req.url);
   const command = url.searchParams.get('command');
-  
+
   if (command) {
     try {
       const request = JSON.parse(command);
@@ -826,7 +826,7 @@ app.post('/sse', async (c) => {
       }
     }
   }
-  
+
   // Send pings to keep connection alive
   let pingInterval = setInterval(async () => {
     try {
@@ -836,7 +836,7 @@ app.post('/sse', async (c) => {
       clearInterval(pingInterval);
     }
   }, 30000);
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',

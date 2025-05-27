@@ -26,7 +26,7 @@ export const searchHotelsByCityTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = hotelsByCitySchema.parse(params);
-      
+
       // Placeholder for now
       return {
         content: [{

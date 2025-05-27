@@ -9,7 +9,7 @@ export async function r2_objects_list(
 ) {
   try {
     const { bucket_name, prefix = '', limit = 1000 } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // Use the R2 bucket binding to list objects
@@ -17,9 +17,9 @@ export async function r2_objects_list(
         prefix,
         limit
       };
-      
+
       const objects = await env.TRAVEL_MEDIA_BUCKET.list(options);
-      
+
       return {
         success: true,
         bucket: bucket_name,
@@ -34,7 +34,7 @@ export async function r2_objects_list(
         cursor: objects.cursor
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -56,19 +56,19 @@ export async function r2_object_get(
 ) {
   try {
     const { bucket_name, key } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // Get the object
       const object = await env.TRAVEL_MEDIA_BUCKET.get(key);
-      
+
       if (!object) {
         return {
           success: false,
           error: `Object '${key}' not found in bucket '${bucket_name}'`
         };
       }
-      
+
       // If the object is text-based, include its content
       let content = null;
       if (object.httpMetadata?.contentType?.startsWith('text/') ||
@@ -90,7 +90,7 @@ export async function r2_object_get(
         }
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -112,19 +112,19 @@ export async function r2_object_put(
 ) {
   try {
     const { bucket_name, key, body, content_type } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // Create HTTP headers for the object
       const httpMetadata: R2HTTPMetadata = {
         contentType: content_type || 'text/plain'
       };
-      
+
       // Upload the object
       await env.TRAVEL_MEDIA_BUCKET.put(key, body, {
         httpMetadata
       });
-      
+
       return {
         success: true,
         key,
@@ -132,7 +132,7 @@ export async function r2_object_put(
         contentType: httpMetadata.contentType
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -154,18 +154,18 @@ export async function r2_object_delete(
 ) {
   try {
     const { bucket_name, key } = params;
-    
+
     // Check if we have a binding for this bucket
     if (bucket_name === 'travel-media') {
       // Delete the object
       await env.TRAVEL_MEDIA_BUCKET.delete(key);
-      
+
       return {
         success: true,
         message: `Object '${key}' deleted from bucket '${bucket_name}'`
       };
     }
-    
+
     return {
       success: false,
       error: `Bucket '${bucket_name}' not found or not accessible`
@@ -182,40 +182,40 @@ export async function r2_object_delete(
  * Copy an object between buckets or within a bucket
  */
 export async function r2_object_copy(
-  params: { 
-    source_bucket: string; 
-    source_key: string; 
-    destination_bucket: string; 
-    destination_key: string 
+  params: {
+    source_bucket: string;
+    source_key: string;
+    destination_bucket: string;
+    destination_key: string
   },
   env: Env
 ) {
   try {
     const { source_bucket, source_key, destination_bucket, destination_key } = params;
-    
+
     // Currently, we only support copying within the same bucket if it has a binding
     if (source_bucket === 'travel-media' && destination_bucket === 'travel-media') {
       // Get the source object
       const sourceObject = await env.TRAVEL_MEDIA_BUCKET.get(source_key);
-      
+
       if (!sourceObject) {
         return {
           success: false,
           error: `Source object '${source_key}' not found in bucket '${source_bucket}'`
         };
       }
-      
+
       // Copy the object to the destination
       await env.TRAVEL_MEDIA_BUCKET.put(destination_key, sourceObject.body, {
         httpMetadata: sourceObject.httpMetadata
       });
-      
+
       return {
         success: true,
         message: `Object copied from '${source_bucket}/${source_key}' to '${destination_bucket}/${destination_key}'`
       };
     }
-    
+
     return {
       success: false,
       error: 'Cross-bucket copy operations are not supported with current bindings'

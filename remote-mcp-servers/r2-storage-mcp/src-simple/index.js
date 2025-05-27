@@ -16,12 +16,12 @@ app.use('*', cors({
 const MCPServer = {
   name: 'R2 Storage MCP Server',
   version: '1.0.0',
-  
+
   // Handle JSON-RPC 2.0 requests
   async handleRequest(request, context) {
     const { id, method, params = {} } = request;
     const { env, log } = context;
-    
+
     try {
       // Initialize method
       if (method === 'initialize') {
@@ -35,7 +35,7 @@ const MCPServer = {
           }
         };
       }
-      
+
       // List tools method
       if (method === 'listTools') {
         return {
@@ -193,11 +193,11 @@ const MCPServer = {
           }
         };
       }
-      
+
       // Tool execution
       if (method.startsWith('tools/')) {
         const toolName = method.substring(6);
-        
+
         // In a simplified version, we'll return mock responses
         switch (toolName) {
           case 'list_buckets':
@@ -213,7 +213,7 @@ const MCPServer = {
                 ]
               }
             };
-            
+
           case 'list_bucket':
             if (!params.bucket_name) {
               return {
@@ -225,7 +225,7 @@ const MCPServer = {
                 }
               };
             }
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -254,7 +254,7 @@ const MCPServer = {
                 bucket_name: params.bucket_name
               }
             };
-            
+
           case 'get_object':
             if (!params.bucket_name || !params.key) {
               return {
@@ -266,7 +266,7 @@ const MCPServer = {
                 }
               };
             }
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -282,7 +282,7 @@ const MCPServer = {
                 }
               }
             };
-            
+
           case 'put_object':
             if (!params.bucket_name || !params.key || !params.body) {
               return {
@@ -294,7 +294,7 @@ const MCPServer = {
                 }
               };
             }
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -306,7 +306,7 @@ const MCPServer = {
                 url: `https://${env.R2_PUBLIC_HOSTNAME}/${params.bucket_name}/${params.key}`
               }
             };
-            
+
           case 'delete_object':
             if (!params.bucket_name || !params.key) {
               return {
@@ -318,7 +318,7 @@ const MCPServer = {
                 }
               };
             }
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -328,7 +328,7 @@ const MCPServer = {
                 bucket_name: params.bucket_name
               }
             };
-            
+
           case 'generate_presigned_url':
             if (!params.bucket_name || !params.key) {
               return {
@@ -340,12 +340,12 @@ const MCPServer = {
                 }
               };
             }
-            
+
             const expiresIn = params.expires_in || 3600;
             const method = params.http_method || 'GET';
             const expiryDate = new Date();
             expiryDate.setSeconds(expiryDate.getSeconds() + expiresIn);
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -357,7 +357,7 @@ const MCPServer = {
                 key: params.key
               }
             };
-            
+
           case 'copy_object':
             if (!params.source_bucket || !params.source_key || !params.dest_bucket || !params.dest_key) {
               return {
@@ -369,7 +369,7 @@ const MCPServer = {
                 }
               };
             }
-            
+
             return {
               jsonrpc: '2.0',
               id,
@@ -380,7 +380,7 @@ const MCPServer = {
                 last_modified: new Date().toISOString()
               }
             };
-            
+
           default:
             return {
               jsonrpc: '2.0',
@@ -392,7 +392,7 @@ const MCPServer = {
             };
         }
       }
-      
+
       // Unknown method
       return {
         jsonrpc: '2.0',
@@ -404,7 +404,7 @@ const MCPServer = {
       };
     } catch (error) {
       console.error('Error handling request:', error);
-      
+
       return {
         jsonrpc: '2.0',
         id,
@@ -422,10 +422,10 @@ const MCPServer = {
 function createMcpHandler(path) {
   app.post(path, async (c) => {
     // Authorization check
-    const authToken = c.req.header('Authorization')?.replace('Bearer ', '') || 
+    const authToken = c.req.header('Authorization')?.replace('Bearer ', '') ||
                       c.req.header('X-API-Token');
     const expectedToken = c.env.MCP_AUTH_KEY;
-    
+
     if (expectedToken && authToken !== expectedToken) {
       return c.json({
         jsonrpc: '2.0',
@@ -437,7 +437,7 @@ function createMcpHandler(path) {
         }
       }, 401);
     }
-    
+
     try {
       const request = await c.req.json();
       const response = await MCPServer.handleRequest(request, {
@@ -470,15 +470,15 @@ app.get('/sse', async (c) => {
   c.header('Content-Type', 'text/event-stream');
   c.header('Cache-Control', 'no-cache');
   c.header('Connection', 'keep-alive');
-  
+
   // Authorization check
-  const authToken = c.req.query('token') || 
+  const authToken = c.req.query('token') ||
                     c.req.header('Authorization')?.replace('Bearer ', '');
   const expectedToken = c.env.MCP_AUTH_KEY;
-  
+
   if (expectedToken && authToken !== expectedToken) {
     return new Response(
-      'event: error\ndata: {"message":"Unauthorized"}\n\n', 
+      'event: error\ndata: {"message":"Unauthorized"}\n\n',
       {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -490,19 +490,19 @@ app.get('/sse', async (c) => {
       }
     );
   }
-  
+
   // Create response stream
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
-  
+
   // Send initial open event
   writer.write(encoder.encode('event: open\ndata: {}\n\n'));
-  
+
   // Handle command if provided
   const url = new URL(c.req.url);
   const command = url.searchParams.get('command');
-  
+
   if (command) {
     try {
       const request = JSON.parse(command);
@@ -525,7 +525,7 @@ app.get('/sse', async (c) => {
       writer.write(encoder.encode(errorEvent));
     }
   }
-  
+
   // Send pings to keep connection alive
   let pingInterval = setInterval(() => {
     writer.write(encoder.encode('event: ping\ndata: {}\n\n'))
@@ -533,7 +533,7 @@ app.get('/sse', async (c) => {
         clearInterval(pingInterval);
       });
   }, 30000);
-  
+
   return new Response(readable, {
     headers: {
       'Content-Type': 'text/event-stream',

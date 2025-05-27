@@ -77,7 +77,7 @@ export class R2StorageMCP extends McpAgent {
         } catch (error) {
           return {
             content: [{
-              type: "text", 
+              type: "text",
               text: JSON.stringify({
                 status: "error",
                 message: error.message
@@ -133,7 +133,7 @@ export class R2StorageMCP extends McpAgent {
           const content = await object.text();
           return {
             content: [{
-              type: "text", 
+              type: "text",
               text: JSON.stringify({
                 status: "success",
                 type: "text",
@@ -147,7 +147,7 @@ export class R2StorageMCP extends McpAgent {
             content: [{
               type: "text",
               text: JSON.stringify({
-                status: "error", 
+                status: "error",
                 message: error.message
               }, null, 2)
             }]
@@ -175,7 +175,7 @@ export class R2StorageMCP extends McpAgent {
           if (limit) options.limit = limit;
 
           const objects = await bucketBinding.list(options);
-          
+
           return {
             content: [{
               type: "text",
@@ -221,7 +221,7 @@ export class R2StorageMCP extends McpAgent {
           }
 
           await bucketBinding.delete(key);
-          
+
           return {
             content: [{
               type: "text",
@@ -235,7 +235,7 @@ export class R2StorageMCP extends McpAgent {
         } catch (error) {
           return {
             content: [{
-              type: "text", 
+              type: "text",
               text: JSON.stringify({
                 status: "error",
                 message: error.message
@@ -265,7 +265,7 @@ export class R2StorageMCP extends McpAgent {
             method,
             expiresIn
           });
-          
+
           return {
             content: [{
               type: "text",
