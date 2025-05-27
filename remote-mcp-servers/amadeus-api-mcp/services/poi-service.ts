@@ -1,8 +1,8 @@
 import { getAmadeusClient } from './amadeus-client';
-import { Env } from '../src/index';
 
 export interface POISearchParams {
-  location: string;
+  keyword?: string;
+  location?: string;
   category?: string;
   radius?: number;
   latitude?: number;
@@ -20,13 +20,14 @@ export async function searchPOI(params: POISearchParams, env: Env): Promise<stri
       }, env);
     }
 
+    const locationName = params.location || params.keyword;
     // If we only have location name, suggest using coordinates or Google Places
     return `To search for points of interest, please provide coordinates (latitude/longitude) or use the Google Places API.
 
-For "${params.location}", you can:
+For "${locationName}", you can:
 1. Use Google Places API for comprehensive attraction search
-2. Search hotels in ${params.location} which may include nearby attractions
-3. Use city_search to find coordinates for ${params.location}, then search POI by coordinates`;
+2. Search hotels in ${locationName} which may include nearby attractions
+3. Use city_search to find coordinates for ${locationName}, then search POI by coordinates`;
 
   } catch (error: any) {
     console.error('Error searching POI:', error);

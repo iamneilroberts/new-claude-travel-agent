@@ -52,3 +52,7 @@ __pycache__/
 # Cloudflare
 .dev.vars
 wrangler.toml
+
+# Exclude embedded git repositories
+reference-docs/developer-guides/
+reference-docs/temp/

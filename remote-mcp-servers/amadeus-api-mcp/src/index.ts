@@ -6,11 +6,7 @@ import { searchFlights } from "../services/flight-service";
 import { searchPOI, searchPOIByCoordinates, searchActivitiesByCoordinates } from "../services/poi-service";
 import { getAmadeusClient } from "../services/amadeus-client";
 
-export interface Env {
-  AMADEUS_API_KEY: string;
-  AMADEUS_API_SECRET: string;
-  MCP_AUTH_KEY: string;
-}
+// Use the global Env interface from worker-configuration.d.ts
 
 // Define our Amadeus Travel MCP agent
 export class AmadeusMCP extends McpAgent {
@@ -319,7 +315,7 @@ export class AmadeusMCP extends McpAgent {
 }
 
 export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
+	fetch(request: Request, env: Env, ctx: any) {
 		const url = new URL(request.url);
 
 		// Standard MCP HTTP endpoints

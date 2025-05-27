@@ -1,5 +1,4 @@
 import { AmadeusFetchClient } from './amadeus-fetch';
-import { Env } from '../index';
 
 let amadeusInstance: AmadeusFetchClient | null = null;
 

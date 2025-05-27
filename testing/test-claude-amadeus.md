@@ -6,12 +6,12 @@ Test prompts for the Amadeus MCP tools, ranging from simple to complex scenarios
 
 **Flight Search:**
 ```
-Search for flights from New York to London on March 15, 2024
+Search for flights from New York to London on October 15, 2025
 ```
 
 **Hotel Search:**
 ```
-Find hotels in Paris for 2 adults checking in March 10, checking out March 12
+Find hotels in Paris for 2 adults checking in October 10, checking out October 12
 ```
 
 **Point of Interest:**

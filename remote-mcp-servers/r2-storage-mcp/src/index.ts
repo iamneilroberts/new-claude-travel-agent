@@ -5,8 +5,6 @@ import { z } from "zod";
 interface Env {
   TRAVEL_MEDIA_BUCKET: R2Bucket;
   MCP_AUTH_KEY: string;
-  MCP_SERVER_NAME?: string;
-  MCP_SERVER_VERSION?: string;
 }
 
 export class R2StorageMCP extends McpAgent {
@@ -19,314 +17,194 @@ export class R2StorageMCP extends McpAgent {
     const env = this.env as Env;
 
     try {
-      // Bucket management tools
-      this.server.tool(
-        'r2_buckets_list',
-        {},
-        async () => {
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify({
-                success: true,
-                buckets: ['travel-media']
-              })
-            }]
-          };
-        }
-      );
+      console.log("Initializing R2 Storage MCP server...");
 
+      // List bucket objects tool
       this.server.tool(
         'r2_objects_list',
         {
-          bucket_name: z.string().describe('Name of the bucket'),
-          prefix: z.string().optional().describe('Optional prefix to filter objects'),
-          limit: z.number().optional().describe('Maximum number of objects to return (default: 100)')
+          prefix: z.string().optional().describe("Filter objects by prefix"),
+          limit: z.number().min(1).max(1000).optional().describe("Maximum number of objects to return (default 100)")
         },
         async (params) => {
           try {
-            if (params.bucket_name === 'travel-media' && env.TRAVEL_MEDIA_BUCKET) {
-              const list = await env.TRAVEL_MEDIA_BUCKET.list({
-                prefix: params.prefix || '',
-                limit: params.limit || 100
-              });
+            const options: R2ListOptions = {
+              limit: params.limit || 100,
+              prefix: params.prefix
+            };
 
-              const result = {
-                success: true,
-                bucket: params.bucket_name,
-                objects: list.objects.map(obj => ({
-                  key: obj.key,
-                  size: obj.size,
-                  uploaded: obj.uploaded,
-                  etag: obj.etag
-                })),
-                truncated: list.truncated,
-                cursor: list.cursor
-              };
+            const result = await env.TRAVEL_MEDIA_BUCKET.list(options);
 
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify(result)
-                }]
-              };
-            } else {
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify({
-                    success: false,
-                    error: `Bucket '${params.bucket_name}' not found or not accessible`
-                  })
-                }]
-              };
-            }
-          } catch (error) {
-            console.error('R2 list error:', error);
             return {
               content: [{
                 type: "text",
                 text: JSON.stringify({
-                  success: false,
-                  error: error instanceof Error ? error.message : String(error)
+                  objects: result.objects.map(obj => ({
+                    key: obj.key,
+                    size: obj.size,
+                    etag: obj.etag,
+                    uploaded: obj.uploaded
+                  })),
+                  truncated: result.truncated
                 })
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'r2_objects_list' tool:`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ status: "error", message: error instanceof Error ? error.message : 'Unknown error' })
               }]
             };
           }
         }
       );
 
-      this.server.tool(
-        'r2_object_get',
-        {
-          bucket_name: z.string().describe('Name of the bucket'),
-          key: z.string().describe('Key of the object to get')
-        },
-        async (params) => {
-          try {
-            if (params.bucket_name === 'travel-media' && env.TRAVEL_MEDIA_BUCKET) {
-              const object = await env.TRAVEL_MEDIA_BUCKET.get(params.key);
-
-              if (object) {
-                // For images, return metadata and URL info
-                const result = {
-                  success: true,
-                  bucket: params.bucket_name,
-                  key: params.key,
-                  size: object.size,
-                  uploaded: object.uploaded,
-                  etag: object.etag,
-                  contentType: object.httpMetadata?.contentType,
-                  metadata: object.customMetadata
-                };
-
-                return {
-                  content: [{
-                    type: "text",
-                    text: JSON.stringify(result)
-                  }]
-                };
-              } else {
-                return {
-                  content: [{
-                    type: "text",
-                    text: JSON.stringify({
-                      success: false,
-                      error: `Object '${params.key}' not found in bucket '${params.bucket_name}'`
-                    })
-                  }]
-                };
-              }
-            } else {
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify({
-                    success: false,
-                    error: `Bucket '${params.bucket_name}' not found or not accessible`
-                  })
-                }]
-              };
-            }
-          } catch (error) {
-            console.error('R2 get error:', error);
-            return {
-              content: [{
-                type: "text",
-                text: JSON.stringify({
-                  success: false,
-                  error: error instanceof Error ? error.message : String(error)
-                })
-              }]
-            };
-          }
-        }
-      );
-
+      // Upload image tool
       this.server.tool(
         'r2_upload_image',
         {
-          bucket_name: z.string().describe('Name of the bucket'),
-          key: z.string().describe('Key (file path) for the image'),
-          base64_image: z.string().describe('Base64-encoded image data (with or without data URL prefix)'),
-          content_type: z.string().optional().describe('Content type of the image (e.g., image/jpeg, image/png)'),
-          generate_presigned_url: z.boolean().optional().describe('Whether to generate a presigned URL for the uploaded image'),
-          expires_in: z.number().optional().describe('Expiration time for presigned URL in seconds (default: 3600)'),
-          metadata: z.record(z.string()).optional().describe('Custom metadata to store with the image')
+          key: z.string().describe("Unique key for the image"),
+          image_url: z.string().url().describe("URL of the image to download and store"),
+          description: z.string().optional().describe("Image description")
         },
         async (params) => {
           try {
-            if (params.bucket_name === 'travel-media' && env.TRAVEL_MEDIA_BUCKET) {
-              // Clean base64 data
-              let base64Data = params.base64_image;
-              if (base64Data.startsWith('data:')) {
-                base64Data = base64Data.split(',')[1];
-              }
-
-              // Convert base64 to Uint8Array
-              const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-
-              // Determine content type
-              let contentType = params.content_type;
-              if (!contentType) {
-                // Try to detect from base64 header if it was provided
-                if (params.base64_image.startsWith('data:image/')) {
-                  contentType = params.base64_image.split(';')[0].replace('data:', '');
-                } else {
-                  contentType = 'image/jpeg'; // Default
-                }
-              }
-
-              // Upload to R2
-              const putOptions: any = {
-                httpMetadata: {
-                  contentType: contentType
-                }
-              };
-
-              if (params.metadata) {
-                putOptions.customMetadata = params.metadata;
-              }
-
-              await env.TRAVEL_MEDIA_BUCKET.put(params.key, binaryData, putOptions);
-
-              const result: any = {
-                success: true,
-                bucket: params.bucket_name,
-                key: params.key,
-                size: binaryData.length,
-                contentType: contentType,
-                uploaded: new Date().toISOString()
-              };
-
-              // Generate presigned URL if requested
-              if (params.generate_presigned_url) {
-                // Note: Cloudflare R2 doesn't support presigned URLs in the same way as S3
-                // For now, we'll return a note about this limitation
-                result.presignedUrl = null;
-                result.note = "Presigned URLs not currently supported for Cloudflare R2";
-              }
-
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify(result)
-                }]
-              };
-            } else {
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify({
-                    success: false,
-                    error: `Bucket '${params.bucket_name}' not found or not accessible`
-                  })
-                }]
-              };
+            // Download image from URL
+            const response = await fetch(params.image_url);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
             }
-          } catch (error) {
-            console.error('R2 upload error:', error);
+
+            const contentType = response.headers.get('content-type') || 'application/octet-stream';
+            if (!contentType.startsWith('image/')) {
+              throw new Error(`Invalid content type: ${contentType}. Expected image/*`);
+            }
+
+            const imageData = await response.arrayBuffer();
+
+            // Upload to R2
+            await env.TRAVEL_MEDIA_BUCKET.put(params.key, imageData, {
+              httpMetadata: {
+                contentType: contentType,
+                cacheControl: 'public, max-age=31536000'
+              },
+              customMetadata: {
+                source_url: params.image_url,
+                description: params.description || '',
+                uploaded_at: new Date().toISOString()
+              }
+            });
+
             return {
               content: [{
                 type: "text",
                 text: JSON.stringify({
-                  success: false,
-                  error: error instanceof Error ? error.message : String(error)
+                  status: "success",
+                  key: params.key,
+                  size: imageData.byteLength,
+                  content_type: contentType,
+                  public_url: `https://r2-storage-mcp.somotravel.workers.dev/object/${encodeURIComponent(params.key)}`
                 })
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'r2_upload_image' tool:`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ status: "error", message: error instanceof Error ? error.message : 'Unknown error' })
               }]
             };
           }
         }
       );
 
+      // Delete object tool
       this.server.tool(
         'r2_object_delete',
         {
-          bucket_name: z.string().describe('Name of the bucket'),
-          key: z.string().describe('Key of the object to delete')
+          key: z.string().describe("Object key to delete")
         },
         async (params) => {
           try {
-            if (params.bucket_name === 'travel-media' && env.TRAVEL_MEDIA_BUCKET) {
-              await env.TRAVEL_MEDIA_BUCKET.delete(params.key);
+            await env.TRAVEL_MEDIA_BUCKET.delete(params.key);
 
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify({
-                    success: true,
-                    bucket: params.bucket_name,
-                    key: params.key,
-                    message: `Object '${params.key}' deleted successfully`
-                  })
-                }]
-              };
-            } else {
-              return {
-                content: [{
-                  type: "text",
-                  text: JSON.stringify({
-                    success: false,
-                    error: `Bucket '${params.bucket_name}' not found or not accessible`
-                  })
-                }]
-              };
-            }
-          } catch (error) {
-            console.error('R2 delete error:', error);
             return {
               content: [{
                 type: "text",
                 text: JSON.stringify({
-                  success: false,
-                  error: error instanceof Error ? error.message : String(error)
+                  status: "success",
+                  message: `Object '${params.key}' deleted successfully`
                 })
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'r2_object_delete' tool:`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ status: "error", message: error instanceof Error ? error.message : 'Unknown error' })
               }]
             };
           }
         }
       );
 
-      console.log('R2 Storage MCP server initialized with tools:', [
-        'r2_buckets_list',
-        'r2_objects_list',
-        'r2_object_get',
-        'r2_upload_image',
-        'r2_object_delete'
-      ]);
-
+      console.log("R2 Storage MCP server initialized successfully");
     } catch (error) {
-      console.error('Error initializing R2 Storage MCP server:', error);
+      console.error("Failed to initialize R2 Storage MCP server:", error);
       throw error;
     }
   }
 }
 
-// Export for Cloudflare Workers
 export default {
-  fetch: (request: Request, env: Env, ctx: ExecutionContext) => {
-    const server = new R2StorageMCP();
-    server.env = env;
-    return server.handleRequest(request, ctx);
-  }
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const url = new URL(request.url);
+
+    // Health check endpoint
+    if (url.pathname === '/health') {
+      return new Response(JSON.stringify({
+        status: 'ok',
+        service: 'R2 Storage MCP',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Direct object access endpoint
+    if (url.pathname.startsWith('/object/')) {
+      const key = decodeURIComponent(url.pathname.substring(8));
+      return env.TRAVEL_MEDIA_BUCKET.get(key).then(object => {
+        if (!object) {
+          return new Response('Object not found', { status: 404 });
+        }
+        return new Response(object.body, {
+          headers: {
+            'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+            'Cache-Control': 'public, max-age=31536000',
+            'ETag': object.etag
+          }
+        });
+      }).catch(() => new Response('Object not found', { status: 404 }));
+    }
+
+    // SSE endpoints (primary)
+    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+      return R2StorageMCP.serveSSE("/sse").fetch(request, env, ctx);
+    }
+
+    // Default 404 response
+    return new Response(JSON.stringify({
+      error: "Not found",
+      available_endpoints: ["/health", "/sse", "/object/{key}"]
+    }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  },
 };

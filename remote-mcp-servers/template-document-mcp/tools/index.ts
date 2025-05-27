@@ -1,3 +1,4 @@
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { generateItineraryTool } from "./generate-itinerary.js";
 import { generatePackingListTool } from "./generate-packing-list.js";
 import { generateTravelBudgetTool } from "./generate-travel-budget.js";
@@ -31,7 +32,7 @@ export async function initializeTools(): Promise<ToolRegistry> {
     registry.tools.push({
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.schema
+      inputSchema: zodToJsonSchema(tool.schema)
     });
 
     registry.handlers.set(tool.name, async (params) => {

@@ -1,5 +1,4 @@
 import { getAmadeusClient } from './amadeus-client';
-import { Env } from '../index';
 
 export interface FlightSearchParams {
   origin: string;

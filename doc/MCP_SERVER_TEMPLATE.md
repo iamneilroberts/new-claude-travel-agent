@@ -11,8 +11,14 @@ Based on CHANGELOG.md and recent commits, these are the most common issues when 
 **Fix**: Always use `"2024-11-05"`
 
 ### 2. Schema Issues  
-**Issue**: Empty schemas `{}` or Zod internal structure (`_def`, `~standard`)
+**Issue**: Empty schemas `{}` or Zod internal structure (`_def`, `~standard`) returned to Claude Desktop
 **Fix**: Use proper Zod schemas with `.describe()` for all parameters
+
+**CRITICAL**: Schema conversion must happen automatically in McpAgent framework. If you see Zod internal structure in Claude Desktop logs, check:
+- Ensure using `agents` package version `^0.0.93`
+- Use inline Zod schemas directly in `this.server.tool()` calls
+- Do NOT use `zodToJsonSchema()` explicitly - framework handles conversion
+- Compare with working servers like `google-places-api-mcp`
 
 ### 3. Missing Tool Imports
 **Issue**: Tool files exist but not imported in `tools/index.ts`
@@ -25,6 +31,20 @@ Based on CHANGELOG.md and recent commits, these are the most common issues when 
 ### 5. Authentication Issues
 **Issue**: Inconsistent auth token handling
 **Fix**: Use standardized MCP_AUTH_KEY pattern with proper env interface
+
+### 6. Deployment Patterns
+**Issue**: McpAgent constructor and export pattern errors
+**Fix**: Use exact pattern from working servers:
+- Export: `export default { fetch: ... }`
+- SSE endpoints: `ServerClass.serveSSE("/sse").fetch(request, env, ctx)`
+- Environment access: `const env = this.env as Env;` in init()
+
+### 7. Schema Debugging
+**Issue**: Cannot determine why schemas fail conversion
+**Fix**: Check Claude Desktop logs for schema format:
+- Working: `"inputSchema":{"type":"object","properties":...}`
+- Broken: `"inputSchema":{"_def":{"unknownKeys":"strip"...}}`
+- Compare dependencies in `package.json` with working servers
 
 ## File Structure Template
 
@@ -46,7 +66,111 @@ your-mcp-server/
 
 ## Template Files
 
-### 1. src/index.ts (Main Server)
+### 1. src/index.ts (Main Server - Inline Pattern)
+
+**RECOMMENDED**: Use inline Zod schemas (proven to work)
+
+```typescript
+import { McpAgent } from "agents/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+
+interface Env {
+  // Add your environment variables here
+  API_KEY: string;
+  MCP_AUTH_KEY: string;
+}
+
+export class YourServiceMCP extends McpAgent {
+  server = new McpServer({
+    name: "Your Service MCP",
+    version: "1.0.0",
+  });
+
+  async init() {
+    const env = this.env as Env;
+
+    try {
+      console.log("Initializing Your Service MCP server...");
+
+      // Example tool with inline Zod schema (PROVEN PATTERN)
+      this.server.tool(
+        'example_tool',
+        {
+          query: z.string().describe('Search query or input text'),
+          limit: z.number().min(1).max(100).optional().describe('Maximum results to return'),
+          format: z.enum(["json", "text"]).optional().describe('Output format')
+        },
+        async (params) => {
+          try {
+            // Your tool logic here
+            const result = await yourApiCall(params.query, env.API_KEY);
+            
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify(result)
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'example_tool':`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ 
+                  status: "error", 
+                  message: error instanceof Error ? error.message : 'Unknown error' 
+                })
+              }]
+            };
+          }
+        }
+      );
+
+      console.log("MCP server initialized with all tools");
+    } catch (error) {
+      console.error("Failed to initialize MCP server:", error);
+      throw error;
+    }
+  }
+}
+
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const url = new URL(request.url);
+
+    // Health check endpoint
+    if (url.pathname === '/health') {
+      return new Response(JSON.stringify({
+        status: 'ok',
+        service: 'Your Service MCP',
+        version: '1.0.0',
+        timestamp: new Date().toISOString()
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // SSE endpoints (primary)
+    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+      return YourServiceMCP.serveSSE("/sse").fetch(request, env, ctx);
+    }
+
+    // Default 404 response
+    return new Response(JSON.stringify({
+      error: "Not found",
+      available_endpoints: ["/health", "/sse"]
+    }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  },
+};
+```
+
+### 1b. src/index.ts (External Tools Pattern - TROUBLESOME)
+
+**WARNING**: This pattern has schema conversion issues - use only if inline pattern cannot work
 
 ```typescript
 import { McpAgent } from "agents/mcp";
@@ -54,7 +178,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { initializeTools } from "../tools/index.js";
 
 interface Env {
-  // Add your environment variables here
   API_KEY: string;
   MCP_AUTH_KEY: string;
 }
@@ -76,7 +199,7 @@ export class YourServiceMCP extends McpAgent {
         this.server.tool(
           tool.name,
           tool.description,
-          tool.inputSchema,
+          tool.inputSchema,  // This may cause Zod internal structure issues
           async (params: any) => {
             const handler = toolRegistry.handlers.get(tool.name);
             if (!handler) {
@@ -415,6 +538,66 @@ Add to `/mcptools/mcp-use/production_config.json`:
         "Authorization": "Bearer your-service-auth-2025"
       }
     }
+  }
+}
+```
+
+## Troubleshooting Schema Issues
+
+### Diagnosing Schema Problems
+
+1. **Check Claude Desktop Logs**:
+   ```bash
+   tail -f ~/.config/Claude/logs/mcp-server-your-service.log
+   ```
+
+2. **Look for Schema Format**:
+   - ✅ **Working**: `"inputSchema":{"type":"object","properties":{"param":{"type":"string"}}}`
+   - ❌ **Broken**: `"inputSchema":{"_def":{"unknownKeys":"strip","typeName":"ZodObject"}}`
+
+3. **Compare with Working Server**:
+   ```bash
+   # Check google-places (known working)
+   grep -A5 '"inputSchema"' ~/.config/Claude/logs/mcp-server-google-places-api.log
+   
+   # Check your server
+   grep -A5 '"inputSchema"' ~/.config/Claude/logs/mcp-server-your-service.log
+   ```
+
+### Common Schema Fixes
+
+1. **If seeing Zod internal structure**:
+   - Revert to inline Zod schemas in `this.server.tool()` calls
+   - Remove any `zodToJsonSchema()` conversions
+   - Ensure using exact pattern from `google-places-api-mcp`
+
+2. **If tools not appearing in Claude Desktop**:
+   - Check protocol version is `"2024-11-05"`
+   - Verify authentication token matches production_config.json
+   - Restart Claude Desktop completely
+
+3. **If deployment errors**:
+   - Check Durable Object migrations in wrangler.toml
+   - Ensure export pattern matches working servers
+   - Verify environment bindings in wrangler.toml
+
+### Emergency Recovery
+
+If server completely broken:
+1. Copy working server (google-places-api-mcp) as base
+2. Replace API calls with your service
+3. Keep exact same schema and export patterns
+4. Deploy and test incrementally
+
+### Dependency Verification
+
+Ensure exact versions match working servers:
+```json
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.4",
+    "agents": "^0.0.93",
+    "zod": "^3.25.16"
   }
 }
 ```
