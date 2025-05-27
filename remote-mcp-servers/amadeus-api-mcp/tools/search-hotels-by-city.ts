@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Env } from '../index';
+import { getAmadeusClient } from '../services/amadeus-client';
 
 const hotelsByCitySchema = z.object({
   cityCode: z.string().describe('City IATA code (e.g., "PAR" for Paris)'),
@@ -26,15 +27,42 @@ export const searchHotelsByCityTool = {
   execute: async (params: any, env: Env) => {
     try {
       const validated = hotelsByCitySchema.parse(params);
+      const amadeus = await getAmadeusClient(env);
 
-      // Placeholder for now
+      // Search for hotels by city code
+      const hotelListResponse = await amadeus.get('/v1/reference-data/locations/hotels/by-city', {
+        cityCode: validated.cityCode,
+        radius: validated.radius || 5,
+        radiusUnit: validated.radiusUnit || 'KM'
+      });
+
+      if (!hotelListResponse.data || hotelListResponse.data.length === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: `No hotels found in city ${validated.cityCode}`
+          }]
+        };
+      }
+
+      // Format the results
+      const hotels = hotelListResponse.data.slice(0, 10).map((hotel: any, index: number) => {
+        const name = hotel.name || 'Unknown Hotel';
+        const address = hotel.address
+          ? `${hotel.address.lines?.join(', ') || ''}, ${hotel.address.cityName || ''}`
+          : 'Location not available';
+
+        return `${index + 1}. ${name}\n   ${address}`;
+      });
+
       return {
         content: [{
           type: 'text',
-          text: `Hotels by city search feature coming soon for ${validated.cityCode}`
+          text: `Found ${hotels.length} hotels in ${validated.cityCode}:\n\n${hotels.join('\n\n')}`
         }]
       };
     } catch (error: any) {
+      console.error('Error searching hotels by city:', error);
       return {
         content: [{
           type: 'text',

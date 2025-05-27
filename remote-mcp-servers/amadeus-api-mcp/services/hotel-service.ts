@@ -33,7 +33,9 @@ export async function searchHotels(params: HotelSearchParams, env: Env): Promise
     } catch (error) {
       console.error('City search failed:', error);
       // If city search fails, try using the input as a city code directly
-      cityCode = params.city.toUpperCase();
+      if (params.city && typeof params.city === 'string') {
+        cityCode = params.city.toUpperCase();
+      }
     }
 
     // If we have a city code, search for hotels
