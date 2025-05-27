@@ -1,5 +1,6 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { GooglePlacesFetchClient } from "./googlePlacesFetchClient.js";
 
 interface Env {
@@ -24,37 +25,11 @@ export class GooglePlacesMCP extends McpAgent {
       this.server.tool(
         'find_place',
         {
-          type: 'object',
-          properties: {
-            query: {
-              type: 'string',
-              description: 'The text string to search for (e.g., "restaurants in Paris", "Eiffel Tower").'
-            },
-            language: {
-              type: 'string',
-              description: 'The language code (e.g., "en", "fr") to return results in.',
-              enum: ["ar", "be", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en-Au", "en-GB", "es", "eu", "fa", "fi", "fil", "fr", "gl", "gu", "hi", "hr", "hu", "id", "it", "iw", "ja", "kk", "kn", "ko", "ky", "lt", "lv", "mk", "ml", "mr", "my", "nl", "no", "pa", "pl", "pt", "pt-BR", "pt-PT", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta", "te", "th", "tl", "tr", "uk", "uz", "vi", "zh-CN", "zh-TW"]
-            },
-            region: {
-              type: 'string',
-              description: 'The region code (e.g., "us", "fr") to bias results towards.'
-            },
-            fields: {
-              type: 'array',
-              items: {
-                type: 'string'
-              },
-              description: 'Fields to include in the response.'
-            },
-            max_results: {
-              type: 'integer',
-              description: 'Maximum number of place candidates to return (default 5, max 10).',
-              default: 5,
-              maximum: 10,
-              minimum: 1
-            }
-          },
-          required: ['query']
+          query: z.string().describe('The text string to search for (e.g., "restaurants in Paris", "Eiffel Tower").'),
+          language: z.enum(["ar", "be", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en-Au", "en-GB", "es", "eu", "fa", "fi", "fil", "fr", "gl", "gu", "hi", "hr", "hu", "id", "it", "iw", "ja", "kk", "kn", "ko", "ky", "lt", "lv", "mk", "ml", "mr", "my", "nl", "no", "pa", "pl", "pt", "pt-BR", "pt-PT", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta", "te", "th", "tl", "tr", "uk", "uz", "vi", "zh-CN", "zh-TW"]).optional().describe('The language code (e.g., "en", "fr") to return results in.'),
+          region: z.string().optional().describe('The region code (e.g., "us", "fr") to bias results towards.'),
+          fields: z.array(z.string()).optional().describe('Fields to include in the response.'),
+          max_results: z.number().min(1).max(10).optional().describe('Maximum number of place candidates to return (default 5, max 10).')
         },
         async (params) => {
           try {
@@ -87,30 +62,10 @@ export class GooglePlacesMCP extends McpAgent {
       this.server.tool(
         'get_place_details',
         {
-          type: 'object',
-          properties: {
-            place_id: {
-              type: 'string',
-              description: 'The Place ID of the place.'
-            },
-            language: {
-              type: 'string',
-              description: 'The language code for the results.',
-              enum: ["ar", "be", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en-Au", "en-GB", "es", "eu", "fa", "fi", "fil", "fr", "gl", "gu", "hi", "hr", "hu", "id", "it", "iw", "ja", "kk", "kn", "ko", "ky", "lt", "lv", "mk", "ml", "mr", "my", "nl", "no", "pa", "pl", "pt", "pt-BR", "pt-PT", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta", "te", "th", "tl", "tr", "uk", "uz", "vi", "zh-CN", "zh-TW"]
-            },
-            region: {
-              type: 'string',
-              description: 'The region code for biasing results.'
-            },
-            fields: {
-              type: 'array',
-              items: {
-                type: 'string'
-              },
-              description: 'Specific fields to request.'
-            }
-          },
-          required: ['place_id']
+          place_id: z.string().describe('The Place ID of the place.'),
+          language: z.enum(["ar", "be", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en-Au", "en-GB", "es", "eu", "fa", "fi", "fil", "fr", "gl", "gu", "hi", "hr", "hu", "id", "it", "iw", "ja", "kk", "kn", "ko", "ky", "lt", "lv", "mk", "ml", "mr", "my", "nl", "no", "pa", "pl", "pt", "pt-BR", "pt-PT", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta", "te", "th", "tl", "tr", "uk", "uz", "vi", "zh-CN", "zh-TW"]).optional().describe('The language code for the results.'),
+          region: z.string().optional().describe('The region code for biasing results.'),
+          fields: z.array(z.string()).optional().describe('Specific fields to request.')
         },
         async (params) => {
           try {
@@ -142,22 +97,9 @@ export class GooglePlacesMCP extends McpAgent {
       this.server.tool(
         'get_place_photo_url',
         {
-          type: 'object',
-          properties: {
-            photo_reference: {
-              type: 'string',
-              description: 'The reference string for the photo, obtained from get_place_details.'
-            },
-            max_width: {
-              type: 'integer',
-              description: 'Maximum desired width of the photo in pixels.'
-            },
-            max_height: {
-              type: 'integer',
-              description: 'Maximum desired height of the photo in pixels.'
-            }
-          },
-          required: ['photo_reference']
+          photo_reference: z.string().describe('The reference string for the photo, obtained from get_place_details.'),
+          max_width: z.number().optional().describe('Maximum desired width of the photo in pixels.'),
+          max_height: z.number().optional().describe('Maximum desired height of the photo in pixels.')
         },
         async (params) => {
           try {
