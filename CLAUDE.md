@@ -9,6 +9,7 @@
 - **d1-database**: Client data and activity logging  
 - **google-places-api-mcp**: 3 tools with photo download, CORS-compliant
   - Deployed: https://google-places-api-mcp.somotravel.workers.dev
+- **IMPORTANT NOTE**: DO NOT USE mcp-remote. REPLACED BY mcp-use
 
 ### Emergency Recovery Protocol
 **If ANY MCP server stops working:**
@@ -125,6 +126,14 @@ checkpoint: complete amadeus API integration phase
 
 ## Advanced Workflows
 
+### MCP Server Development
+**Template**: [doc/MCP_SERVER_TEMPLATE.md](doc/MCP_SERVER_TEMPLATE.md)
+- Standardized McpAgent framework patterns
+- Proper Zod schema implementation 
+- mcp-use compatibility requirements
+- Common issue fixes and debugging
+- **Use this template for ALL new/fixed MCP servers**
+
 ### Test-Driven Development
 **Guide**: [doc/claude-code-tdd-guide.md](doc/claude-code-tdd-guide.md)
 - Start with "use TDD approach"
@@ -148,10 +157,22 @@ checkpoint: complete amadeus API integration phase
 ## Project Workflows
 
 ### MCP Server Development
+**MANDATORY**: Use [MCP_SERVER_TEMPLATE.md](doc/MCP_SERVER_TEMPLATE.md) for ALL MCP servers
+
+**Common Fixes Required:**
+- Protocol version: Use `"2024-11-05"` (not "2025-03-26")
+- Schema issues: Proper Zod schemas with `.describe()` (not empty `{}`)
+- Missing imports: All tools imported in `tools/index.ts`
+- McpAgent framework: Extend McpAgent, use McpServer
+- Auth tokens: Standardized MCP_AUTH_KEY pattern
+
+**Development Process:**
 - Test locally: `wrangler dev`
 - Validate tools independently
 - Debug with: `wrangler tail`
 - Backup configs before changes
+- Check health endpoint after deployment
+- Add to production_config.json for mcp-use
 
 ### Database Operations
 - Backup schema before modifications

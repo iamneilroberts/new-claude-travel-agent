@@ -298,45 +298,127 @@ async function handleRequest(request, env) {
       const args = params?.arguments || {};
 
       if (toolName === 'list_objects') {
-        const mockObjects = [
-          { key: 'images/hotel-1.jpg', size: 245000, lastModified: new Date().toISOString() },
-          { key: 'images/hotel-2.jpg', size: 189000, lastModified: new Date().toISOString() }
-        ];
+        try {
+          if (env.TRAVEL_MEDIA_BUCKET) {
+            const list = await env.TRAVEL_MEDIA_BUCKET.list({
+              prefix: args.prefix || '',
+              delimiter: args.delimiter || '/',
+              limit: args.limit || 100
+            });
 
-        return {
-          jsonrpc: '2.0',
-          id,
-          result: {
-            content: [{
-              type: 'text',
-              text: JSON.stringify({
-                objects: args.prefix ?
-                  mockObjects.filter(o => o.key.startsWith(args.prefix)) :
-                  mockObjects,
-                truncated: false,
-                cursor: null
-              }, null, 2)
-            }]
+            const objects = list.objects.map(obj => ({
+              key: obj.key,
+              size: obj.size,
+              lastModified: obj.uploaded,
+              etag: obj.etag
+            }));
+
+            return {
+              jsonrpc: '2.0',
+              id,
+              result: {
+                content: [{
+                  type: 'text',
+                  text: JSON.stringify({
+                    objects: objects,
+                    truncated: list.truncated,
+                    commonPrefixes: list.delimitedPrefixes || []
+                  }, null, 2)
+                }]
+              }
+            };
+          } else {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: 'R2 bucket not configured'
+              }
+            };
           }
-        };
+        } catch (error) {
+          console.error('Error listing objects:', error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32603,
+              message: `Error listing objects: ${error.message}`
+            }
+          };
+        }
       }
 
       if (toolName === 'upload_object') {
-        return {
-          jsonrpc: '2.0',
-          id,
-          result: {
-            content: [{
-              type: 'text',
-              text: JSON.stringify({
-                key: args.key,
-                etag: '"' + crypto.randomUUID() + '"',
-                uploaded: new Date().toISOString(),
-                size: args.content ? args.content.length : 0
-              }, null, 2)
-            }]
+        try {
+          if (!env.TRAVEL_MEDIA_BUCKET) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: 'R2 bucket not configured'
+              }
+            };
           }
-        };
+
+          // Decode base64 content
+          let content;
+          try {
+            content = Uint8Array.from(atob(args.content), c => c.charCodeAt(0));
+          } catch (error) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32602,
+                message: 'Invalid base64 content'
+              }
+            };
+          }
+
+          // Prepare upload options
+          const uploadOptions = {
+            httpMetadata: {
+              contentType: args.content_type || 'application/octet-stream'
+            }
+          };
+
+          if (args.metadata) {
+            uploadOptions.customMetadata = args.metadata;
+          }
+
+          // Upload to R2
+          const result = await env.TRAVEL_MEDIA_BUCKET.put(args.key, content, uploadOptions);
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: [{
+                type: 'text',
+                text: JSON.stringify({
+                  key: args.key,
+                  etag: result.etag,
+                  uploaded: new Date().toISOString(),
+                  size: content.length,
+                  contentType: args.content_type || 'application/octet-stream'
+                }, null, 2)
+              }]
+            }
+          };
+        } catch (error) {
+          console.error('Error uploading object:', error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32603,
+              message: `Error uploading object: ${error.message}`
+            }
+          };
+        }
       }
 
       if (toolName === 'get_presigned_url') {
@@ -359,40 +441,102 @@ async function handleRequest(request, env) {
       }
 
       if (toolName === 'get_object') {
-        return {
-          jsonrpc: '2.0',
-          id,
-          result: {
-            content: [{
-              type: 'text',
-              text: JSON.stringify({
-                key: args.key,
-                content: 'base64_encoded_content_here',
-                content_type: 'image/jpeg',
-                size: 245000,
-                etag: '"abc123"',
-                lastModified: new Date().toISOString()
-              }, null, 2)
-            }]
+        try {
+          if (!env.TRAVEL_MEDIA_BUCKET) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: 'R2 bucket not configured'
+              }
+            };
           }
-        };
+
+          const object = await env.TRAVEL_MEDIA_BUCKET.get(args.key);
+          
+          if (!object) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: `Object '${args.key}' not found`
+              }
+            };
+          }
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: [{
+                type: 'text',
+                text: JSON.stringify({
+                  key: args.key,
+                  size: object.size,
+                  etag: object.etag,
+                  lastModified: object.uploaded,
+                  contentType: object.httpMetadata?.contentType,
+                  metadata: object.customMetadata,
+                  note: 'Content data not included in response for size reasons. Use get_presigned_url for direct access.'
+                }, null, 2)
+              }]
+            }
+          };
+        } catch (error) {
+          console.error('Error getting object:', error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32603,
+              message: `Error getting object: ${error.message}`
+            }
+          };
+        }
       }
 
       if (toolName === 'delete_object') {
-        return {
-          jsonrpc: '2.0',
-          id,
-          result: {
-            content: [{
-              type: 'text',
-              text: JSON.stringify({
-                key: args.key,
-                deleted: true,
-                timestamp: new Date().toISOString()
-              }, null, 2)
-            }]
+        try {
+          if (!env.TRAVEL_MEDIA_BUCKET) {
+            return {
+              jsonrpc: '2.0',
+              id,
+              error: {
+                code: -32603,
+                message: 'R2 bucket not configured'
+              }
+            };
           }
-        };
+
+          await env.TRAVEL_MEDIA_BUCKET.delete(args.key);
+
+          return {
+            jsonrpc: '2.0',
+            id,
+            result: {
+              content: [{
+                type: 'text',
+                text: JSON.stringify({
+                  key: args.key,
+                  deleted: true,
+                  timestamp: new Date().toISOString()
+                }, null, 2)
+              }]
+            }
+          };
+        } catch (error) {
+          console.error('Error deleting object:', error);
+          return {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32603,
+              message: `Error deleting object: ${error.message}`
+            }
+          };
+        }
       }
 
       return {

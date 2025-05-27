@@ -22,6 +22,16 @@
       "env": {
         "MCP_AUTH_TOKEN": "NkYJjz86DTJ8ciEjALmX4OqGrUBsKPsUeATY_0Cu"
       }
+    },
+    "mobile-interaction-mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mobile-interaction-mcp.somotravel.workers.dev/sse"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "NkYJjz86DTJ8ciEjALmX4OqGrUBsKPsUeATY_0Cu"
+      }
     }
   }
 }

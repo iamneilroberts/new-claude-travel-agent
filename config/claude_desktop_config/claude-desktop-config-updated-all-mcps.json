@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "amadeus-api": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config.json",
+        "--server", "amadeus-api"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "template-document": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config.json",
+        "--server", "template-document"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "d1-database": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config.json",
+        "--server", "d1-database"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "google-places-api": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config.json",
+        "--server", "google-places-api"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "r2-storage": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config.json",
+        "--server", "r2-storage"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    }
+  }
+}

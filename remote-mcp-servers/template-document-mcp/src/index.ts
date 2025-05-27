@@ -14,14 +14,12 @@ export class TemplateDocumentMCP extends McpAgent {
 
       const toolRegistry = await initializeTools();
 
-      // Register all tools with the MCP server using proper Zod schemas
+      // Register all tools with the MCP server using proper schemas
       toolRegistry.tools.forEach(tool => {
-        // Convert to basic schema for now - the tools expect simple parameters
-        const basicSchema = {};
-
         this.server.tool(
           tool.name,
-          basicSchema,
+          tool.description,
+          tool.inputSchema,
           async (params: any) => {
             const handler = toolRegistry.handlers.get(tool.name);
             if (!handler) {

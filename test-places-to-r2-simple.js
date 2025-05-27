@@ -71,7 +71,7 @@ class SimpleMCPClient {
 
     async listTools() {
         console.log(`📋 Listing tools from ${this.baseUrl}...`);
-        
+
         const request = {
             jsonrpc: "2.0",
             id: 1,
@@ -111,16 +111,16 @@ class SimplePlacesToR2Workflow {
     async healthChecks() {
         console.log('\n🏥 Running health checks...');
         console.log('='.repeat(50));
-        
+
         const googleHealth = await this.googleClient.healthCheck();
         const r2Health = await this.r2Client.healthCheck();
-        
+
         const googleOk = googleHealth && googleHealth.status === 'healthy';
         const r2Ok = r2Health && r2Health.status === 'healthy';
-        
+
         console.log(`Google Places API: ${googleOk ? '✅ Healthy' : '❌ Unhealthy'}`);
         console.log(`R2 Storage: ${r2Ok ? '✅ Healthy' : '❌ Unhealthy'}`);
-        
+
         return googleOk && r2Ok;
     }
 
@@ -307,7 +307,7 @@ class SimplePlacesToR2Workflow {
         try {
             console.log('🚀 Google Places → R2 Storage Integration Test');
             console.log('🕒 Started at:', new Date().toISOString());
-            
+
             // Health checks first
             const healthOk = await this.healthChecks();
             if (!healthOk) {
@@ -320,10 +320,10 @@ class SimplePlacesToR2Workflow {
 
             // Run complete workflow
             const result = await this.runCompleteWorkflow();
-            
+
             console.log('\n📋 FINAL RESULT:');
             console.log(JSON.stringify(result, null, 2));
-            
+
         } catch (error) {
             console.error('❌ Test execution failed:', error);
         }
