@@ -22,7 +22,7 @@ export class AmadeusMCP extends McpAgent {
 			{},
 			async () => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const amadeus = await getAmadeusClient(env);
 					return {
 						content: [{ type: "text", text: "✅ Amadeus API connection test successful!" }],
@@ -50,7 +50,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const result = await searchHotels(params, env);
 					return {
 						content: [{
@@ -83,7 +83,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const amadeus = await getAmadeusClient(env);
 
 					// Search for hotels by city code
@@ -145,7 +145,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const result = await searchFlights(params, env);
 					return {
 						content: [{
@@ -178,7 +178,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const result = await searchPOI(params, env);
 					return {
 						content: [{
@@ -209,7 +209,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const amadeus = await getAmadeusClient(env);
 
 					const response = await amadeus.get('/v1/reference-data/locations/cities', {
@@ -260,7 +260,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const result = await searchPOIByCoordinates(params, env);
 					return {
 						content: [{
@@ -291,7 +291,7 @@ export class AmadeusMCP extends McpAgent {
 			},
 			async (params) => {
 				try {
-					const env = this.env as Env;
+					const env = (this as any).env;
 					const result = await searchActivitiesByCoordinates(params, env);
 					return {
 						content: [{

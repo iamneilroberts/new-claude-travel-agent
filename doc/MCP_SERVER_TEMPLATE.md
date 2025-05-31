@@ -2,6 +2,26 @@
 
 This template ensures all MCP servers follow the established patterns for mcp-use compatibility.
 
+## ✅ CRITICAL SUCCESS FACTORS - VERIFIED 2025-05-31
+
+**ALL 8 CLOUDFLARE MCP SERVERS NOW WORKING** - Use these exact patterns:
+
+### Environment Access Pattern (CRITICAL)
+```typescript
+// ✅ WORKING - Use this exact pattern
+const env = (this as any).env as Env;
+
+// ❌ BROKEN - Do not use
+const env = this.env as Env;
+const env = this.env;
+```
+
+### McpAgent Framework Pattern
+- ✅ **ALL servers use McpAgent framework** (agents package ^0.0.93)
+- ✅ **Inline Zod schemas** work perfectly (see google-places-api-mcp)
+- ✅ **SSE endpoints** via `serveSSE("/sse")` are the standard
+- ✅ **Environment access** requires `(this as any).env as Env` pattern
+
 ## Common Issues & Fixes
 
 Based on CHANGELOG.md and recent commits, these are the most common issues when creating/fixing MCP servers:
@@ -88,7 +108,7 @@ export class YourServiceMCP extends McpAgent {
   });
 
   async init() {
-    const env = this.env as Env;
+    const env = (this as any).env as Env;
 
     try {
       console.log("Initializing Your Service MCP server...");

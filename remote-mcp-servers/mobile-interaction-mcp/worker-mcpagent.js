@@ -1,2 +1,2 @@
 // Cloudflare Worker entry point for Mobile Interaction MCP
-export { default, MobileInteractionMCP } from './src/index.js';
+export { default, MobileInteractionMCP } from './dist/index.js';
