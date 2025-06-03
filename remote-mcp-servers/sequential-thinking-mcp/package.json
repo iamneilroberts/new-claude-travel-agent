@@ -11,7 +11,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "hono": "^3.10.2"
+    "@modelcontextprotocol/sdk": "^1.11.4",
+    "agents": "^0.0.93",
+    "zod": "^3.25.16"
   },
   "devDependencies": {
     "vitest": "^0.34.6",

@@ -14,7 +14,7 @@ export class R2StorageMCP extends McpAgent {
   });
 
   async init() {
-    const env = this.env as Env;
+    const env = (this as any).env as Env;
 
     try {
       console.log("Initializing R2 Storage MCP server...");

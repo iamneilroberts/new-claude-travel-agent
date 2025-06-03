@@ -1,0 +1,19 @@
+{
+  "name": "prompt-server-mcp",
+  "version": "1.0.0",
+  "description": "Prompt Server MCP for dynamic travel assistant instructions",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "agents": "file:../../../mcptools/mcp-use/node_modules/agents",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -15,7 +15,7 @@ export class GooglePlacesMCP extends McpAgent {
   });
 
   async init() {
-    const env = this.env as Env;
+    const env = (this as any).env as Env;
 
     try {
       // Create Google Places Client using Fetch API

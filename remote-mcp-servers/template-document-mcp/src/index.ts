@@ -1,217 +1,55 @@
-// Direct MCP implementation for Template Document MCP Server
-// Based on working r2-storage pattern
+import { McpAgent } from "agents/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 
 interface Env {
   MCP_AUTH_KEY: string;
 }
 
-async function handleRequest(json: any, env: Env) {
-  const { method, id } = json;
+export class TemplateDocumentMCP extends McpAgent {
+  server = new McpServer({
+    name: "Template Document MCP",
+    version: "1.0.0",
+  });
 
-  switch (method) {
-    case 'initialize':
-      return {
-        jsonrpc: '2.0',
-        id,
-        result: {
-          protocolVersion: '2024-11-05',
-          capabilities: {
-            tools: {
-              listChanged: false
-            }
-          },
-          serverInfo: {
-            name: 'Template Document MCP',
-            version: '1.0.0'
-          }
-        }
-      };
+  async init() {
+    const env = (this as any).env as Env;
 
-    case 'tools/list':
-      return {
-        jsonrpc: '2.0',
-        id,
-        result: {
-          tools: [
-            {
-              name: 'generate_itinerary',
-              description: 'Generate a comprehensive travel itinerary document with flights, accommodation, activities, and checklists',
-              input_schema: {
-                type: 'object',
-                properties: {
-                  title: {
-                    type: 'string',
-                    description: 'Travel itinerary title'
-                  },
-                  destination: {
-                    type: 'string',
-                    description: 'Primary destination'
-                  },
-                  duration_days: {
-                    type: 'number',
-                    description: 'Trip duration in days'
-                  },
-                  traveler_count: {
-                    type: 'number',
-                    description: 'Number of travelers'
-                  },
-                  budget_range: {
-                    type: 'string',
-                    enum: ['budget', 'medium', 'luxury'],
-                    description: 'Budget category'
-                  },
-                  interests: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Traveler interests and preferences'
-                  },
-                  special_requirements: {
-                    type: 'string',
-                    description: 'Special requirements or notes'
-                  }
-                },
-                required: ['title', 'destination', 'duration_days', 'traveler_count', 'budget_range', 'interests']
-              }
-            },
-            {
-              name: 'generate_packing_list',
-              description: 'Generate a personalized packing list based on destination, trip type, season, and traveler requirements',
-              input_schema: {
-                type: 'object',
-                properties: {
-                  destination: {
-                    type: 'string',
-                    description: 'Travel destination'
-                  },
-                  duration_days: {
-                    type: 'number',
-                    description: 'Trip duration in days'
-                  },
-                  season: {
-                    type: 'string',
-                    enum: ['spring', 'summer', 'fall', 'winter'],
-                    description: 'Travel season'
-                  },
-                  trip_type: {
-                    type: 'string',
-                    enum: ['business', 'leisure', 'adventure', 'cultural'],
-                    description: 'Type of trip'
-                  },
-                  traveler_profile: {
-                    type: 'string',
-                    enum: ['solo', 'couple', 'family', 'group'],
-                    description: 'Traveler profile'
-                  },
-                  special_activities: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Special activities planned'
-                  }
-                },
-                required: ['destination', 'duration_days', 'season', 'trip_type', 'traveler_profile']
-              }
-            },
-            {
-              name: 'generate_travel_budget',
-              description: 'Generate a comprehensive travel budget with expense categories, recommendations, and money-saving tips',
-              input_schema: {
-                type: 'object',
-                properties: {
-                  destination: {
-                    type: 'string',
-                    description: 'Travel destination'
-                  },
-                  duration_days: {
-                    type: 'number',
-                    description: 'Trip duration in days'
-                  },
-                  traveler_count: {
-                    type: 'number',
-                    description: 'Number of travelers'
-                  },
-                  budget_range: {
-                    type: 'string',
-                    enum: ['budget', 'medium', 'luxury'],
-                    description: 'Budget category'
-                  },
-                  trip_type: {
-                    type: 'string',
-                    enum: ['business', 'leisure', 'adventure', 'cultural'],
-                    description: 'Type of trip'
-                  },
-                  include_flights: {
-                    type: 'boolean',
-                    description: 'Include flight costs'
-                  }
-                },
-                required: ['destination', 'duration_days', 'traveler_count', 'budget_range', 'trip_type']
-              }
-            },
-            {
-              name: 'generate_travel_checklist',
-              description: 'Generate a comprehensive, time-based travel checklist with all preparations needed before and during travel',
-              input_schema: {
-                type: 'object',
-                properties: {
-                  destination: {
-                    type: 'string',
-                    description: 'Travel destination'
-                  },
-                  duration_days: {
-                    type: 'number',
-                    description: 'Trip duration in days'
-                  },
-                  trip_type: {
-                    type: 'string',
-                    enum: ['business', 'leisure', 'adventure', 'cultural'],
-                    description: 'Type of trip'
-                  },
-                  departure_date: {
-                    type: 'string',
-                    description: 'Departure date (YYYY-MM-DD)'
-                  },
-                  international_travel: {
-                    type: 'boolean',
-                    description: 'Is this international travel'
-                  },
-                  special_requirements: {
-                    type: 'string',
-                    description: 'Special requirements or notes'
-                  }
-                },
-                required: ['destination', 'duration_days', 'trip_type', 'departure_date', 'international_travel']
-              }
-            }
-          ]
-        }
-      };
-
-    case 'tools/call':
-      const { name: toolName, arguments: args } = json.params;
-
-      if (toolName === 'generate_itinerary') {
+    // Generate itinerary tool
+    this.server.tool(
+      "generate_itinerary",
+      {
+        title: z.string().describe("Travel itinerary title"),
+        destination: z.string().describe("Primary destination"),
+        duration_days: z.number().describe("Trip duration in days"),
+        traveler_count: z.number().describe("Number of travelers"),
+        budget_range: z.enum(['budget', 'medium', 'luxury']).describe("Budget category"),
+        interests: z.array(z.string()).describe("Traveler interests and preferences"),
+        special_requirements: z.string().optional().describe("Special requirements or notes")
+      },
+      async (params) => {
         try {
-          const itinerary = `# ${args.title}
+          const itinerary = `# ${params.title}
 
 ## Trip Overview
-- **Destination**: ${args.destination}
-- **Duration**: ${args.duration_days} days
-- **Travelers**: ${args.traveler_count} ${args.traveler_count === 1 ? 'person' : 'people'}
-- **Budget Range**: ${args.budget_range}
+- **Destination**: ${params.destination}
+- **Duration**: ${params.duration_days} days
+- **Travelers**: ${params.traveler_count} ${params.traveler_count === 1 ? 'person' : 'people'}
+- **Budget Range**: ${params.budget_range}
 
 ## Interests & Preferences
-${args.interests.map((interest: string) => `- ${interest}`).join('\n')}
+${params.interests.map((interest: string) => `- ${interest}`).join('\n')}
 
 ## Sample Daily Activities
-${Array.from({length: Math.min(args.duration_days, 7)}, (_, i) => {
+${Array.from({length: Math.min(params.duration_days, 7)}, (_, i) => {
   const day = i + 1;
   return `### Day ${day}
 - **Morning**: Explore local attractions
-- **Afternoon**: ${args.interests[i % args.interests.length]} activities
+- **Afternoon**: ${params.interests[i % params.interests.length]} activities
 - **Evening**: Local dining experience`;
 }).join('\n\n')}
 
-${args.special_requirements ? `\n## Special Requirements\n${args.special_requirements}` : ''}
+${params.special_requirements ? `\n## Special Requirements\n${params.special_requirements}` : ''}
 
 ## Travel Tips
 - Book accommodations in advance
@@ -223,48 +61,55 @@ ${args.special_requirements ? `\n## Special Requirements\n${args.special_require
 *Generated by Template Document MCP*`;
 
           return {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [{
-                type: 'text',
-                text: itinerary
-              }]
-            }
+            content: [{
+              type: "text",
+              text: itinerary
+            }]
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error generating itinerary:', error);
           return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32603,
-              message: `Error generating itinerary: ${(error as Error).message}`
-            }
+            content: [{
+              type: "text",
+              text: `Error generating itinerary: ${error.message}`
+            }],
+            isError: true
           };
         }
       }
+    );
 
-      if (toolName === 'generate_packing_list') {
+    // Generate packing list tool
+    this.server.tool(
+      "generate_packing_list",
+      {
+        destination: z.string().describe("Travel destination"),
+        duration_days: z.number().describe("Trip duration in days"),
+        season: z.enum(['spring', 'summer', 'fall', 'winter']).describe("Travel season"),
+        trip_type: z.enum(['business', 'leisure', 'adventure', 'cultural']).describe("Type of trip"),
+        traveler_profile: z.enum(['solo', 'couple', 'family', 'group']).describe("Traveler profile"),
+        special_activities: z.array(z.string()).optional().describe("Special activities planned")
+      },
+      async (params) => {
         try {
-          const packingList = `# Packing List for ${args.destination}
+          const packingList = `# Packing List for ${params.destination}
 
 ## Trip Details
-- **Destination**: ${args.destination}
-- **Duration**: ${args.duration_days} days
-- **Season**: ${args.season}
-- **Trip Type**: ${args.trip_type}
-- **Traveler Profile**: ${args.traveler_profile}
+- **Destination**: ${params.destination}
+- **Duration**: ${params.duration_days} days
+- **Season**: ${params.season}
+- **Trip Type**: ${params.trip_type}
+- **Traveler Profile**: ${params.traveler_profile}
 
 ## Essential Items
 
 ### Clothing
-- ${args.duration_days + 1} days of underwear
-- ${Math.ceil(args.duration_days / 2)} pairs of socks
-- ${args.season === 'summer' ? 'Light, breathable clothing' : 'Warm layers'}
-- ${args.season === 'winter' ? 'Heavy jacket, gloves, hat' : 'Light jacket or sweater'}
+- ${params.duration_days + 1} days of underwear
+- ${Math.ceil(params.duration_days / 2)} pairs of socks
+- ${params.season === 'summer' ? 'Light, breathable clothing' : 'Warm layers'}
+- ${params.season === 'winter' ? 'Heavy jacket, gloves, hat' : 'Light jacket or sweater'}
 - Comfortable walking shoes
-- ${args.trip_type === 'business' ? 'Business attire' : 'Casual clothing'}
+- ${params.trip_type === 'business' ? 'Business attire' : 'Casual clothing'}
 
 ### Personal Care
 - Toothbrush and toothpaste
@@ -272,7 +117,7 @@ ${args.special_requirements ? `\n## Special Requirements\n${args.special_require
 - Deodorant
 - Any prescription medications
 - Sunscreen
-- ${args.traveler_profile === 'family' ? 'Baby/child care items if needed' : ''}
+- ${params.traveler_profile === 'family' ? 'Baby/child care items if needed' : ''}
 
 ### Electronics
 - Phone charger
@@ -286,7 +131,7 @@ ${args.special_requirements ? `\n## Special Requirements\n${args.special_require
 - Flight/hotel confirmations
 - Emergency contact information
 
-${args.special_activities?.length ? `\n### Special Activity Items\n${args.special_activities.map((activity: string) => `- Items for: ${activity}`).join('\n')}` : ''}
+${params.special_activities?.length ? `\n### Special Activity Items\n${params.special_activities.map((activity: string) => `- Items for: ${activity}`).join('\n')}` : ''}
 
 ## Tips
 - Roll clothes to save space
@@ -298,73 +143,80 @@ ${args.special_activities?.length ? `\n### Special Activity Items\n${args.specia
 *Generated by Template Document MCP*`;
 
           return {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [{
-                type: 'text',
-                text: packingList
-              }]
-            }
+            content: [{
+              type: "text",
+              text: packingList
+            }]
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error generating packing list:', error);
           return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32603,
-              message: `Error generating packing list: ${(error as Error).message}`
-            }
+            content: [{
+              type: "text",
+              text: `Error generating packing list: ${error.message}`
+            }],
+            isError: true
           };
         }
       }
+    );
 
-      if (toolName === 'generate_travel_budget') {
+    // Generate travel budget tool
+    this.server.tool(
+      "generate_travel_budget",
+      {
+        destination: z.string().describe("Travel destination"),
+        duration_days: z.number().describe("Trip duration in days"),
+        traveler_count: z.number().describe("Number of travelers"),
+        budget_range: z.enum(['budget', 'medium', 'luxury']).describe("Budget category"),
+        trip_type: z.enum(['business', 'leisure', 'adventure', 'cultural']).describe("Type of trip"),
+        include_flights: z.boolean().optional().describe("Include flight costs")
+      },
+      async (params) => {
         try {
-          const budgetMultiplier = args.budget_range === 'budget' ? 1 : args.budget_range === 'medium' ? 2 : 3;
+          const budgetMultiplier = params.budget_range === 'budget' ? 1 : params.budget_range === 'medium' ? 2 : 3;
           const dailyBase = 50 * budgetMultiplier;
 
-          const budget = `# Travel Budget for ${args.destination}
+          const budget = `# Travel Budget for ${params.destination}
 
 ## Trip Overview
-- **Destination**: ${args.destination}
-- **Duration**: ${args.duration_days} days
-- **Travelers**: ${args.traveler_count}
-- **Budget Category**: ${args.budget_range}
+- **Destination**: ${params.destination}
+- **Duration**: ${params.duration_days} days
+- **Travelers**: ${params.traveler_count}
+- **Budget Category**: ${params.budget_range}
 
 ## Estimated Costs (USD)
 
 ### Accommodation
 - **Per night**: $${Math.round(dailyBase * 1.5)}
-- **Total (${args.duration_days} nights)**: $${Math.round(dailyBase * 1.5 * args.duration_days * args.traveler_count)}
+- **Total (${params.duration_days} nights)**: $${Math.round(dailyBase * 1.5 * params.duration_days * params.traveler_count)}
 
 ### Meals
 - **Per person per day**: $${Math.round(dailyBase * 0.8)}
-- **Total**: $${Math.round(dailyBase * 0.8 * args.duration_days * args.traveler_count)}
+- **Total**: $${Math.round(dailyBase * 0.8 * params.duration_days * params.traveler_count)}
 
-${args.include_flights ? `### Flights
+${params.include_flights ? `### Flights
 - **Per person**: $${Math.round(dailyBase * 8)}
-- **Total**: $${Math.round(dailyBase * 8 * args.traveler_count)}` : ''}
+- **Total**: $${Math.round(dailyBase * 8 * params.traveler_count)}` : ''}
 
 ### Activities & Entertainment
 - **Per day**: $${Math.round(dailyBase * 0.6)}
-- **Total**: $${Math.round(dailyBase * 0.6 * args.duration_days)}
+- **Total**: $${Math.round(dailyBase * 0.6 * params.duration_days)}
 
 ### Local Transportation
 - **Per day**: $${Math.round(dailyBase * 0.3)}
-- **Total**: $${Math.round(dailyBase * 0.3 * args.duration_days)}
+- **Total**: $${Math.round(dailyBase * 0.3 * params.duration_days)}
 
 ### Miscellaneous & Souvenirs
 - **Total**: $${Math.round(dailyBase * 2)}
 
 ## Total Estimated Budget
 **$${Math.round(
-  (dailyBase * 1.5 * args.duration_days * args.traveler_count) + // accommodation
-  (dailyBase * 0.8 * args.duration_days * args.traveler_count) + // meals
-  (args.include_flights ? dailyBase * 8 * args.traveler_count : 0) + // flights
-  (dailyBase * 0.6 * args.duration_days) + // activities
-  (dailyBase * 0.3 * args.duration_days) + // transport
+  (dailyBase * 1.5 * params.duration_days * params.traveler_count) + // accommodation
+  (dailyBase * 0.8 * params.duration_days * params.traveler_count) + // meals
+  (params.include_flights ? dailyBase * 8 * params.traveler_count : 0) + // flights
+  (dailyBase * 0.6 * params.duration_days) + // activities
+  (dailyBase * 0.3 * params.duration_days) + // transport
   (dailyBase * 2) // misc
 )}**
 
@@ -379,42 +231,49 @@ ${args.include_flights ? `### Flights
 *Generated by Template Document MCP*`;
 
           return {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [{
-                type: 'text',
-                text: budget
-              }]
-            }
+            content: [{
+              type: "text",
+              text: budget
+            }]
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error generating budget:', error);
           return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32603,
-              message: `Error generating budget: ${(error as Error).message}`
-            }
+            content: [{
+              type: "text",
+              text: `Error generating budget: ${error.message}`
+            }],
+            isError: true
           };
         }
       }
+    );
 
-      if (toolName === 'generate_travel_checklist') {
+    // Generate travel checklist tool
+    this.server.tool(
+      "generate_travel_checklist",
+      {
+        destination: z.string().describe("Travel destination"),
+        duration_days: z.number().describe("Trip duration in days"),
+        trip_type: z.enum(['business', 'leisure', 'adventure', 'cultural']).describe("Type of trip"),
+        departure_date: z.string().describe("Departure date (YYYY-MM-DD)"),
+        international_travel: z.boolean().describe("Is this international travel"),
+        special_requirements: z.string().optional().describe("Special requirements or notes")
+      },
+      async (params) => {
         try {
-          const departureDate = new Date(args.departure_date);
+          const departureDate = new Date(params.departure_date);
           const now = new Date();
           const daysUntilDeparture = Math.ceil((departureDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-          const checklist = `# Travel Checklist for ${args.destination}
+          const checklist = `# Travel Checklist for ${params.destination}
 
 ## Trip Information
-- **Destination**: ${args.destination}
-- **Duration**: ${args.duration_days} days
-- **Departure**: ${args.departure_date}
+- **Destination**: ${params.destination}
+- **Duration**: ${params.duration_days} days
+- **Departure**: ${params.departure_date}
 - **Days until departure**: ${daysUntilDeparture}
-- **International travel**: ${args.international_travel ? 'Yes' : 'No'}
+- **International travel**: ${params.international_travel ? 'Yes' : 'No'}
 
 ## 8+ Weeks Before
 - [ ] Research destination and create itinerary
@@ -456,7 +315,7 @@ ${args.include_flights ? `### Flights
 - [ ] Stay hydrated
 - [ ] Enjoy your trip!
 
-${args.international_travel ? `
+${params.international_travel ? `
 ## International Travel Specific
 - [ ] Passport valid for 6+ months
 - [ ] Visa obtained if required
@@ -465,171 +324,60 @@ ${args.international_travel ? `
 - [ ] International phone plan or SIM card
 - [ ] Power adapter for destination country` : ''}
 
-${args.special_requirements ? `\n## Special Requirements\n${args.special_requirements.split('\n').map((req: string) => `- [ ] ${req}`).join('\n')}` : ''}
+${params.special_requirements ? `\n## Special Requirements\n${params.special_requirements.split('\n').map((req: string) => `- [ ] ${req}`).join('\n')}` : ''}
 
 ---
 *Generated by Template Document MCP*`;
 
           return {
-            jsonrpc: '2.0',
-            id,
-            result: {
-              content: [{
-                type: 'text',
-                text: checklist
-              }]
-            }
+            content: [{
+              type: "text",
+              text: checklist
+            }]
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error generating checklist:', error);
           return {
-            jsonrpc: '2.0',
-            id,
-            error: {
-              code: -32603,
-              message: `Error generating checklist: ${(error as Error).message}`
-            }
+            content: [{
+              type: "text",
+              text: `Error generating checklist: ${error.message}`
+            }],
+            isError: true
           };
         }
       }
-
-      return {
-        jsonrpc: '2.0',
-        id,
-        error: {
-          code: -32601,
-          message: `Unknown tool: ${toolName}`
-        }
-      };
-
-    default:
-      return {
-        jsonrpc: '2.0',
-        id,
-        error: {
-          code: -32601,
-          message: `Method not found: ${method}`
-        }
-      };
+    );
   }
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
-
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Max-Age': '86400'
-        }
-      });
-    }
 
     // Health check endpoint
     if (url.pathname === '/health') {
       return new Response(JSON.stringify({
-        status: "ok",
-        service: "Template Document MCP",
-        version: "1.0.0",
-        tools: ["generate_itinerary", "generate_packing_list", "generate_travel_budget", "generate_travel_checklist"],
+        status: 'ok',
+        service: 'Template Document MCP',
+        version: '1.0.0',
         timestamp: new Date().toISOString()
       }), {
-        headers: { "Content-Type": "application/json" }
+        headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // SSE endpoint - GET for initial connection
-    if (url.pathname === '/sse' && request.method === 'GET') {
-      // Check authorization
-      const authHeader = request.headers.get('Authorization');
-      if (env.MCP_AUTH_KEY && authHeader !== `Bearer ${env.MCP_AUTH_KEY}`) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-
-      // Generate session ID and return endpoint URL
-      const sessionId = crypto.randomUUID();
-      const endpointUrl = `${url.origin}/sse/message?sessionId=${sessionId}`;
-
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        start(controller) {
-          // Send endpoint event
-          controller.enqueue(encoder.encode(`event: endpoint\ndata: ${endpointUrl}\n\n`));
-        }
-      });
-
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type, mcp-session-id',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Expose-Headers': 'mcp-session-id',
-          'Access-Control-Max-Age': '86400'
-        }
-      });
+    // SSE endpoints (primary)
+    if (url.pathname === "/sse" || url.pathname === "/sse/message") {
+      return TemplateDocumentMCP.serveSSE("/sse").fetch(request, env, ctx);
     }
 
-    // SSE message endpoint - POST for message handling
-    if (url.pathname.startsWith('/sse/message') && request.method === 'POST') {
-      // Check authorization
-      const authHeader = request.headers.get('Authorization');
-      if (env.MCP_AUTH_KEY && authHeader !== `Bearer ${env.MCP_AUTH_KEY}`) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-
-      try {
-        const json = await request.json();
-        const response = await handleRequest(json, env);
-
-        const encoder = new TextEncoder();
-        const stream = new ReadableStream({
-          start(controller) {
-            // Send response as SSE message
-            controller.enqueue(encoder.encode(`event: message\ndata: ${JSON.stringify(response)}\n\n`));
-            controller.close();
-          }
-        });
-
-        return new Response(stream, {
-          status: 202,
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type, mcp-session-id',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Expose-Headers': 'mcp-session-id',
-            'Access-Control-Max-Age': '86400'
-          }
-        });
-      } catch (error) {
-        console.error('Error handling request:', error);
-        return new Response(JSON.stringify({
-          jsonrpc: '2.0',
-          error: {
-            code: -32700,
-            message: 'Parse error'
-          }
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
+    // Default 404 response
     return new Response(JSON.stringify({
       error: "Not found",
-      available_endpoints: ["/sse", "/health"]
+      available_endpoints: ["/health", "/sse"]
     }), {
       status: 404,
-      headers: { "Content-Type": "application/json" }
+      headers: { 'Content-Type': 'application/json' }
     });
   },
 };
