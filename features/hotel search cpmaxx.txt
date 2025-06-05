@@ -1,3 +1,0 @@
-I need to migrate the cpmaxx hotel search from /home/neil/dev/claude-travel-chat. 
-
-\
