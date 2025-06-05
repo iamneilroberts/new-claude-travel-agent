@@ -35,6 +35,7 @@
 - **NO MORE mcp-remote**: System uses mcp-use proxy for all connections
 - **Template Updated**: `/doc/MCP_SERVER_TEMPLATE.md` has comprehensive working patterns
 - **Ready for Testing**: All servers loading without errors, system ready for end-to-end testing
+- **🚫 NO MOCK DATA EVER**: NEVER use mock, sample, fake, or test data unless explicitly instructed by user. Mock data wastes development time and provides false test results. All implementations must return real data or clear error messages stating real implementation is needed.
 
 ### ⚠️ CRITICAL WARNING - DO NOT REPEAT THIS MISTAKE
 **NEVER replace working McpAgent implementations with custom SSE implementations**

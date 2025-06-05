@@ -56,3 +56,6 @@ wrangler.toml
 # Exclude embedded git repositories
 reference-docs/developer-guides/
 reference-docs/temp/
+
+# Obsolete files and folders
+obsolete/
