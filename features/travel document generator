@@ -1,0 +1,16 @@
+● I'll create a features file and testing plan for the travel document generator MCP server.
+
+● Write(../../features/11-travel-document-generator.md)…
+  ⎿  Wrote 190 lines to ../../features/11-travel-document-generator.md
+     # Feature: Travel Document Generator MCP
+     ## Overview
+     The Travel Document Generator MCP is a comprehensive system for creating professional travel documents (proposals and itineraries) using
+     HTML templates stored in a database, with integrated image management and dynamic content rendering.
+     ## Core Features
+     ### 1. Database Template System
+     - **HTML Template Storage**: Templates stored in D1 database with metadata
+     - **Template Types**: Proposals, itineraries, and custom document types
+     … +180 lines (ctrl+r to expand)
+
+● Write(../../testing/travel-document-generator-testing-plan.md)…
+  ⎿  Wrote 500 lines to ../../testing/travel-document-generator-testin

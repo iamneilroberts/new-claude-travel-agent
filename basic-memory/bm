@@ -1,0 +1,12 @@
+#!/bin/bash
+# Basic Memory convenience script
+# Usage: ./bm <command> [args...]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+KNOWLEDGE_DIR="$SCRIPT_DIR/knowledge"
+
+# Ensure knowledge directory exists
+mkdir -p "$KNOWLEDGE_DIR"
+
+# Run the Python script with the knowledge directory
+python3 "$SCRIPT_DIR/basic_memory.py" --knowledge-dir "$KNOWLEDGE_DIR" "$@"

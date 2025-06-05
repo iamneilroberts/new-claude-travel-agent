@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Watcher Dashboard</title>
+    <style>
+        :root {
+            /* Light mode colors */
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f8f9fa;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #856404;
+            --border-color: #dee2e6;
+            --border-light: #ddd;
+            --header-bg: #2c3e50;
+            --nav-bg: #34495e;
+            --nav-hover: #4a5f7a;
+            --success-bg: #d4edda;
+            --success-color: #155724;
+            --warning-bg: #fff3cd;
+            --warning-color: #856404;
+            --danger-bg: #f8d7da;
+            --danger-color: #721c24;
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode colors */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #ffd700;
+            --border-color: #555;
+            --border-light: #666;
+            --header-bg: #1a1a1a;
+            --nav-bg: #333;
+            --nav-hover: #555;
+            --success-bg: #0f3f1f;
+            --success-color: #90ee90;
+            --warning-bg: #3a3a1a;
+            --warning-color: #ffd700;
+            --danger-bg: #3a1a1a;
+            --danger-color: #ff6b6b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            background: var(--header-bg);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            background: var(--nav-bg);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--nav-hover);
+            transform: scale(1.05);
+        }
+
+        .nav {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav button {
+            background: var(--nav-bg);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav button:hover {
+            background: var(--nav-hover);
+        }
+
+        .nav button.active {
+            background: #e74c3c;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+        }
+
+        .status-healthy { background: var(--success-bg); border-left: 4px solid #28a745; color: var(--success-color); }
+        .status-degraded { background: var(--warning-bg); border-left: 4px solid #ffc107; color: var(--warning-color); }
+        .status-down { background: var(--danger-bg); border-left: 4px solid #dc3545; color: var(--danger-color); }
+
+        .status-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .response-time {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .restart-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .restart-btn:hover {
+            background: #0056b3;
+        }
+
+        .restart-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .overall-status {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .overall-healthy { background: #d4edda; color: #155724; }
+        .overall-degraded { background: #fff3cd; color: #856404; }
+        .overall-warning { background: #f8d7da; color: #721c24; }
+
+        .operations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .operations-table th,
+        .operations-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .operations-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .operation-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .op-completed { background: #d4edda; color: #155724; }
+        .op-failed { background: #f8d7da; color: #721c24; }
+        .op-pending { background: #fff3cd; color: #856404; }
+        .op-retrying { background: #cce7ff; color: #004085; }
+
+        .test-form {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            font-size: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .result-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            color: var(--text-primary);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .timestamp {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 MCP Watcher Dashboard</h1>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙 Dark Mode</button>
+        <div class="nav">
+            <button onclick="showSection('status')" class="active" id="nav-status">Status</button>
+            <button onclick="showSection('tools')" id="nav-tools">Tool Health</button>
+            <button onclick="showSection('operations')" id="nav-operations">Operations</button>
+            <button onclick="showSection('emergency')" id="nav-emergency">Emergency</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="auto-refresh">
+            <label>
+                <input type="checkbox" id="autoRefresh" checked> Auto-refresh (10s)
+            </label>
+            <button class="btn btn-secondary" onclick="refreshData()">Refresh Now</button>
+            <span class="timestamp" id="lastUpdate"></span>
+        </div>
+
+        <!-- Main Status Section -->
+        <div id="section-status" class="section">
+            <div id="overallStatus" class="overall-status"></div>
+
+            <div class="grid">
+            <div class="card">
+                <h2>Server Status</h2>
+                <div id="serverStatus"></div>
+            </div>
+
+            <div class="card">
+                <h2>Test Operations</h2>
+                <form class="test-form" onsubmit="testOperation(event)" id="testForm">
+                    <div class="form-group">
+                        <label>Server:</label>
+                        <select id="testServer" required>
+                            <option value="">Select server...</option>
+                            <option value="amadeus-api">amadeus-api</option>
+                            <option value="d1-database">d1-database</option>
+                            <option value="mobile-interaction">mobile-interaction</option>
+                            <option value="google-places-api">google-places-api</option>
+                            <option value="r2-storage">r2-storage</option>
+                            <option value="template-document">template-document</option>
+                            <option value="prompt-instructions">prompt-instructions</option>
+                            <option value="github-mcp">github-mcp</option>
+                            <option value="sequential-thinking">sequential-thinking</option>
+                            <option value="cpmaxx-integration">cpmaxx-integration</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Operation:</label>
+                        <select id="testOperation" required>
+                            <option value="">Select operation...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payload (JSON):</label>
+                        <textarea id="testPayload" rows="3" placeholder='{"client_name": "Chisholm"}'>{}</textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="testButton" onclick="manualTestOperation()">Test Operation</button>
+                </form>
+                <div id="testResult" class="result-box" style="display: block; min-height: 60px; border: 2px dashed var(--border-color);">
+                    <div style="color: var(--text-secondary); font-style: italic;">
+                        📊 Test results will appear here... Click "Test Operation" to see results.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Data Integrity Diagnosis</h2>
+            <form onsubmit="runDiagnosis(event)">
+                <div class="form-group">
+                    <label>Client Name (optional):</label>
+                    <input type="text" id="clientName" placeholder="Leave empty for all clients">
+                </div>
+                <button type="submit" class="btn btn-primary">Run Diagnosis</button>
+            </form>
+            <div id="diagnosisResult" class="result-box" style="display: none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Operations</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                📊 Shows operations logged to the watcher database (watcher.db). Test operations, health checks, and manual server interactions appear here.
+            </p>
+            <table class="operations-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Server</th>
+                        <th>Operation</th>
+                        <th>Status</th>
+                        <th>Attempts</th>
+                    </tr>
+                </thead>
+                <tbody id="operationsTable">
+                </tbody>
+            </table>
+        </div>
+        </div> <!-- End section-status -->
+
+        <!-- Tool Health Section (hidden by default) -->
+        <div id="section-tools" class="section" style="display: none;">
+            <div class="card">
+                <h2>🔧 Tool Registration Health Check</h2>
+                <p>This section monitors for the agents package tool registration bug that causes empty tool lists.</p>
+                <button class="btn btn-primary" onclick="checkToolHealth()">Check All Servers</button>
+                <div id="toolHealthStatus" class="status-grid"></div>
+            </div>
+        </div>
+
+        <!-- Operations Section (hidden by default) -->
+        <div id="section-operations" class="section" style="display: none;">
+            <div class="card">
+                <h2>📊 Recent Operations</h2>
+                <div id="operationsHistory"></div>
+            </div>
+        </div>
+
+        <!-- Emergency Section (hidden by default) -->
+        <div id="section-emergency" class="section" style="display: none;">
+            <div class="card emergency-card">
+                <h2>🚨 Emergency Controls</h2>
+                <p><strong>Warning:</strong> These actions will update and redeploy all MCP servers.</p>
+                
+                <div class="emergency-actions">
+                    <button class="btn btn-danger" onclick="emergencyUpdateAgents()">
+                        🔄 Emergency Agents Package Update
+                    </button>
+                    <p>Updates all servers to agents@latest and redeploys them.</p>
+                </div>
+                
+                <div id="emergencyResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval;
+        let serverTools = {}; // Cache for server tools
+
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                updateOverallStatus(data.overall);
+                updateServerStatus(data.servers);
+                updateTimestamp();
+
+                await loadOperations();
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+            }
+        }
+
+        // Load available tools from all servers
+        async function loadServerTools() {
+            try {
+                console.log('🔧 Loading server tools from API...');
+                const response = await fetch('/api/tools');
+                const data = await response.json();
+                serverTools = data.tools;
+                console.log('🔧 Loaded tools for', Object.keys(serverTools).length, 'servers:', Object.keys(serverTools));
+                console.log('🔧 Sample tools for d1-database:', serverTools['d1-database']);
+            } catch (error) {
+                console.error('Failed to load server tools, using fallback:', error);
+                
+                // Fallback: static tool definitions
+                serverTools = {
+                    'amadeus-api': [
+                        { name: 'test_connection', description: 'Test API connection' },
+                        { name: 'search_flights', description: 'Search for flights between airports' },
+                        { name: 'search_hotels', description: 'Search for hotels in a city' },
+                        { name: 'search_hotels_by_city', description: 'Search hotels by city code' },
+                        { name: 'search_poi', description: 'Search points of interest' },
+                        { name: 'city_search', description: 'Search for cities' },
+                        { name: 'search_poi_by_coordinates', description: 'Search POI by coordinates' },
+                        { name: 'search_activities_by_coordinates', description: 'Search activities by coordinates' }
+                    ],
+                    'd1-database': [
+                        { name: 'search_clients', description: 'Search for clients in database' },
+                        { name: 'search_trips', description: 'Search for trips' },
+                        { name: 'create_client', description: 'Create a new client' },
+                        { name: 'log_activity', description: 'Log an activity' }
+                    ],
+                    'google-places-api': [
+                        { name: 'search_places', description: 'Search for places using Google Places API' },
+                        { name: 'get_place_details', description: 'Get detailed information about a place' },
+                        { name: 'download_place_photos', description: 'Download photos for a place' }
+                    ],
+                    'r2-storage': [
+                        { name: 'r2_upload_image', description: 'Upload an image to R2 storage' },
+                        { name: 'r2_list_images', description: 'List images in R2 storage' },
+                        { name: 'create_image_gallery', description: 'Create an image gallery' },
+                        { name: 'generate_presigned_url', description: 'Get presigned URL for upload' }
+                    ],
+                    'template-document': [
+                        { name: 'generate_itinerary', description: 'Generate a travel itinerary' },
+                        { name: 'generate_packing_list', description: 'Generate a packing list' },
+                        { name: 'generate_travel_budget', description: 'Generate a travel budget' },
+                        { name: 'generate_travel_checklist', description: 'Generate a travel checklist' }
+                    ],
+                    'mobile-interaction': [
+                        { name: 'get_messages_by_label', description: 'Get emails by label' },
+                        { name: 'send_message', description: 'Send an email message' },
+                        { name: 'process_email', description: 'Process incoming email' },
+                        { name: 'get_chat_history', description: 'Get chat history' }
+                    ],
+                    'prompt-instructions': [
+                        { name: 'get_travel_instructions', description: 'Get current travel mode instructions' },
+                        { name: 'update_mode', description: 'Update travel agent mode' },
+                        { name: 'get_current_mode', description: 'Get current travel agent mode' },
+                        { name: 'search_instructions', description: 'Search instructions' }
+                    ],
+                    'github-mcp': [
+                        { name: 'search_repositories', description: 'Search GitHub repositories' },
+                        { name: 'get_file_content', description: 'Get content of a file' },
+                        { name: 'create_issue', description: 'Create a GitHub issue' }
+                    ],
+                    'sequential-thinking': [
+                        { name: 'think_step_by_step', description: 'Perform step-by-step reasoning' }
+                    ],
+                    'cpmaxx-integration': [
+                        { name: 'search_hotels', description: 'Search hotels via CPMAXX' },
+                        { name: 'search_cars', description: 'Search car rentals via CPMAXX' },
+                        { name: 'search_packages', description: 'Search travel packages via CPMAXX' }
+                    ]
+                };
+                console.log('🔧 Using fallback tools for', Object.keys(serverTools).length, 'servers');
+            }
+        }
+
+        // Update operation dropdown when server selection changes
+        function updateOperationDropdown() {
+            const serverSelect = document.getElementById('testServer');
+            const operationSelect = document.getElementById('testOperation');
+            const selectedServer = serverSelect.value;
+
+            console.log('🔧 updateOperationDropdown called for server:', selectedServer);
+            console.log('🔧 serverTools available:', Object.keys(serverTools));
+            console.log('🔧 Tools for selected server:', serverTools[selectedServer]);
+
+            // Clear current options
+            operationSelect.innerHTML = '<option value="">Select operation...</option>';
+
+            if (selectedServer && serverTools[selectedServer]) {
+                const tools = serverTools[selectedServer];
+                console.log(`🔧 Adding ${tools.length} tools for ${selectedServer}`);
+                
+                tools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.name;
+                    option.textContent = `${tool.name} - ${tool.description}`;
+                    operationSelect.appendChild(option);
+                });
+
+                // Enable the operation dropdown
+                operationSelect.disabled = false;
+                console.log('✅ Operation dropdown enabled with', tools.length, 'options');
+            } else {
+                // Disable if no server selected or no tools available
+                operationSelect.disabled = true;
+                console.log('❌ Operation dropdown disabled - no server or no tools');
+            }
+        }
+
+        function updateOverallStatus(status) {
+            const element = document.getElementById('overallStatus');
+            element.className = `overall-status overall-${status}`;
+            element.textContent = `Overall System Status: ${status.toUpperCase()}`;
+        }
+
+        function updateServerStatus(servers) {
+            const container = document.getElementById('serverStatus');
+            container.innerHTML = '';
+
+            servers.forEach(server => {
+                const item = document.createElement('div');
+                item.className = `status-item status-${server.status}`;
+
+                const statusIcon = server.status === 'healthy' ? '✅' :
+                                 server.status === 'degraded' ? '⚠️' : '❌';
+
+                item.innerHTML = `
+                    <div>
+                        <span class="status-icon">${statusIcon}</span>
+                        <strong>${server.name}</strong>
+                        ${server.error ? `<br><small style="color: #e74c3c;">${server.error}</small>` : ''}
+                    </div>
+                    <div class="response-time">
+                        ${server.responseTime ? server.responseTime + 'ms' : 'N/A'}
+                        ${server.consecutiveFailures > 0 ? `<br>${server.consecutiveFailures} failures` : ''}
+                        <br><button onclick="restartServer('${server.name}')"
+                                   class="restart-btn"
+                                   ${server.status === 'healthy' ? 'style="display:none"' : ''}>
+                            🔄 Restart
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+        }
+
+        async function loadOperations() {
+            try {
+                const response = await fetch('/api/operations');
+                const operations = await response.json();
+
+                const tbody = document.getElementById('operationsTable');
+                tbody.innerHTML = '';
+
+                operations.slice(0, 10).forEach(op => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(op.updated_at).toLocaleTimeString()}</td>
+                        <td>${op.server_name}</td>
+                        <td>${op.operation}</td>
+                        <td><span class="operation-status op-${op.status}">${op.status}</span></td>
+                        <td>${op.attempt}/${op.max_attempts}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Failed to load operations:', error);
+            }
+        }
+
+        async function testOperation(event) {
+            console.log('🚀 testOperation function called - event type:', event.type);
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('🚀 preventDefault called');
+
+            const server = document.getElementById('testServer').value;
+            const operation = document.getElementById('testOperation').value;
+            const payloadText = document.getElementById('testPayload').value;
+
+            console.log('📋 Form values:', { server, operation, payloadText });
+
+            if (!server || !operation) {
+                console.log('❌ Missing server or operation');
+                alert('Please select both a server and operation');
+                return false;
+            }
+
+            const resultDiv = document.getElementById('testResult');
+            const testButton = document.getElementById('testButton');
+            
+            // Show result div and loading state
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ <div class="loading"></div> Testing operation...';
+            testButton.disabled = true;
+            testButton.textContent = 'Testing...';
+
+            console.log('🧪 Testing operation:', { server, operation, payloadText });
+
+            try {
+                const payload = JSON.parse(payloadText);
+                console.log('📤 Sending request to:', `/api/test/${server}/${operation}`, 'with payload:', payload);
+                
+                const response = await fetch(`/api/test/${server}/${operation}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📥 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('📋 Response data:', result);
+                
+                // Enhanced result formatting with better styling and data source indicator
+                let resultHtml = '';
+                
+                // Add data source indicator
+                const dataSourceIcon = result.dataSource === 'direct_api' ? '🌐' : '🤖';
+                const dataSourceText = result.dataSource === 'direct_api' ? 'REAL DATA' : 'SIMULATED';
+                const dataSourceColor = result.dataSource === 'direct_api' ? '#28a745' : '#ffc107';
+                
+                if (result.success) {
+                    resultHtml = `<div style="color: var(--success-color); font-weight: bold;">✅ SUCCESS</div>`;
+                    resultHtml += `<div style="color: ${dataSourceColor}; font-weight: bold; margin: 5px 0; padding: 5px; background: var(--bg-tertiary); border-radius: 4px; border-left: 4px solid ${dataSourceColor};">${dataSourceIcon} ${dataSourceText}</div>`;
+                    
+                    if (result.result && typeof result.result === 'object' && Object.keys(result.result).length > 0) {
+                        resultHtml += `<div style="font-weight: bold; margin-top: 10px;">RESULT:</div>`;
+                        resultHtml += `<pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 4px; overflow: auto; margin-top: 5px;">${JSON.stringify(result.result, null, 2)}</pre>`;
+                    } else if (result.result) {
+                        resultHtml += `<div style="font-weight: bold; margin-top: 10px;">RESULT:</div>`;
+                        resultHtml += `<div style="background: var(--bg-tertiary); padding: 10px; border-radius: 4px; margin-top: 5px;">${result.result}</div>`;
+                    } else {
+                        resultHtml += `<div style="color: var(--text-secondary); margin-top: 10px;">Operation completed successfully (no data returned)</div>`;
+                    }
+                } else {
+                    resultHtml = `<div style="color: var(--danger-color); font-weight: bold;">❌ FAILED</div>`;
+                    resultHtml += `<div style="color: ${dataSourceColor}; font-weight: bold; margin: 5px 0; padding: 5px; background: var(--bg-tertiary); border-radius: 4px; border-left: 4px solid ${dataSourceColor};">${dataSourceIcon} ${dataSourceText}</div>`;
+                    resultHtml += `<div style="font-weight: bold; margin-top: 10px;">ERROR:</div>`;
+                    resultHtml += `<div style="background: var(--danger-bg); color: var(--danger-color); padding: 10px; border-radius: 4px; margin-top: 5px;">${result.error || 'Unknown error'}</div>`;
+                }
+                
+                resultDiv.innerHTML = resultHtml;
+
+                // Refresh operations list
+                await loadOperations();
+
+            } catch (error) {
+                console.error('❌ Test operation failed:', error);
+                const errorHtml = `
+                    <div style="color: var(--danger-color); font-weight: bold;">❌ REQUEST FAILED</div><br>
+                    <div style="font-weight: bold; margin-top: 10px;">ERROR:</div>
+                    <div style="background: var(--danger-bg); color: var(--danger-color); padding: 10px; border-radius: 4px; margin-top: 5px;">${error.message}</div>
+                `;
+                resultDiv.innerHTML = errorHtml;
+            } finally {
+                testButton.disabled = false;
+                testButton.textContent = 'Test Operation';
+            }
+            
+            return false; // Prevent form submission
+        }
+
+        async function manualTestOperation() {
+            console.log('🚀 manualTestOperation called directly');
+            
+            const server = document.getElementById('testServer').value;
+            const operation = document.getElementById('testOperation').value;
+            const payloadText = document.getElementById('testPayload').value;
+
+            console.log('📋 Manual test values:', { server, operation, payloadText });
+
+            if (!server || !operation) {
+                console.log('❌ Missing server or operation');
+                alert('Please select both a server and operation');
+                return;
+            }
+
+            const resultDiv = document.getElementById('testResult');
+            const testButton = document.getElementById('testButton');
+            
+            console.log('📍 Found result div:', resultDiv ? 'YES' : 'NO');
+            console.log('📍 Found test button:', testButton ? 'YES' : 'NO');
+            
+            // Show result div and loading state
+            resultDiv.style.display = 'block';
+            resultDiv.style.border = '2px solid var(--text-primary)';
+            resultDiv.innerHTML = '⏳ <div class="loading"></div> Testing operation...';
+            testButton.disabled = true;
+            testButton.textContent = 'Testing...';
+
+            console.log('🧪 Testing operation manually:', { server, operation, payloadText });
+
+            try {
+                const payload = JSON.parse(payloadText);
+                console.log('📤 Sending request to:', `/api/test/${server}/${operation}`, 'with payload:', payload);
+                
+                const response = await fetch(`/api/test/${server}/${operation}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📥 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('📋 Response data:', result);
+                
+                // Enhanced result formatting with better styling and data source indicator
+                let resultHtml = '';
+                
+                // Add data source indicator
+                const dataSourceIcon = result.dataSource === 'direct_api' ? '🌐' : '🤖';
+                const dataSourceText = result.dataSource === 'direct_api' ? 'REAL DATA' : 'SIMULATED';
+                const dataSourceColor = result.dataSource === 'direct_api' ? '#28a745' : '#ffc107';
+                
+                if (result.success) {
+                    resultHtml = `<div style="color: var(--success-color); font-weight: bold; font-size: 1.2em;">✅ SUCCESS</div>`;
+                    resultHtml += `<div style="color: ${dataSourceColor}; font-weight: bold; margin: 5px 0; padding: 5px; background: var(--bg-tertiary); border-radius: 4px; border-left: 4px solid ${dataSourceColor};">${dataSourceIcon} ${dataSourceText}</div>`;
+                    
+                    if (result.result && typeof result.result === 'object' && Object.keys(result.result).length > 0) {
+                        resultHtml += `<div style="font-weight: bold; margin-top: 10px;">RESULT:</div>`;
+                        resultHtml += `<pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 4px; overflow: auto; margin-top: 5px; max-height: 300px;">${JSON.stringify(result.result, null, 2)}</pre>`;
+                    } else if (result.result) {
+                        resultHtml += `<div style="font-weight: bold; margin-top: 10px;">RESULT:</div>`;
+                        resultHtml += `<div style="background: var(--bg-tertiary); padding: 10px; border-radius: 4px; margin-top: 5px;">${result.result}</div>`;
+                    } else {
+                        resultHtml += `<div style="color: var(--text-secondary); margin-top: 10px;">Operation completed successfully (no data returned)</div>`;
+                    }
+                } else {
+                    resultHtml = `<div style="color: var(--danger-color); font-weight: bold; font-size: 1.2em;">❌ FAILED</div>`;
+                    resultHtml += `<div style="color: ${dataSourceColor}; font-weight: bold; margin: 5px 0; padding: 5px; background: var(--bg-tertiary); border-radius: 4px; border-left: 4px solid ${dataSourceColor};">${dataSourceIcon} ${dataSourceText}</div>`;
+                    resultHtml += `<div style="font-weight: bold; margin-top: 10px;">ERROR:</div>`;
+                    resultHtml += `<div style="background: var(--danger-bg); color: var(--danger-color); padding: 10px; border-radius: 4px; margin-top: 5px;">${result.error || 'Unknown error'}</div>`;
+                }
+                
+                resultDiv.innerHTML = resultHtml;
+                console.log('✅ Result HTML set:', resultHtml.substring(0, 100) + '...');
+
+                // Refresh operations list
+                await loadOperations();
+
+            } catch (error) {
+                console.error('❌ Test operation failed:', error);
+                const errorHtml = `
+                    <div style="color: var(--danger-color); font-weight: bold; font-size: 1.2em;">❌ REQUEST FAILED</div><br>
+                    <div style="font-weight: bold; margin-top: 10px;">ERROR:</div>
+                    <div style="background: var(--danger-bg); color: var(--danger-color); padding: 10px; border-radius: 4px; margin-top: 5px;">${error.message}</div>
+                `;
+                resultDiv.innerHTML = errorHtml;
+                console.log('❌ Error HTML set:', errorHtml.substring(0, 100) + '...');
+            } finally {
+                testButton.disabled = false;
+                testButton.textContent = 'Test Operation';
+            }
+        }
+
+        async function runDiagnosis(event) {
+            event.preventDefault();
+
+            const clientName = document.getElementById('clientName').value || undefined;
+            const resultDiv = document.getElementById('diagnosisResult');
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading"></div> Running diagnosis...';
+
+            try {
+                const response = await fetch('/api/diagnose', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientName })
+                });
+
+                const result = await response.json();
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdate').textContent =
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        async function restartServer(serverName) {
+            const button = event.target;
+            const originalText = button.textContent;
+
+            try {
+                button.disabled = true;
+                button.textContent = '🔄 Restarting...';
+
+                const response = await fetch(`/api/restart/${serverName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    button.textContent = '✅ Restarted';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                        refreshData(); // Refresh status after restart
+                    }, 3000);
+                } else {
+                    button.textContent = '❌ Failed';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 3000);
+                    alert(`Failed to restart ${serverName}: ${result.error}`);
+                }
+            } catch (error) {
+                button.textContent = '❌ Error';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 3000);
+                alert(`Error restarting ${serverName}: ${error.message}`);
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshData, 10000);
+            } else {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+
+        // Section management
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById('section-' + section).style.display = 'block';
+            
+            // Set active nav button
+            document.getElementById('nav-' + section).classList.add('active');
+        }
+
+        // Tool health checking
+        async function checkToolHealth() {
+            try {
+                const response = await fetch('/api/tool-health');
+                const data = await response.json();
+                
+                displayToolHealth(data.results);
+            } catch (error) {
+                console.error('Error checking tool health:', error);
+                document.getElementById('toolHealthStatus').innerHTML = 
+                    '<div class="error">Error checking tool health: ' + error.message + '</div>';
+            }
+        }
+
+        function displayToolHealth(results) {
+            const container = document.getElementById('toolHealthStatus');
+            
+            let html = '<div class="tool-health-grid">';
+            
+            results.forEach(result => {
+                const statusClass = result.status === 'healthy' ? 'healthy' : 
+                                  result.status === 'empty_tools' ? 'critical' : 'error';
+                
+                html += `
+                    <div class="tool-health-card ${statusClass}">
+                        <h3>${result.serverName}</h3>
+                        <div class="status">${result.status.replace('_', ' ').toUpperCase()}</div>
+                        <div class="tool-count">${result.toolCount}/${result.expectedToolCount} tools</div>
+                        ${result.tools ? '<div class="tools">Tools: ' + result.tools.join(', ') + '</div>' : ''}
+                        ${result.error ? '<div class="error">Error: ' + result.error + '</div>' : ''}
+                        ${result.responseTime ? '<div class="response-time">' + result.responseTime + 'ms</div>' : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // Add summary
+            const healthy = results.filter(r => r.status === 'healthy').length;
+            const emptyTools = results.filter(r => r.status === 'empty_tools').length;
+            const errors = results.filter(r => r.status === 'connection_error' || r.status === 'auth_error').length;
+            
+            html = `
+                <div class="tool-health-summary">
+                    <h3>Summary: ${healthy} healthy, ${emptyTools} with tool issues, ${errors} with errors</h3>
+                    ${emptyTools > 0 ? '<div class="warning">⚠️ Tool registration issues detected! This may be the agents package bug.</div>' : ''}
+                </div>
+            ` + html;
+            
+            container.innerHTML = html;
+        }
+
+        // Emergency actions
+        async function emergencyUpdateAgents() {
+            if (!confirm('This will update all MCP servers and redeploy them. Continue?')) {
+                return;
+            }
+            
+            const button = event.target;
+            const resultsDiv = document.getElementById('emergencyResults');
+            
+            button.disabled = true;
+            button.textContent = 'Updating...';
+            resultsDiv.innerHTML = '<div class="loading">🔄 Updating agents package and redeploying servers...</div>';
+            
+            try {
+                const response = await fetch('/api/emergency/update-agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                let html = '<div class="emergency-results">';
+                html += '<h3>' + (result.success ? '✅ ' : '❌ ') + result.message + '</h3>';
+                
+                if (result.updateResults) {
+                    html += '<h4>Package Updates:</h4><ul>';
+                    result.updateResults.forEach(update => {
+                        html += '<li>' + (update.success ? '✅' : '❌') + ' ' + update.directory.split('/').pop() + 
+                               (update.error ? ': ' + update.error : '') + '</li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                if (result.deployResults) {
+                    html += '<h4>Deployments:</h4><ul>';
+                    result.deployResults.forEach(deploy => {
+                        html += '<li>' + (deploy.success ? '✅' : '❌') + ' ' + deploy.server + 
+                               (deploy.error ? ': ' + deploy.error : '') + '</li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                if (result.recommendation) {
+                    html += '<div class="recommendation">💡 ' + result.recommendation + '</div>';
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="error">❌ Emergency update failed: ' + error.message + '</div>';
+            } finally {
+                button.disabled = false;
+                button.textContent = '🔄 Emergency Agents Package Update';
+            }
+        }
+
+        // Dark mode functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (body.hasAttribute('data-theme')) {
+                // Switch to light mode
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                // Switch to dark mode
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme on page load
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️ Light Mode';
+            } else {
+                themeToggle.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        // Initialize
+        document.getElementById('autoRefresh').addEventListener('change', toggleAutoRefresh);
+        
+        // Add event listener for server selection change
+        document.getElementById('testServer').addEventListener('change', updateOperationDropdown);
+
+        // Load saved theme first
+        loadSavedTheme();
+
+        // Load initial data and tools
+        loadServerTools().then(() => {
+            // Initialize operation dropdown as disabled
+            document.getElementById('testOperation').disabled = true;
+            
+            // Trigger updateOperationDropdown for the initially selected server
+            updateOperationDropdown();
+            
+            refreshData();
+            toggleAutoRefresh();
+        });
+    </script>
+</body>
+</html>
