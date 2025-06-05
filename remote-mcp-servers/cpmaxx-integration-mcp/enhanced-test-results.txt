@@ -1,0 +1,13 @@
+🚀 Testing Enhanced Hotel Data Extraction & Intelligence
+=======================================================
+CPMaxx Local MCP Server running on stdio
+📨 Sending enhanced extraction test request...
+🔍 Location: Portland, Oregon
+📅 Dates: Oct 1-2, 2025
+🏨 Testing: Enhanced data extraction with intelligence
+
+[Hotel Search] Starting search for: Portland, Oregon
+Launching browser...
+❌ Failed to parse response: Unterminated string in JSON at position 65516 (line 1 column 65517)
+
+🏁 Enhanced extraction test completed!

@@ -1,0 +1,8 @@
+🔍 Testing Checkbox-Based Hotel Extraction
+=========================================
+📨 Sending hotel search request...
+
+🎉 EXTRACTION COMPLETED!
+========================
+
+🏁 Test completed!

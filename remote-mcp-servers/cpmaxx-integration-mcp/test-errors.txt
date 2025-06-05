@@ -1,0 +1,3 @@
+CPMaxx Local MCP Server running on stdio
+[Hotel Search] Starting search for: Cork
+Launching browser...

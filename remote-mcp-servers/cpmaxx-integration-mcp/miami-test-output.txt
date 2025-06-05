@@ -1,0 +1,11 @@
+🔍 Testing Checkbox-Based Hotel Extraction
+=========================================
+CPMaxx Local MCP Server running on stdio
+📨 Sending hotel search request...
+[Hotel Search] Starting search for: Miami, Florida
+Launching browser...
+
+🎉 EXTRACTION COMPLETED!
+========================
+
+🏁 Test completed!

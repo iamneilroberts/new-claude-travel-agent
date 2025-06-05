@@ -1,0 +1,37 @@
+{
+  "name": "cpmaxx-integration-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for CPMaxx hotel and rental car search integration with browser automation",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "wrangler dev",
+    "dev:local": "npm run build && node dist/local-server.js",
+    "start:local": "npm run build && node dist/local-server.js",
+    "deploy": "wrangler deploy",
+    "test": "node test-server.js",
+    "test:local": "npm run build && node dist/local-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.4",
+    "agents": "^0.0.94",
+    "playwright": "^1.52.0",
+    "zod": "^3.25.16"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.16.0"
+  },
+  "keywords": [
+    "mcp",
+    "cpmaxx",
+    "hotel-search",
+    "car-rental",
+    "browser-automation",
+    "travel"
+  ],
+  "author": "Travel Agent System",
+  "license": "MIT"
+}

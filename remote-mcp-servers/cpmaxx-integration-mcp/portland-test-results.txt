@@ -1,0 +1,17 @@
+🏨 Testing Portland Oregon Hotel Search with Real Commission Extraction
+==================================================================
+CPMaxx Local MCP Server running on stdio
+📨 Sending Portland Oregon hotel search request...
+🔍 Location: Portland, Oregon
+📅 Check-in: 2025-10-01
+📅 Check-out: 2025-10-02
+🏨 Rooms: 1, Adults: 2, Children: 0
+👁️  Visible browser: Enabled
+
+[Hotel Search] Starting search for: Portland, Oregon
+Launching browser...
+
+🎉 PORTLAND OREGON EXTRACTION COMPLETED!
+========================================
+
+🏁 Portland Oregon test completed!
