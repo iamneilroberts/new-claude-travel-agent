@@ -65,3 +65,6 @@ reference-docs/temp/
 
 # Obsolete files and folders
 obsolete/
+remote-mcp-servers/mobile-interaction-mcp/manual-oauth.js
+remote-mcp-servers/mobile-interaction-mcp/quick-oauth.js
+remote-mcp-servers/mobile-interaction-mcp/simple-oauth-fixed.js
