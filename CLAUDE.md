@@ -56,7 +56,7 @@ The **basic-memory MCP server** is your primary knowledge source. It contains:
 - ✅ **r2-storage** - Image gallery, file storage, presigned URLs (6 tools)
 - ✅ **template-document** - Itinerary, packing lists, budget documents (4 tools)
 - ✅ **mobile-interaction** - WhatsApp, Telegram, SMS integration (4 tools) 
-- ✅ **prompt-server** - Dynamic instructions, mode detection (5 tools)
+- ✅ **prompt-instructions** - Dynamic instructions, mode detection (5 tools)
 - ✅ **sequential-thinking** - Step-by-step reasoning chains (1 tool)
 
 ### Critical Implementation Notes
@@ -91,7 +91,7 @@ The **basic-memory MCP server** is your primary knowledge source. It contains:
 - Manual protocol implementation missing async initialization
 - **Zod Schema Corruption**: Custom implementations serialize Zod objects incorrectly, causing tools to show as "disabled" in Claude Desktop
 
-**Servers broken by this**: amadeus-api, template-document, r2-storage, prompt-server, sequential-thinking
+**Servers broken by this**: amadeus-api, template-document, r2-storage, prompt-instructions, sequential-thinking
 
 **Fix**: Revert to commit 8f17c57 (working McpAgent implementations)
 
