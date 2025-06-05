@@ -6,6 +6,12 @@
 # Claude Desktop config with sensitive data
 claude-desktop-config.json
 
+# OAuth credential files (keep local, don't commit)
+remote-mcp-servers/mobile-interaction-mcp/exchange-code.js
+remote-mcp-servers/mobile-interaction-mcp/oauth-refresh.js
+remote-mcp-servers/mobile-interaction-mcp/simple-oauth-server.js
+remote-mcp-servers/mobile-interaction-mcp/update-tokens.js
+
 # Node modules
 node_modules/
 */node_modules/
