@@ -48,3 +48,27 @@ Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-05 03:11)
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-05 07:22)
+- 🐛 Fixed: docs: fix prompt-instructions typo and update memory-bank records
+
+- Correct "prompt-server" to "prompt-instructions" in CLAUDE.md
+- Update memory-bank with latest session documentation
+- Remove obsolete test image file
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-05 12:55)
+- ✨ Added: feat: implement D1-powered OAuth MCP server for direct Claude Desktop connections
+
+- Convert PostgreSQL-based OAuth server to use Cloudflare D1 database
+- Enable direct Claude Desktop → remote MCP server connections via HTTP
+- Add OAuth 2.0 authentication with RFC 8252 support (urn:ietf:wg:oauth:2.0:oob)
+- Integrate mcp-remote proxy for OAuth client registration and PKCE flow
+- Deploy sequential-thinking MCP server with D1 backend at somotravel.workers.dev
+- Eliminate need for mcp-use bridge by using Cloudflare boilerplate pattern
+
+This breakthrough enables Claude Desktop to connect directly to remote Cloudflare
+Workers MCP servers, providing a scalable foundation for all future MCP deployments.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-05 13:04)
