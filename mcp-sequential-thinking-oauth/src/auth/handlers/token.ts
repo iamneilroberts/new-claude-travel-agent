@@ -48,7 +48,7 @@ export class OAuthTokenHandler {
 
       return authCode;
     } finally {
-      await this.db.disconnect();
+      // await this.db.disconnect(); // D1 doesn't need disconnect
     }
   }
 
@@ -133,7 +133,7 @@ export class OAuthTokenHandler {
         scope: grant.scopes
       };
     } finally {
-      await this.db.disconnect();
+      // await this.db.disconnect(); // D1 doesn't need disconnect
     }
   }
 
@@ -191,7 +191,7 @@ export class OAuthTokenHandler {
         scope: accessToken.scopes
       };
     } finally {
-      await this.db.disconnect();
+      // await this.db.disconnect(); // D1 doesn't need disconnect
     }
   }
 
@@ -221,7 +221,7 @@ export class OAuthTokenHandler {
         scopes: accessToken.scopes.split(' ')
       };
     } finally {
-      await this.db.disconnect();
+      // await this.db.disconnect(); // D1 doesn't need disconnect
     }
   }
 
@@ -244,7 +244,7 @@ export class OAuthTokenHandler {
 
       return false;
     } finally {
-      await this.db.disconnect();
+      // await this.db.disconnect(); // D1 doesn't need disconnect
     }
   }
 } 

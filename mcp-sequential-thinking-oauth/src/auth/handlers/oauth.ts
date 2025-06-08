@@ -549,12 +549,11 @@ oauthApp.post("/oauth/introspect", async (c) => {
       return c.json({ active: false });
     }
 
+    // Try to get access token info
+    const db = new D1DatabaseService(c.env);
+      
     try {
-      // Try to get access token info
-      const db = new D1DatabaseService(c.env);
-        
-      try {
-        const accessToken = await db.findOAuthAccessTokenByToken(token);
+      const accessToken = await db.findOAuthAccessTokenByToken(token);
         if (!accessToken) {
           return c.json({ active: false });
         }
@@ -576,9 +575,6 @@ oauthApp.post("/oauth/introspect", async (c) => {
           sub: user.id,
           aud: application.uid
         });
-      } finally {
-        await db.disconnect();
-      }
     } catch (error) {
       console.error("Token introspection error:", error);
       return c.json({ active: false });

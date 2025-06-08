@@ -44,15 +44,9 @@ authApp.post("/login", async (c) => {
     const db = new D1DatabaseService(c.env);
   
     try {
-      // Get user
-      const user = await db.getUserByUsername(username);
+      // Validate user credentials
+      const user = await db.validateUserCredentials(username, password);
       if (!user) {
-        return c.json({ message: "Invalid username or password" }, 401);
-      }
-
-      // Verify password
-      const isValidPassword = await db.verifyPassword(password, user.password_hash);
-      if (!isValidPassword) {
         return c.json({ message: "Invalid username or password" }, 401);
       }
 
@@ -130,11 +124,12 @@ authApp.post("/login", async (c) => {
           return c.json({ message: "Failed to create session" }, 500);
         }
       }
-    } finally {
-      await db.disconnect();
+    } catch (error) {
+      console.error("Login error:", error);
+      return c.json({ message: "Internal server error" }, 500);
     }
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Outer login error:", error);
     return c.json({ message: "Internal server error" }, 500);
   }
 });
@@ -171,11 +166,12 @@ authApp.post("/register", async (c) => {
       await db.createUser({ username, email, name, password });
       
       return c.json({ message: "User created successfully" });
-    } finally {
-      await db.disconnect();
+    } catch (error) {
+      console.error("Registration error:", error);
+      return c.json({ message: "Internal server error" }, 500);
     }
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Outer registration error:", error);
     return c.json({ message: "Internal server error" }, 500);
   }
 });
@@ -183,14 +179,7 @@ authApp.post("/register", async (c) => {
 // Initialize database endpoint (for setup)
 authApp.post("/init-db", async (c) => {
   try {
-    const db = new D1DatabaseService(c.env);
-      
-    try {
-      await db.initializeDatabase();
-      return c.json({ message: "Database initialized successfully" });
-    } finally {
-      await db.disconnect();
-    }
+    return c.json({ message: "Database schema should be initialized via D1 migrations. Use 'wrangler d1 execute --file schema.sql'" });
   } catch (error) {
     console.error("Database initialization error:", error);
     return c.json({ message: "Failed to initialize database" }, 500);

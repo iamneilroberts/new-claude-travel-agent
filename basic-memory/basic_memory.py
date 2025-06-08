@@ -364,6 +364,8 @@ def main():
     parser = argparse.ArgumentParser(description='Basic Memory System for Claude Code')
     parser.add_argument('--knowledge-dir', default='knowledge', 
                        help='Directory to store knowledge files')
+    parser.add_argument('--quiet', '-q', action='store_true',
+                       help='Suppress all non-essential output')
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
@@ -419,50 +421,68 @@ def main():
     if args.command == 'create':
         note_id = bm.create_note(args.title, args.content, args.type, 
                                 args.tags, args.observations)
-        print(f"Created note: {note_id}")
+        if not args.quiet:
+            print(f"Created note: {note_id}")
         
     elif args.command == 'read':
         content = bm.read_note(args.note_id, args.format)
         if content:
             print(content)
         else:
-            print(f"Note '{args.note_id}' not found")
+            if not args.quiet:
+                print(f"Note '{args.note_id}' not found")
             
     elif args.command == 'search':
         results = bm.search_notes(args.query, args.type, args.limit)
         if results:
-            print(f"Found {len(results)} notes:")
-            for i, note in enumerate(results, 1):
-                print(f"{i}. {note['title']} ({note['id']}) - {note['type']}")
-                print(f"   Tags: {', '.join(note['tags'])}")
-                print(f"   Modified: {note['modified']}")
-                print()
+            if not args.quiet:
+                print(f"Found {len(results)} notes:")
+                for i, note in enumerate(results, 1):
+                    print(f"{i}. {note['title']} ({note['id']}) - {note['type']}")
+                    print(f"   Tags: {', '.join(note['tags'])}")
+                    print(f"   Modified: {note['modified']}")
+                    print()
+            else:
+                # In quiet mode, just print note IDs for programmatic use
+                for note in results:
+                    print(note['id'])
         else:
-            print("No notes found")
+            if not args.quiet:
+                print("No notes found")
             
     elif args.command == 'observe':
         if bm.add_observation(args.note_id, args.observation, args.method):
-            print(f"Added observation to {args.note_id}")
+            if not args.quiet:
+                print(f"Added observation to {args.note_id}")
         else:
-            print(f"Note '{args.note_id}' not found")
+            if not args.quiet:
+                print(f"Note '{args.note_id}' not found")
             
     elif args.command == 'relate':
         if bm.create_relation(args.from_note, args.to_note, args.relation_type):
-            print(f"Created relation: {args.from_note} --[{args.relation_type}]--> {args.to_note}")
+            if not args.quiet:
+                print(f"Created relation: {args.from_note} --[{args.relation_type}]--> {args.to_note}")
         else:
-            print("One or both notes not found")
+            if not args.quiet:
+                print("One or both notes not found")
             
     elif args.command == 'list':
         results = bm.list_notes(args.type, args.limit)
         if results:
-            print(f"Found {len(results)} notes:")
-            for i, note in enumerate(results, 1):
-                print(f"{i}. {note['title']} ({note['id']}) - {note['type']}")
-                print(f"   Tags: {', '.join(note['tags'])}")
-                print(f"   Modified: {note['modified']}")
-                print()
+            if not args.quiet:
+                print(f"Found {len(results)} notes:")
+                for i, note in enumerate(results, 1):
+                    print(f"{i}. {note['title']} ({note['id']}) - {note['type']}")
+                    print(f"   Tags: {', '.join(note['tags'])}")
+                    print(f"   Modified: {note['modified']}")
+                    print()
+            else:
+                # In quiet mode, just print note IDs for programmatic use
+                for note in results:
+                    print(note['id'])
         else:
-            print("No notes found")
+            if not args.quiet:
+                print("No notes found")
 
 
 if __name__ == '__main__':
