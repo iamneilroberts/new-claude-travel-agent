@@ -1,5 +1,5 @@
-name = "d1-database-pure"
-main = "src/index.ts"
+name = "d1-database-robust"
+main = "src/robust-mcp-index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
