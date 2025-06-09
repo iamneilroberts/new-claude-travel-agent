@@ -31,3 +31,35 @@ Workers MCP servers, providing a scalable foundation for all future MCP deployme
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 
+**Database Schema Update** (2025-06-09 10:48)
+- feat: establish baseline for MCP infrastructure evaluation
+
+## Summary
+- Complete Sprint S05 MCP remote evaluation with systematic analysis
+- Document current mcp-remote issues and alternative solutions
+- Prepare foundation for MetaMCP migration
+
+## Key Changes
+- Add comprehensive Sprint S05 documentation in .simone/
+- Document DNS resolution issues and 27+ process overhead with mcp-remote
+- Create pure MCP implementations for all servers
+- Add evaluation infrastructure for mcpo and MetaMCP alternatives
+- Update basic-memory knowledge base with troubleshooting insights
+
+## Infrastructure Updates
+- All MCP servers now have pure-mcp-index.ts implementations
+- Add wrangler.pure-mcp.toml configurations
+- Update package.json files for latest MCP SDK compatibility
+- Create systematic testing and validation framework
+
+## Documentation
+- MCP_TIMEOUT_ANALYSIS_AND_FIX.md: Root cause analysis
+- Sprint S05 task documentation with evaluation results
+- Basic-memory knowledge entries for future troubleshooting
+
+This commit establishes the baseline before MetaMCP migration testing.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+

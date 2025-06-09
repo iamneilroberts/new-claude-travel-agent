@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "MetaMCP": {
+      "command": "npx",
+      "args": [
+        "-y", "@metamcp/mcp-server-metamcp@latest",
+        "--metamcp-api-key", "sk_mt_RgDDhK51yQiXzZidSyJvEhiHcDfVOzvEeeiSaa9Zo53xjJN8HpSTkR8JBiALeG7uThe",
+        "--metamcp-api-base-url", "http://localhost:12005"
+      ]
+    }
+  }
+}
