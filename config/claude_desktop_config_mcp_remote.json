@@ -1,0 +1,84 @@
+{
+  "mcpServers": {
+    "amadeus-api": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://pure-amadeus-api-mcp.somotravel.workers.dev/sse",
+        "--auth-token", "amadeus-mcp-auth-key-2025"
+      ]
+    },
+    "travel-document-generator": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://travel-document-generator-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "travel-document-generator-mcp-auth-key-2025"
+      ]
+    },
+    "google-places-api": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://google-places-api-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "google-places-mcp-auth-key-2025"
+      ]
+    },
+    "r2-storage": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://r2-storage-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "r2-mcp-auth-key-2025"
+      ]
+    },
+    "mobile-interaction": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://mobile-interaction-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "mobile-interaction-mcp-auth-key-2025"
+      ]
+    },
+    "prompt-instructions": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://prompt-instructions-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "prompt-instructions-mcp-auth-key-2025"
+      ]
+    },
+    "github-mcp": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://github-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "github-mcp-auth-key-2025"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://sequential-thinking-pure.somotravel.workers.dev/sse",
+        "--auth-token", "sequential-thinking-auth-2025"
+      ]
+    },
+    "basic-memory": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://basic-memory-mcp-pure.somotravel.workers.dev/sse",
+        "--auth-token", "basic-memory-mcp-auth-key-2025"
+      ]
+    },
+    "d1-database": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", 
+        "https://d1-database-pure.somotravel.workers.dev/sse",
+        "--auth-token", "clean-d1-auth-2025"
+      ]
+    }
+  }
+}

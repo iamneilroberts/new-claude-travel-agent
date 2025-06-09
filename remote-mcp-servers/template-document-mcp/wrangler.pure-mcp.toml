@@ -1,0 +1,13 @@
+name = "template-document-mcp-pure"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[observability.logs]
+enabled = true
+
+[vars]
+MCP_AUTH_KEY = "template-document-auth-2025"
+
+[triggers]
+crons = []

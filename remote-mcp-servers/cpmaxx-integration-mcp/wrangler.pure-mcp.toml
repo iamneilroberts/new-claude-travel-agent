@@ -1,0 +1,22 @@
+name = "cpmaxx-integration-mcp-pure"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[observability.logs]
+enabled = true
+
+[vars]
+MCP_AUTH_KEY = "cpmaxx-integration-mcp-auth-key-2025"
+CPMAXX_BASE_URL = "https://cpmaxx.cruiseplannersnet.com"
+
+# Secrets (set via wrangler secret put)
+# CP_CENTRAL_LOGIN = "..."
+# CP_CENTRAL_PASSWORD = "..."
+
+[triggers]
+crons = []
+
+# Note: This server requires browser automation capabilities
+# It uses Playwright for CPMaxx portal automation
+# Ensure all browser automation dependencies are available

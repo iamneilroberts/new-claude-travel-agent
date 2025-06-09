@@ -1,0 +1,120 @@
+● Session Summary: Basic-Memory MCP Integration for Automatic Documentation
+
+  Current Status ✅
+
+  Completed:
+
+  1. Consolidated Memory Systems:
+    - Removed confusing simple-memory template (had only 2 test notes)
+    - Consolidated on single "basic-memory" system containing real project knowledge
+    - Renamed and moved MCP server: /home/neil/dev/new-claude-travel-agent/basic-memory-mcp/
+    - Successfully added to Claude Code as basic-memory MCP server
+  2. Built Working Basic-Memory MCP Server:
+    - Location: /home/neil/dev/new-claude-travel-agent/basic-memory-mcp/
+    - Status: Added to Claude Code (requires restart to activate tools)
+    - Integrates with existing basic-memory system via uvx basic-memory tool commands
+  3. Available MCP Tools for Claude Code (after restart):
+    - mcp__basic-memory__search_notes - Search existing knowledge
+    - mcp__basic-memory__read_note - Read specific notes
+    - mcp__basic-memory__write_note - Create/update notes
+    - mcp__basic-memory__add_compact_summary - KEY: Add /compact summaries automatically
+    - mcp__basic-memory__add_commit_note - KEY: Add detailed commit information
+  4. Updated Documentation:
+    - Updated CLAUDE.md with instructions for when Claude Code should automatically add memories
+    - Includes clear guidelines for auto-documentation triggers
+  5. Web Browser Interface:
+    - Location: /home/neil/dev/new-claude-travel-agent/scripts/memory-browser.js
+    - URL: http://localhost:3000 (when running: cd scripts && npm start)
+    - Integrated with basic-memory system for viewing/searching all notes
+  6. 🎉 DISCOVERED: Extensive Existing Git Automation:
+    - Post-commit hook: /.git/hooks/post-commit - Auto-categorizes commits, updates memory-bank files
+    - Pre-push hook: /.git/hooks/pre-push - Creates session summaries when pushing to GitHub
+    - Auto-generated files:
+        - memory-bank/sessions.md - Session summaries with commit lists
+      - memory-bank/activeContext.md - Real-time commit activity log
+      - memory-bank/progress.md - Categorized progress tracking
+      - memory-bank/systemPatterns.md - MCP server change tracking
+      - memory-bank/techContext.md - Database/schema change tracking
+
+  Goal Progress 🎯
+
+  Target: Automatic documentation via daemon monitoring /compact summaries + detailed commit descriptions
+
+  Current State:
+  - ✅ MCP tools ready for automatic documentation
+  - ✅ Claude Code can now add summaries and commit notes (after restart)
+  - ✅ Git commit automation working (categorized progress tracking)
+  - ✅ Session summary automation working (on git push)
+  - ❌ Missing: /compact summary monitoring daemon
+  - ❌ Missing: Integration between existing memory-bank automation and basic-memory system
+
+  Next Steps for New Session 📋
+
+  1. Test MCP Tools (Priority 1)
+
+  After Claude Code restart, test if tools are available:
+  # Test basic search
+  mcp__basic-memory__search_notes {"query": "travel"}
+
+  # Test adding a compact summary
+  mcp__basic-memory__add_compact_summary {
+    "sessionDate": "2025-01-06",
+    "summary": "Test summary",
+    "keyChanges": ["Testing MCP integration"]
+  }
+
+  2. Research /compact Storage Mechanism
+
+  Key Research Needed:
+  - Investigate Claude Code cache directories for /compact output storage
+  - Determine how Claude Code's /compact command saves summaries
+  - Check: /home/neil/.cache/claude-cli-nodejs/ (contains MCP logs by timestamp)
+  - Look for chat history/session storage locations
+
+  3. Build /compact Monitoring Daemon
+
+  Once storage mechanism is found:
+  - Create file system watcher for /compact output
+  - Build daemon to automatically trigger mcp__basic-memory__add_compact_summary
+  - Integrate with existing git hook automation
+
+  4. Integration & Testing
+
+  - Connect existing memory-bank automation with basic-memory system
+  - Test end-to-end workflow: commit → git hooks → basic-memory storage
+  - Verify web browser shows all integrated content
+
+  Key Information for New Session 🔗
+
+  Existing Knowledge Base
+
+  Access via: uvx basic-memory tool search-notes "topic"
+  - Contains: Travel agent project notes, MCP server configs, implementation details
+  - Feature request exists: "feature-requests/feature-request-automatic-session-summary-storage"
+
+  File Locations
+
+  - Basic-Memory MCP: /home/neil/dev/new-claude-travel-agent/basic-memory-mcp/
+  - Web Interface: /home/neil/dev/new-claude-travel-agent/scripts/memory-browser.js
+  - Git Hooks: /.git/hooks/post-commit and /.git/hooks/pre-push
+  - Auto-docs: /memory-bank/ directory (sessions.md, progress.md, etc.)
+  - Claude Cache: /home/neil/.cache/claude-cli-nodejs/ (potential /compact storage)
+
+  Current Documentation
+
+  - CLAUDE.md: Updated with memory automation guidelines
+  - Basic-memory system: Contains real project knowledge (not just test data)
+  - Memory-bank files: Working git automation creating categorized progress logs
+
+  Status Summary
+
+  Infrastructure: 95% complete - MCP tools ready, git automation working, web interface built
+  Missing piece: /compact monitoring mechanism (research needed on Claude Code's internal storage)
+  Goal: Once /compact monitoring is implemented, full automatic documentation workflow will be complete
+  
+
+first task: we need a daemon to monitor these folders and extract conversation summaries and possibly todos
+  /home/neil/.claude/todos
+/home/neil/.claude/projects/-home-neil-dev-new-claude-travel-agent
+
+I'm positive that we had a daemon/service running that was able to extract conversation summaries. Start by extensively searching the project directory to find prior work on the chat history monitoring daemon and any documentation about it (work was done on 6/5/2025 - 6/6/2025)

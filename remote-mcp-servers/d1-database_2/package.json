@@ -4,6 +4,7 @@
 	"description": "D1 Database MCP Server for travel data with standard HTTP endpoints",
 	"private": true,
 	"scripts": {
+		"build": "tsc",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"format": "biome format --write",
@@ -19,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@cloudflare/workers-types": "^4.20250607.0",
 		"typescript": "^5.8.3",
 		"wrangler": "^4.16.0"
 	}

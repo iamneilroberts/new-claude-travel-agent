@@ -1,0 +1,10 @@
+name = "pure-amadeus-api-mcp"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+MCP_AUTH_KEY = "amadeus-mcp-auth-key-2025"
+
+# Environment variables are loaded from .env file or Cloudflare dashboard
+# Required: AMADEUS_API_KEY, AMADEUS_API_SECRET

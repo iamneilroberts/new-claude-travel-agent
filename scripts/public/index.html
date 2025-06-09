@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .header {
+            background: #1e1e1e;
+        }
+
+        body.dark-mode .controls,
+        body.dark-mode .stat-card,
+        body.dark-mode .note-card {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .search-box input,
+        body.dark-mode .filter-group select {
+            background: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        body.dark-mode .search-box input:focus,
+        body.dark-mode .filter-group select:focus {
+            border-color: #4a9eff;
+        }
+
+        body.dark-mode .note-title {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .note-actions {
+            background: #3d3d3d;
+        }
+
+        body.dark-mode .modal-content {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .note-content-full {
+            background: #1e1e1e;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #noteTitle,
+        body.dark-mode #noteTags,
+        body.dark-mode #noteContent {
+            background: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        body.dark-mode .error {
+            background: #c0392b;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .search-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-box label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .search-box input {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .filter-group select {
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            height: fit-content;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .note-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .note-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .note-header {
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+
+        .note-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .note-type {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .type-entity { background: #e8f4fd; color: #1976d2; }
+        .type-project { background: #e8f5e8; color: #27ae60; }
+        .type-concept { background: #e3f2fd; color: #2196f3; }
+        .type-reference { background: #fff3e0; color: #ff9800; }
+        .type-insight { background: #f3e5f5; color: #9c27b0; }
+        .type-decision { background: #ffeaa7; color: #d63031; }
+        .type-todo { background: #ffeec4; color: #e17055; }
+        .type-solution { background: #d5f4e6; color: #00b894; }
+        .type-link { background: #e8f4fd; color: #0984e3; }
+        .type-idea { background: #f8d7da; color: #e74c3c; }
+        .type-resource { background: #e2e8f0; color: #4a5568; }
+        .type-general { background: #f5f5f5; color: #666; }
+
+        .note-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .note-content {
+            padding: 0 1.5rem;
+        }
+
+        .note-preview {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            background: #ecf0f1;
+            color: #555;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .note-actions {
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-view {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2980b9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 1rem;
+            color: #555;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .note-content-full {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Memory Browser</h1>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <label for="darkModeToggle" style="color: #ecf0f1; font-size: 0.9rem; cursor: pointer;">
+                    🌙 Dark Mode
+                </label>
+                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()" style="cursor: pointer;">
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="search-box">
+                <label for="searchInput">Search Notes</label>
+                <input type="text" id="searchInput" placeholder="Enter search terms..." />
+            </div>
+            
+            <div class="filter-group">
+                <label for="typeFilter">Filter by Type <span title="Entity: Core project components, Project: High-level information, Concept: Ideas and concepts, Reference: Documentation, Insight: Learning, Decision: Architectural decisions, Todo: Future tasks, Solution: Problem solutions, Link: External references, Idea: Feature ideas, Resource: Tools and libraries, General: Other notes" style="cursor: help; color: #666;">ℹ️</span></label>
+                <select id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="entity">📦 Entity</option>
+                    <option value="project">🚀 Project</option>
+                    <option value="concept">💡 Concept</option>
+                    <option value="reference">📚 Reference</option>
+                    <option value="insight">🔍 Insight</option>
+                    <option value="decision">🎯 Decision</option>
+                    <option value="todo">📋 Todo</option>
+                    <option value="solution">🔧 Solution</option>
+                    <option value="link">🔗 Link</option>
+                    <option value="idea">💭 Idea</option>
+                    <option value="resource">🏷️ Resource</option>
+                    <option value="general">📝 General</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Actions</label>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="performSearch()">Search</button>
+                    <button class="btn btn-success" onclick="showCreateModal()">New Note</button>
+                    <button class="btn btn-success" onclick="showQuickNoteModal()">Quick Note</button>
+                    <button class="btn btn-success" onclick="showSessionSummaries()">Sessions</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number" id="totalNotes">-</span>
+                <span class="stat-label">Total Notes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="searchResults">-</span>
+                <span class="stat-label">Search Results</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="availableSessions">-</span>
+                <span class="stat-label">Session Summaries</span>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div id="loadingContainer" class="loading">Loading notes...</div>
+        <div id="notesContainer" class="notes-grid"></div>
+    </div>
+
+    <!-- Note Detail Modal -->
+    <div id="noteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Note Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Note Modal -->
+    <div id="createNoteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="createModalTitle">Create New Note</h2>
+                <span class="close" onclick="closeCreateModal()">&times;</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="noteTitle" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Title:</label>
+                <input type="text" id="noteTitle" style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem;" placeholder="Enter note title..." />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="noteTags" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Tags (comma-separated):</label>
+                <input type="text" id="noteTags" style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem;" placeholder="tag1, tag2, tag3" />
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label for="noteContent" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Content:</label>
+                <textarea id="noteContent" style="width: 100%; height: 300px; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: 'Monaco', 'Menlo', monospace; resize: vertical;" placeholder="Enter note content in markdown format..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn" style="background: #95a5a6; color: white;" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Summaries Modal -->
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Session Summaries</h2>
+                <span class="close" onclick="closeSessionModal()">&times;</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <button class="btn btn-success" onclick="importSessions()">Import Available Sessions</button>
+                <span id="importStatus" style="margin-left: 1rem; font-style: italic;"></span>
+            </div>
+            <div id="sessionList"></div>
+        </div>
+    </div>
+
+    <!-- Quick Note Modal -->
+    <div id="quickNoteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Quick Note</h2>
+                <span class="close" onclick="closeQuickNoteModal()">&times;</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="quickNoteType" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Type:</label>
+                <select id="quickNoteType" style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem; background: white;">
+                    <option value="/note">🔍 /note - General observation</option>
+                    <option value="/idea">💭 /idea - Feature idea</option>
+                    <option value="/link">🔗 /link - Reference link</option>
+                    <option value="/decision">🎯 /decision - Important decision</option>
+                    <option value="/todo">📋 /todo - Future task</option>
+                    <option value="/fix">🔧 /fix - Solution to problem</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label for="quickNoteContent" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Brief description:</label>
+                <textarea id="quickNoteContent" style="width: 100%; height: 100px; padding: 0.75rem; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem; resize: vertical;" placeholder="Enter a brief description. Claude will expand this with additional context and details..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn" style="background: #95a5a6; color: white;" onclick="closeQuickNoteModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveQuickNote()">Save & Expand</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allNotes = [];
+        let currentNotes = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDarkMode();
+            loadNotes();
+            loadSessionStats();
+            
+            // Search on Enter key
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+
+        // Load all notes
+        async function loadNotes() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/notes?limit=100');
+                if (!response.ok) throw new Error('Failed to load notes');
+                
+                allNotes = await response.json();
+                currentNotes = allNotes;
+                
+                updateStats();
+                renderNotes(currentNotes);
+                showLoading(false);
+            } catch (error) {
+                showError('Error loading notes: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        // Perform search
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const type = document.getElementById('typeFilter').value;
+
+            try {
+                showLoading(true);
+                
+                if (query) {
+                    // Perform search
+                    let url = `/api/search?q=${encodeURIComponent(query)}`;
+                    if (type) url += `&type=${type}`;
+                    
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Search failed');
+                    
+                    currentNotes = await response.json();
+                } else {
+                    // Filter existing notes by type
+                    currentNotes = type ? allNotes.filter(note => note.type === type) : allNotes;
+                }
+                
+                updateStats();
+                renderNotes(currentNotes);
+                showLoading(false);
+            } catch (error) {
+                showError('Error searching notes: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        // Render notes
+        function renderNotes(notes) {
+            const container = document.getElementById('notesContainer');
+            
+            if (notes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No notes found</h3>
+                        <p>Try adjusting your search terms or filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notes.map(note => `
+                <div class="note-card">
+                    <div class="note-header">
+                        <div class="note-title">${escapeHtml(note.title)}</div>
+                        <div class="note-meta">
+                            <span class="note-type type-${note.type}">${getTypeIcon(note.type)} ${note.type}</span>
+                            <span class="note-date">${formatDate(note.modified)}</span>
+                        </div>
+                    </div>
+                    <div class="note-content">
+                        <div class="note-tags">
+                            ${note.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn-small btn-view" onclick="viewNote('${note.id}')">View</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View note details
+        async function viewNote(noteId) {
+            try {
+                const response = await fetch(`/api/notes/${encodeURIComponent(noteId)}`);
+                if (!response.ok) throw new Error('Failed to load note');
+                
+                const content = await response.text();
+                
+                document.getElementById('modalTitle').textContent = `Note: ${noteId}`;
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="note-content-full">${escapeHtml(content)}</div>
+                `;
+                
+                document.getElementById('noteModal').style.display = 'block';
+            } catch (error) {
+                showError('Error loading note: ' + error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('noteModal').style.display = 'none';
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalNotes').textContent = allNotes.length;
+            document.getElementById('searchResults').textContent = currentNotes.length;
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            document.getElementById('loadingContainer').style.display = show ? 'block' : 'none';
+            document.getElementById('notesContainer').style.display = show ? 'none' : 'grid';
+        }
+
+        // Show error
+        function showError(message) {
+            const container = document.getElementById('errorContainer');
+            container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            try {
+                if (!dateStr || dateStr === '' || dateStr === 'Invalid Date') {
+                    return 'No date';
+                }
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    return 'No date';
+                }
+                // Use local timezone with more readable format
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short', 
+                    day: 'numeric'
+                }) + ' ' + date.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZoneName: 'short'
+                });
+            } catch {
+                return 'No date';
+            }
+        }
+
+        // Dark mode functionality
+        function toggleDarkMode() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+        }
+
+        // Initialize dark mode from localStorage
+        function initializeDarkMode() {
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').checked = true;
+            }
+        }
+
+        // Create/Edit Note Functions
+        function showCreateModal() {
+            document.getElementById('createModalTitle').textContent = 'Create New Note';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteTags').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('createNoteModal').style.display = 'block';
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createNoteModal').style.display = 'none';
+        }
+
+        async function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const tagsStr = document.getElementById('noteTags').value.trim();
+            const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+
+            if (!title || !content) {
+                showError('Title and content are required');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, content, tags })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to save note');
+                }
+
+                const result = await response.json();
+                showError(`Note created successfully: ${result.permalink}`, 'success');
+                closeCreateModal();
+                loadNotes(); // Refresh the notes list
+            } catch (error) {
+                showError('Error saving note: ' + error.message);
+            }
+        }
+
+        // Session Summary Functions
+        async function loadSessionStats() {
+            try {
+                const response = await fetch('/api/session-summaries');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('availableSessions').textContent = data.available;
+                }
+            } catch (error) {
+                console.log('Could not load session stats:', error.message);
+            }
+        }
+
+        async function showSessionSummaries() {
+            try {
+                const response = await fetch('/api/session-summaries');
+                if (!response.ok) throw new Error('Failed to load session summaries');
+                
+                const data = await response.json();
+                const sessionList = document.getElementById('sessionList');
+                
+                if (data.summaries.length === 0) {
+                    sessionList.innerHTML = '<p>No session summaries available.</p>';
+                } else {
+                    sessionList.innerHTML = data.summaries.map(session => `
+                        <div style="border: 1px solid #ddd; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; ${session.ready_for_import ? 'background: #f0f8ff;' : 'background: #fff;'}">
+                            <h4>${escapeHtml(session.title)}</h4>
+                            <p><strong>Size:</strong> ${Math.round(session.fileSize / 1024)}KB | <strong>Modified:</strong> ${formatDate(session.lastModified)}</p>
+                            <p><strong>Status:</strong> ${session.ready_for_import ? '✅ Ready for import' : '⏳ Processing'}</p>
+                            <p style="color: #666; font-size: 0.9rem;">${escapeHtml(session.preview || 'No preview available')}</p>
+                        </div>
+                    `).join('');
+                }
+                
+                document.getElementById('sessionModal').style.display = 'block';
+            } catch (error) {
+                showError('Error loading session summaries: ' + error.message);
+            }
+        }
+
+        async function importSessions() {
+            try {
+                document.getElementById('importStatus').textContent = 'Importing...';
+                
+                const response = await fetch('/api/import-sessions', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) throw new Error('Import failed');
+                
+                const result = await response.json();
+                document.getElementById('importStatus').textContent = result.message;
+                
+                if (result.errors.length > 0) {
+                    console.log('Import errors:', result.errors);
+                }
+                
+                // Refresh data
+                loadNotes();
+                loadSessionStats();
+                showSessionSummaries(); // Refresh the modal
+            } catch (error) {
+                document.getElementById('importStatus').textContent = 'Import failed: ' + error.message;
+            }
+        }
+
+        function closeSessionModal() {
+            document.getElementById('sessionModal').style.display = 'none';
+        }
+
+        // Quick Note Functions
+        function showQuickNoteModal() {
+            document.getElementById('quickNoteContent').value = '';
+            document.getElementById('quickNoteModal').style.display = 'block';
+        }
+
+        function closeQuickNoteModal() {
+            document.getElementById('quickNoteModal').style.display = 'none';
+        }
+
+        async function saveQuickNote() {
+            const type = document.getElementById('quickNoteType').value;
+            const content = document.getElementById('quickNoteContent').value.trim();
+
+            if (!content) {
+                showError('Please enter a brief description');
+                return;
+            }
+
+            try {
+                // Create expanded note using shortcut
+                const expandedNote = await expandQuickNote(type, content);
+                
+                const response = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: expandedNote.title,
+                        content: expandedNote.content,
+                        tags: expandedNote.tags
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to save note');
+                }
+
+                const result = await response.json();
+                showError(`Quick note expanded and saved: ${result.permalink}`, 'success');
+                closeQuickNoteModal();
+                loadNotes(); // Refresh the notes list
+            } catch (error) {
+                showError('Error saving quick note: ' + error.message);
+            }
+        }
+
+        // Note expansion based on CLAUDE.md templates
+        async function expandQuickNote(type, briefContent) {
+            const timestamp = new Date().toISOString();
+            const sessionContext = 'Memory Browser web interface session';
+            
+            switch (type) {
+                case '/note':
+                    return {
+                        title: `Session Note: ${briefContent.substring(0, 50)}`,
+                        content: `# Session Note: ${briefContent}\n\n## Context\nCreated during: ${sessionContext}\nTimestamp: ${timestamp}\n\n## Observation\n${briefContent}\n\n## Additional Context\n*Note created via quick note feature - expand with more details as needed*`,
+                        tags: ['session-note', 'quick-note']
+                    };
+                
+                case '/idea':
+                    return {
+                        title: `Feature Idea: ${briefContent.substring(0, 50)}`,
+                        content: `# Feature Idea: ${briefContent}\n\n## Concept\n${briefContent}\n\n## Implementation Considerations\n- Technical requirements: *To be determined*\n- Dependencies and integrations: *To be analyzed*\n- Estimated complexity: *Medium*\n\n## Related Features\n*Cross-reference with existing functionality*\n\n## Development Timeline\n- Phase 1: Core functionality\n- Phase 2: Enhancements\n\n## Next Steps\n- [ ] Research technical requirements\n- [ ] Analyze dependencies\n- [ ] Create detailed specification\n\nCreated: ${timestamp}`,
+                        tags: ['idea', 'feature-request', 'future-development']
+                    };
+                
+                case '/link':
+                    return {
+                        title: `Reference: ${briefContent.substring(0, 50)}`,
+                        content: `# Reference Link\n\n## Resource\n${briefContent}\n\n## Relevance\n*Relevant to current project work*\n\n## Notes\n*Add specific notes about how this resource applies to the project*\n\n## Category\n*Categorize this reference (documentation, tutorial, tool, etc.)*\n\nSaved: ${timestamp}`,
+                        tags: ['reference', 'link', 'resource']
+                    };
+                
+                case '/decision':
+                    return {
+                        title: `Decision: ${briefContent.substring(0, 50)}`,
+                        content: `# Architectural Decision: ${briefContent}\n\n## Context\nCurrent session: ${sessionContext}\nTimestamp: ${timestamp}\n\n## Decision\n${briefContent}\n\n## Rationale\n*Document the reasoning behind this decision*\n\n## Alternatives Considered\n- Option A: *Describe alternative*\n- Option B: *Describe alternative*\n\n## Impact Assessment\n- Affects: *List affected components/systems*\n- Benefits: *List expected benefits*\n- Risks: *List potential risks*\n\n## Implementation Notes\n*Technical details and next steps*`,
+                        tags: ['decision', 'architecture', 'planning']
+                    };
+                
+                case '/todo':
+                    return {
+                        title: `Todo: ${briefContent.substring(0, 50)}`,
+                        content: `# Task: ${briefContent}\n\n## Description\n${briefContent}\n\n## Implementation Steps\n1. *Step 1*\n2. *Step 2*\n3. *Step 3*\n\n## Priority Assessment\n- Priority: *Medium*\n- Estimated effort: *TBD*\n- Dependencies: *None identified*\n\n## Related Components\n*List related files, systems, or features*\n\n## Acceptance Criteria\n- [ ] *Criteria 1*\n- [ ] *Criteria 2*\n\n## Notes\n*Additional implementation notes*\n\nCreated: ${timestamp}`,
+                        tags: ['todo', 'task', 'planned']
+                    };
+                
+                case '/fix':
+                    return {
+                        title: `Solution: ${briefContent.substring(0, 50)}`,
+                        content: `# Problem Solution: ${briefContent}\n\n## Problem Description\n${briefContent}\n\n## Root Cause\n*Identify the underlying cause*\n\n## Solution Applied\n*Describe the solution steps taken*\n\n## Verification\n*How to verify the fix works*\n\n## Prevention Measures\n*Steps to prevent this problem in the future*\n\n## Related Issues\n*Link to related problems or solutions*\n\nResolved: ${timestamp}`,
+                        tags: ['solution', 'troubleshooting', 'fix']
+                    };
+                
+                default:
+                    return {
+                        title: briefContent.substring(0, 50),
+                        content: briefContent,
+                        tags: ['quick-note']
+                    };
+            }
+        }
+
+        // Enhanced error display with type support
+        function showError(message, type = 'error') {
+            const container = document.getElementById('errorContainer');
+            const className = type === 'success' ? 'error' : 'error';
+            const style = type === 'success' ? 'background: #27ae60;' : '';
+            container.innerHTML = `<div class="${className}" style="${style}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Get icon for note type
+        function getTypeIcon(type) {
+            const icons = {
+                'entity': '📦',
+                'project': '🚀', 
+                'concept': '💡',
+                'reference': '📚',
+                'insight': '🔍',
+                'decision': '🎯',
+                'todo': '📋',
+                'solution': '🔧',
+                'link': '🔗',
+                'idea': '💭',
+                'resource': '🏷️',
+                'general': '📝'
+            };
+            return icons[type] || '📄';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = ['noteModal', 'createNoteModal', 'sessionModal', 'quickNoteModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

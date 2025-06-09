@@ -72,3 +72,16 @@ Workers MCP servers, providing a scalable foundation for all future MCP deployme
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-05 13:04)
+- ✨ Added: feat: major project infrastructure and documentation overhaul
+
+- Add Claude-Simone project management framework with sprint-based planning
+- Implement comprehensive memory management system with CLI --quiet flag
+- Add quick note shortcuts system (/note, /idea, /decision) for enhanced documentation
+- Clean up OAuth MCP server database connection handling
+- Update MCP server implementations with pure-MCP patterns
+- Establish clear protocols for auto-documentation and session management
+- Add project configuration directories (.claude/, .simone/) for better organization
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-08 12:06)

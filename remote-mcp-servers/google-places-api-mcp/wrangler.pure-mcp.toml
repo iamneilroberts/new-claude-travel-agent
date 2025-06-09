@@ -1,0 +1,14 @@
+name = "google-places-api-mcp-pure"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+GOOGLE_MAPS_API_KEY = "AIzaSyB4ZqEv-J8jBIk3MNxVblvb6MexsuwkLMA"
+MCP_AUTH_KEY = "google-places-mcp-auth-key-2025" 
+
+[env.production]
+vars = { GOOGLE_MAPS_API_KEY = "production-key-set-in-cloudflare-dashboard" }
+
+[triggers]
+crons = []

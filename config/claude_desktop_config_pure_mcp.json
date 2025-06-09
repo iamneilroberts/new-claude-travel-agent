@@ -1,0 +1,103 @@
+{
+  "mcpServers": {
+    "amadeus-api": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "amadeus-api"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "travel-document-generator": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "travel-document-generator"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "d1-database": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "d1-database"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "r2-storage": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "r2-storage"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "github-mcp": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "github-mcp"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "google-places-api": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "google-places-api"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "mobile-interaction": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "mobile-interaction"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "prompt-instructions": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "prompt-instructions"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "sequential-thinking": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "sequential-thinking"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "cpmaxx-integration": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "cpmaxx-integration"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "basic-memory": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "basic-memory"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    }
+  }
+}

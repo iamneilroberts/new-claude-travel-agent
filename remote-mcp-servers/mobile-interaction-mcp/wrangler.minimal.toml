@@ -1,0 +1,19 @@
+name = "mobile-interaction-mcp-minimal"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 database commented out for deployment without resource permissions
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "travel_assistant"
+# database_id = "e6723f99-1d99-45bb-a941-e7600a56abe9"
+
+[observability.logs]
+enabled = true
+
+[vars]
+MCP_AUTH_KEY = "mobile-interaction-mcp-auth-key-2025"
+
+[triggers]
+crons = []

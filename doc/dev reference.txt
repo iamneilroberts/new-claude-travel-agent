@@ -1,0 +1,6 @@
+https://github.com/geelen/mcp-remote
+https://developers.cloudflare.com/agents/guides/test-remote-mcp-server/
+https://github.com/undeadpickle/claude-code-mcpinstall
+https://docs.anthropic.com/en/docs/overview
+
+new project management mcp: https://github.com/hrishirc/task-orchestrator

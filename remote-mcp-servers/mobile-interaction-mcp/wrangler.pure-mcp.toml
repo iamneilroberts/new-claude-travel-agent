@@ -1,0 +1,31 @@
+name = "mobile-interaction-mcp-pure"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for conversation state
+[[kv_namespaces]]
+binding = "CONVERSATION_STATE" 
+id = "c8c70e41a7e649d09a30d73763639652"
+
+# D1 database for trip information
+[[d1_databases]]
+binding = "DB"
+database_name = "travel_assistant"
+database_id = "e6723f99-1d99-45bb-a941-e7600a56abe9"
+
+[observability.logs]
+enabled = true
+
+[vars]
+MCP_AUTH_KEY = "mobile-interaction-mcp-auth-key-2025"
+
+# Secrets (set via wrangler secret put)
+# WHATSAPP_API_TOKEN
+# TELEGRAM_BOT_TOKEN  
+# TWILIO_ACCOUNT_SID
+# TWILIO_AUTH_TOKEN
+# OPENAI_API_KEY
+
+[triggers]
+crons = []

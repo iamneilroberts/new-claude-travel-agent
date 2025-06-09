@@ -1,16 +1,7 @@
-name = "amadeus-api-mcp"
-main = "worker-mcpagent.js"
-compatibility_date = "2025-05-25"
+name = "pure-amadeus-api-mcp"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-
-[durable_objects]
-bindings = [
-  { class_name = "AmadeusMCP", name = "MCP_OBJECT" }
-]
-
-[[migrations]]
-tag = "v9"
-new_sqlite_classes = [ "AmadeusMCP" ]
 
 [vars]
 MCP_AUTH_KEY = "amadeus-mcp-auth-key-2025"
