@@ -223,7 +223,7 @@ class CPMaxxLocalMCP {
         tools: [
           {
             name: 'search_hotels',
-            description: 'Search for hotels using real CPMaxx browser automation. Returns summarized results to avoid truncation.',
+            description: 'Search for hotels using real CPMaxx browser automation with multi-page pagination. Returns comprehensive results from multiple pages. ⏱️ TIMING: May take 2-3 minutes for full search with pagination across multiple pages. Be patient during execution.',
             inputSchema: searchHotelsSchema
           },
           {
@@ -238,7 +238,7 @@ class CPMaxxLocalMCP {
           },
           {
             name: 'test_browser',
-            description: 'Test browser automation with visible browser',
+            description: 'Test browser automation with visible browser. ⏱️ TIMING: Takes 30-60 seconds depending on test type.',
             inputSchema: testBrowserSchema
           }
         ]
