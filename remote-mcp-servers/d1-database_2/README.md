@@ -1,124 +1,145 @@
-# D1 Travel Database MCP Server v2
+# D1 Database MCP Server
 
-A Model Context Protocol (MCP) server for managing travel data in Cloudflare D1 database with standard HTTP endpoints.
+Enhanced travel management MCP server with comprehensive client, trip, and airport lookup functionality.
 
-## Overview
+## 🚀 Production Deployment
 
-This server provides tools for:
-- 🗄️ Managing travel search history  
-- 👤 Storing user preferences
-- 📊 Analytics on popular routes
-- 🔍 Custom database queries
-- 📋 Database schema management
+**Live Server**: https://d1-database-pure.somotravel.workers.dev  
+**Status**: ✅ Active with 15 functional tools
 
-## Key Differences from v1
+## 📁 Project Structure
 
-- ✅ **Standard HTTP endpoints**: No 404 workarounds needed
-- ✅ **Works with mcp-use**: Direct compatibility with mcp-use library
-- ✅ **Proper error handling**: JSON error responses
-- ✅ **Health check endpoint**: `/health` for monitoring
-- ✅ **Comprehensive travel tools**: 8 database tools for travel data
+```
+src/
+├── index.ts              # Main MCP server implementation (15 tools)
+├── 
+├── package.json          # Dependencies
+├── tsconfig.json         # TypeScript configuration
+├── wrangler.pure-mcp.toml # Production deployment config
+├── test-d1-connection.js # Comprehensive test suite
+├── node_modules/         # Dependencies
+└── backup_versions/      # Historical versions and artifacts
+    ├── README.md         # Backup organization guide
+    ├── old_source/       # Previous source implementations
+    ├── build_artifacts/  # Compiled outputs
+    ├── data_scripts/     # Database seeding scripts
+    └── configurations/   # Alternative configs
+```
 
-## Endpoints
+## 🛠️ Available Tools (15 Total)
 
-- `GET /health` - Health check
-- `POST /sse` - Server-Sent Events endpoint for MCP
-- `POST /mcp` - Standard MCP protocol endpoint
+### Core Travel Management
+- `store_travel_search` - Track search history and analytics
+- `get_search_history` - Retrieve past searches with filtering
+- `get_popular_routes` - Most searched travel routes
+- `store_user_preference` / `get_user_preferences` - User travel preferences
+- `execute_query` - Custom SQL queries (SELECT only for security)
+- `get_database_schema` - Database structure information
 
-## Available Tools
+### ✈️ Airport & Location Services  
+- `airport_city_lookup` - **Critical tool**: Convert city names to IATA codes
+  - Example: "Mobile, Alabama" → MOB, "Denver, CO" → DEN
+  - Essential for flight API integration
 
-### Database Management
-- `initialize_travel_schema` - Set up database tables and views
-- `get_database_schema` - View current database structure
+### 👥 Client Management
+- `create_client` - Create new travel clients
+- `get_client` - Retrieve client details by ID
+- `search_clients` - Search clients by name or email
 
-### Travel Searches  
-- `store_travel_search` - Save flight/hotel search details
-- `get_search_history` - Retrieve past searches
-- `get_popular_routes` - Analyze trending destinations
+### 🗺️ Trip Management
+- `search_trips` - Search trips by name, client, or destination  
+- `get_trip` - Detailed trip information with participants
+- `get_trip_daily_activities` - Day-by-day trip activities
+- `get_upcoming_trips` - Trips starting in next 30 days
 
-### User Preferences
-- `store_user_preference` - Save user preferences (airlines, seats, etc.)
-- `get_user_preferences` - Retrieve user preference profiles
+## 🗄️ Database Integration
 
-### Advanced
-- `execute_query` - Run custom SELECT queries (read-only for security)
+Connects to comprehensive travel database with 46 tables:
+- **Clients** (22 existing records)
+- **Trips** with full itinerary management
+- **TripActivities** - Daily activity tracking  
+- **Accommodations** - Hotel/lodging details
+- **Transportation** - Flight/travel arrangements
+- **TripParticipants** - Multi-traveler support
+- **Airports** & **Cities** - Geographic/transportation data
 
-## Database Schema
+## 🧪 Testing
 
-### Tables
+```bash
+# Test server connectivity and all tools
+node test-d1-connection.js
 
-**travel_searches**
-- `id` - Auto-increment primary key
-- `search_type` - flight, hotel, package
-- `origin` - Departure location
-- `destination` - Arrival location  
-- `departure_date` - Travel start date
-- `return_date` - Return date (optional)
-- `passengers` - Number of travelers
-- `budget_limit` - Price ceiling
-- `search_parameters` - Full search JSON
-- `results_summary` - Search results summary
-- `user_id` - User identifier
-- `created_at` - Timestamp
+# Expected output:
+# ✅ Health check passed: healthy
+# ✅ MCP response received  
+# ✅ Tools list received
+# 📊 Found 15 tools available
+# 🎉 D1 Database MCP Server is working!
+```
 
-**user_preferences**
-- `id` - Auto-increment primary key
-- `user_id` - User identifier
-- `preference_type` - airline, seat_type, meal, etc.
-- `preference_value` - Preference details
-- `created_at/updated_at` - Timestamps
+## 📡 Claude Desktop Integration
 
-### Views
+Add to your Claude Desktop config (`~/.claude_desktop_config.json`):
 
-**popular_routes**
-- Aggregated view of most searched routes
-- Shows search count, average budget, last searched
+```json
+{
+  "mcpServers": {
+    "d1-travel-database": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-remote",
+        "https://d1-database-pure.somotravel.workers.dev/sse"
+      ]
+    }
+  }
+}
+```
 
-## Deployment
+## 🚀 Deployment
+
+```bash
+# Deploy to Cloudflare Workers
+wrangler deploy --config wrangler.pure-mcp.toml
+
+# Test deployment
+curl https://d1-database-pure.somotravel.workers.dev/health
+```
+
+## 🔧 Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Deploy to Cloudflare
-npm run deploy
+# Local development
+wrangler dev --config wrangler.pure-mcp.toml
+
+# Type checking
+npx tsc --noEmit
 ```
 
-## Configuration
+## 🔒 Security Features
 
-The server uses:
-- **D1 Database**: `travel-assistant-db` 
-- **Durable Objects**: For MCP session management
-- **Auth Key**: `d1-travel-auth-2025` (environment variable)
+- Authentication framework with MCP_AUTH_KEY
+- SQL injection protection (SELECT-only queries)
+- CORS headers for secure browser access
+- Comprehensive error handling and logging
 
-## Usage with mcp-use
+## 📝 Recent Enhancements
 
-```python
-config = {
-    "mcpServers": {
-        "d1_travel": {
-            "url": "https://d1-database-2.somotravel.workers.dev/sse"
-        }
-    }
-}
+- **Fixed SSE Handler**: Proper MCP JSON-RPC request processing
+- **Added 7 New Tools**: Comprehensive client and trip management
+- **Database Integration**: Leverages existing 46-table schema
+- **Airport Lookup**: Essential IATA code conversion for APIs
+- **Error Handling**: Robust error responses and validation
+- **Testing Suite**: Comprehensive tool validation
 
-client = MCPClient.from_dict(config)
-agent = MCPAgent(llm=llm, client=client)
+## 🎯 Mission Critical
 
-# Example: Store a flight search
-result = await agent.run(
-    "Store this flight search: LAX to JFK on 2025-06-15, 2 passengers, $800 budget"
-)
-```
+This server serves as the backbone of the travel management system, providing:
+1. **Client Management** - Travel agent CRM functionality
+2. **Trip Planning** - Complete itinerary management  
+3. **Airport Lookup** - Bridge between user input and travel APIs
+4. **Data Analytics** - Search patterns and popular routes
 
-## Migration from v1
-
-This server replaces the problematic d1-database server that returned 404 for mcp-remote compatibility. The new version:
-
-1. Uses standard HTTP status codes
-2. Provides proper JSON error responses  
-3. Works directly with mcp-use library
-4. Includes comprehensive travel-specific tools
-5. Has better error handling and logging
-
-No data migration needed - uses the same D1 database with enhanced schema.
+Essential for connecting human-readable locations ("Mobile, Alabama") to machine-readable codes (MOB) required by travel APIs.

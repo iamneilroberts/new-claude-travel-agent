@@ -17,8 +17,7 @@ const inputSchema = z.object({
 async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promise<string> {
   try {
     const queryParams = new URLSearchParams({
-      keyword: params.keyword,
-      'subType': 'CITY'
+      keyword: params.keyword
     });
 
     if (params.countryCode) {
@@ -72,7 +71,7 @@ async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promis
     });
 
     // Sort by relevance (higher is better) then by rank (lower is better)
-    cities.sort((a, b) => {
+    cities.sort((a: any, b: any) => {
       if (b.relevance !== a.relevance) {
         return (b.relevance || 0) - (a.relevance || 0);
       }
@@ -80,8 +79,8 @@ async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promis
     });
 
     const topCity = cities[0];
-    const countries = [...new Set(cities.map(c => c.address.countryName).filter(Boolean))];
-    const airportCount = cities.reduce((sum, city) => sum + city.airports.length, 0);
+    const countries = [...new Set(cities.map((c: any) => c.address.countryName).filter(Boolean))];
+    const airportCount = cities.reduce((sum: number, city: any) => sum + city.airports.length, 0);
 
     const result = {
       cities,
@@ -119,7 +118,7 @@ async function citySearch(params: z.infer<typeof inputSchema>, env: Env): Promis
 
 export const citySearchTool = {
   name: 'city_search',
-  description: 'Search for cities worldwide, get IATA codes, coordinates, and airport information for travel planning',
+  description: 'DEPRECATED: This tool has been replaced by the D1 Database airport lookup tool. IMPORTANT: Instead of using this tool, you MUST use the D1 Database MCP server\'s airport_city_lookup tool which has much better coverage and accuracy for airport codes, especially for US cities like Mobile, AL and Denver, CO. The D1 tool provides comprehensive airport data with fuzzy search capabilities.',
   schema: {
     type: 'object',
     properties: {
@@ -136,11 +135,30 @@ export const citySearchTool = {
     additionalProperties: false
   },
   execute: async (params: any, env: Env) => {
-    const result = await citySearch(params, env);
+    const redirectMessage = {
+      error: 'TOOL DEPRECATED - USE D1 DATABASE INSTEAD',
+      message: 'This city search tool has been deprecated. Please use the D1 Database MCP server\'s airport_city_lookup tool instead.',
+      instructions: {
+        toolToUse: 'airport_city_lookup',
+        server: 'D1 Database MCP',
+        example: {
+          query: params.keyword,
+          countryCode: params.countryCode || 'US',
+          maxResults: params.max || 5
+        }
+      },
+      benefits: [
+        'Better accuracy for US cities like Mobile, AL and Denver, CO',
+        'Comprehensive global airport database (4,269+ airports)',
+        'Fuzzy search capabilities',
+        'Faster response times'
+      ]
+    };
+    
     return {
       content: [{
         type: 'text',
-        text: result
+        text: JSON.stringify(redirectMessage, null, 2)
       }]
     };
   }

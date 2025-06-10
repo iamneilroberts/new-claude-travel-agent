@@ -124,18 +124,31 @@ class CPMaxxLocalMCP {
       
       // Step 1: Login to CPMaxx
       log.push('=== Logging into CPMaxx ===');
-      await page.goto(CPMAXX_CONFIG.loginUrl);
+      await page.goto(CPMAXX_CONFIG.loginUrl, { timeout: 60000 });
       log.push(`Navigated to: ${CPMAXX_CONFIG.loginUrl}`);
       
-      // Fill login form
-      await page.fill('input[placeholder="Email"]', CPMAXX_CONFIG.credentials.login);
-      await page.fill('input[placeholder="Password"]', CPMAXX_CONFIG.credentials.password);
+      // Wait for login form to be ready
+      await page.waitForSelector('#cpcentrallogin-email', { timeout: 30000 });
+      log.push('Login form detected');
+      
+      // Fill login form (updated selectors based on actual CPMaxx site)
+      await page.fill('#cpcentrallogin-email', CPMAXX_CONFIG.credentials.login);
+      await page.fill('#cpcentrallogin-password', CPMAXX_CONFIG.credentials.password);
       log.push('Filled login credentials');
       
       // Submit login
       await page.click('button:has-text("Sign In To CP | Central")');
-      await page.waitForLoadState('networkidle');
-      log.push('Login submitted, waiting for dashboard...');
+      log.push('Login button clicked, waiting for redirect...');
+      
+      // Wait for successful login with longer timeout
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 60000 });
+        log.push('Login completed, dashboard loaded');
+      } catch (error) {
+        log.push('Login timeout - may need manual intervention');
+        log.push('Current URL: ' + page.url());
+        // Continue anyway, user can assist if needed
+      }
       
       // Step 2: Navigate to hotel search
       log.push('=== Navigating to Hotel Search ===');
@@ -330,8 +343,9 @@ class CPMaxxLocalMCP {
     if (!browser) {
       console.log('Launching browser...');
       browser = await chromium.launch({ 
-        headless: options.headless,
-        timeout: 30000
+        headless: false, // Always show browser window for user assistance
+        timeout: 30000,
+        slowMo: 1000 // Slow down actions for user observation
       });
     }
     

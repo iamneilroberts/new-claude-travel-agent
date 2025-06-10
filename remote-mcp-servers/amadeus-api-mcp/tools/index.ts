@@ -14,7 +14,7 @@ import { getHotelRatingsTool } from './get-hotel-ratings';
 import { searchActivitiesByCoordinatesTool } from './search-activities-by-coordinates';
 import { flightChoicePredictionTool } from './flight-choice-prediction';
 import { hotelNameAutocompleteTool } from './hotel-name-autocomplete';
-import { citySearchTool } from './city-search';
+// Deprecated: import { citySearchTool } from './city-search';
 import { flightCheckInLinksTool } from './flight-check-in-links';
 import { getPOIByIdTool } from './get-poi-by-id';
 import { searchPOIByCoordinatesTool } from './search-poi-by-coordinates';
@@ -45,7 +45,7 @@ export async function initializeTools(env: Env): Promise<ToolRegistry> {
     searchActivitiesByCoordinatesTool,
     flightChoicePredictionTool,
     hotelNameAutocompleteTool,
-    citySearchTool,
+    // Deprecated: citySearchTool,
     flightCheckInLinksTool,
     getPOIByIdTool,
     searchPOIByCoordinatesTool,

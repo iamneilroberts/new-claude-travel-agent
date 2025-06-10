@@ -32,8 +32,8 @@ export async function searchFlights(params: FlightSearchParams, env: Env): Promi
       requestParams.travelClass = params.travelClass.toUpperCase();
     }
 
-    // Make API request using the correct endpoint
-    const response = await amadeus.get('/shopping/flight-offers', requestParams);
+    // Make API request using the correct v2 endpoint
+    const response = await amadeus.get('/v2/shopping/flight-offers', requestParams);
 
     // Format results
     return formatFlightResults(response.data);

@@ -81,6 +81,8 @@ export class AmadeusFetchClient {
       }
     });
 
+    console.log('Amadeus API URL:', url.toString());
+    
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
