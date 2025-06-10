@@ -1,0 +1,8 @@
+# Protect critical documentation files
+.simone/** text eol=lf
+.simone/*.md text eol=lf
+travel-shortcuts.sh text eol=lf
+
+# Ensure these files are always included in git operations
+.simone/** -export-ignore
+CLAUDE.md -export-ignore
