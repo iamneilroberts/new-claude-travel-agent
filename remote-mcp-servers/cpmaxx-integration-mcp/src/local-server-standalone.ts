@@ -7,48 +7,165 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
 import { chromium, Browser, Page } from 'playwright';
 
-// Schema definitions (standalone)
-const searchHotelsSchema = z.object({
-  location: z.string().describe('Hotel location (city, airport, or address)'),
-  check_in_date: z.string().describe('Check-in date (YYYY-MM-DD format)'),
-  check_out_date: z.string().describe('Check-out date (YYYY-MM-DD format)'),
-  rooms: z.number().min(1).max(8).default(1).describe('Number of rooms (1-8)'),
-  adults: z.number().min(1).max(16).default(2).describe('Number of adults (1-16)'),
-  children: z.number().min(0).max(16).default(0).describe('Number of children (0-16)'),
-  filters: z.object({
-    property_name: z.string().optional().describe('Filter by hotel name'),
-    star_rating: z.array(z.number().min(1).max(5)).optional().describe('Filter by star ratings (array: [3,4,5])'),
-    price_range: z.array(z.enum(['under-100', '100-199', '200-299', '300-399', 'over-400'])).optional().describe('Filter by price ranges'),
-    hotel_programs: z.array(z.enum(['SIG', 'FHR', 'SGP', 'THC'])).optional().describe('Hotel programs'),
-    amenities: z.array(z.enum([
-      'free_breakfast', 'free_parking', 'free_wifi', 'airport_shuttle', 
-      'business_center', 'fitness_center', 'no_smoking', 'pets_allowed',
-      'restaurant', 'spa', 'swimming_pool'
-    ])).optional().describe('Required amenities'),
-    exclude_no_rating: z.boolean().default(false).describe('Exclude hotels without ratings')
-  }).optional().describe('Advanced search filters'),
-  debug_mode: z.boolean().default(false).describe('Enable detailed logging for debugging')
-});
+// JSON Schema definitions (no Zod)
+const searchHotelsSchema = {
+  type: "object",
+  properties: {
+    location: {
+      type: "string",
+      description: "Hotel location (city, airport, or address)"
+    },
+    check_in_date: {
+      type: "string",
+      description: "Check-in date (YYYY-MM-DD format)"
+    },
+    check_out_date: {
+      type: "string",
+      description: "Check-out date (YYYY-MM-DD format)"
+    },
+    rooms: {
+      type: "number",
+      minimum: 1,
+      maximum: 8,
+      default: 1,
+      description: "Number of rooms (1-8)"
+    },
+    adults: {
+      type: "number",
+      minimum: 1,
+      maximum: 16,
+      default: 2,
+      description: "Number of adults (1-16)"
+    },
+    children: {
+      type: "number",
+      minimum: 0,
+      maximum: 16,
+      default: 0,
+      description: "Number of children (0-16)"
+    },
+    filters: {
+      type: "object",
+      properties: {
+        property_name: {
+          type: "string",
+          description: "Filter by hotel name"
+        },
+        star_rating: {
+          type: "array",
+          items: {
+            type: "number",
+            minimum: 1,
+            maximum: 5
+          },
+          description: "Filter by star ratings (array: [3,4,5])"
+        },
+        price_range: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["under-100", "100-199", "200-299", "300-399", "over-400"]
+          },
+          description: "Filter by price ranges"
+        },
+        hotel_programs: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["SIG", "FHR", "SGP", "THC"]
+          },
+          description: "Hotel programs"
+        },
+        amenities: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: [
+              "free_breakfast", "free_parking", "free_wifi", "airport_shuttle",
+              "business_center", "fitness_center", "no_smoking", "pets_allowed",
+              "restaurant", "spa", "swimming_pool"
+            ]
+          },
+          description: "Required amenities"
+        },
+        exclude_no_rating: {
+          type: "boolean",
+          default: false,
+          description: "Exclude hotels without ratings"
+        }
+      },
+      description: "Advanced search filters"
+    },
+    debug_mode: {
+      type: "boolean",
+      default: false,
+      description: "Enable detailed logging for debugging"
+    }
+  },
+  required: ["location", "check_in_date", "check_out_date"]
+};
 
-const testBrowserSchema = z.object({
-  test_type: z.enum(['hotel_search', 'login_test', 'visible_test']).describe('Type of test to run'),
-  visible_browser: z.boolean().default(false).describe('Run with visible browser'),
-  debug_mode: z.boolean().default(false).describe('Enable debug output')
-});
+const testBrowserSchema = {
+  type: "object",
+  properties: {
+    test_type: {
+      type: "string",
+      enum: ["hotel_search", "login_test", "visible_test"],
+      description: "Type of test to run"
+    },
+    visible_browser: {
+      type: "boolean",
+      default: false,
+      description: "Run with visible browser"
+    },
+    debug_mode: {
+      type: "boolean",
+      default: false,
+      description: "Enable debug output"
+    }
+  },
+  required: ["test_type"]
+};
 
-const getHotelDetailsSchema = z.object({
-  hotel_name: z.string().describe('Name of the hotel to get detailed information for'),
-  search_context: z.string().optional().describe('Recent search context to find the hotel')
-});
+const getHotelDetailsSchema = {
+  type: "object",
+  properties: {
+    hotel_name: {
+      type: "string",
+      description: "Name of the hotel to get detailed information for"
+    },
+    search_context: {
+      type: "string",
+      description: "Recent search context to find the hotel"
+    }
+  },
+  required: ["hotel_name"]
+};
 
-const getHotelsByCriteriaSchema = z.object({
-  criteria: z.enum(['max_commission', 'balanced', 'best_value', 'highest_rated', 'lowest_price']).describe('Sorting criteria'),
-  limit: z.number().min(1).max(20).default(10).describe('Number of hotels to return'),
-  search_context: z.string().optional().describe('Recent search context')
-});
+const getHotelsByCriteriaSchema = {
+  type: "object",
+  properties: {
+    criteria: {
+      type: "string",
+      enum: ["max_commission", "balanced", "best_value", "highest_rated", "lowest_price"],
+      description: "Sorting criteria"
+    },
+    limit: {
+      type: "number",
+      minimum: 1,
+      maximum: 20,
+      default: 10,
+      description: "Number of hotels to return"
+    },
+    search_context: {
+      type: "string",
+      description: "Recent search context"
+    }
+  },
+  required: ["criteria"]
+};
 
 // CPMaxx configuration
 const CPMAXX_CONFIG = {
@@ -276,30 +393,42 @@ class CPMaxxLocalMCP {
 
   // Real hotel search with Playwright
   private async searchHotels(args: any) {
-    console.error(`[Hotel Search] Starting search for: ${args.location}`);
+    // Apply defaults for missing values (since we removed Zod)
+    const processedArgs = {
+      location: args.location,
+      check_in_date: args.check_in_date,
+      check_out_date: args.check_out_date,
+      rooms: args.rooms || 1,
+      adults: args.adults || 2,
+      children: args.children || 0,
+      filters: args.filters || {},
+      debug_mode: args.debug_mode || false
+    };
+    
+    console.error(`[Hotel Search] Starting search for: ${processedArgs.location}`);
     
     const results = await this.withBrowser(async (page) => {
       const log: string[] = [];
       
       // Show initial status
-      if (args.debug_mode) {
+      if (processedArgs.debug_mode) {
         await this.showBrowserStatus(page, 'Initializing automation...', 1, 6);
       }
       
       try {
         // Step 1: Navigate to CPMaxx
         log.push('=== Navigating to CPMaxx ===');
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await this.showBrowserStatus(page, 'Navigating to CPMaxx login...', 2, 6);
         }
         
         await page.goto(CPMAXX_CONFIG.loginUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-        await this.takeDebugScreenshot(page, '01-after-navigation-to-login', args.debug_mode);
-        await this.debugDOMContent(page, 'after-navigation', args.debug_mode);
+        await this.takeDebugScreenshot(page, '01-after-navigation-to-login', processedArgs.debug_mode);
+        await this.debugDOMContent(page, 'after-navigation', processedArgs.debug_mode);
         
         await page.waitForTimeout(2000); // Allow page to fully load
-        await this.takeDebugScreenshot(page, '02-login-page-loaded', args.debug_mode);
-        await this.debugDOMContent(page, 'login-page-loaded', args.debug_mode);
+        await this.takeDebugScreenshot(page, '02-login-page-loaded', processedArgs.debug_mode);
+        await this.debugDOMContent(page, 'login-page-loaded', processedArgs.debug_mode);
         log.push(`Navigated to: ${CPMAXX_CONFIG.loginUrl}`);
         
         // Check if already logged in
@@ -308,53 +437,53 @@ class CPMaxxLocalMCP {
         if (!isLoggedIn) {
           // Step 2: Login
           log.push('=== Logging into CPMaxx ===');
-          if (args.debug_mode) {
+          if (processedArgs.debug_mode) {
             await this.showBrowserStatus(page, 'Logging into CPMaxx...', 2, 6);
           }
           
           await page.fill('input[placeholder*="mail"]', CPMAXX_CONFIG.credentials.login);
           await page.fill('input[placeholder*="assword"]', CPMAXX_CONFIG.credentials.password);
-          await this.takeDebugScreenshot(page, '03-credentials-filled', args.debug_mode);
+          await this.takeDebugScreenshot(page, '03-credentials-filled', processedArgs.debug_mode);
           log.push('Filled login credentials');
           
           await page.click('button:has-text("Sign In")');
-          await this.takeDebugScreenshot(page, '04-after-login-click', args.debug_mode);
+          await this.takeDebugScreenshot(page, '04-after-login-click', processedArgs.debug_mode);
           
           await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
           await page.waitForTimeout(3000); // Allow login to process
-          await this.takeDebugScreenshot(page, '05-after-login-wait', args.debug_mode);
+          await this.takeDebugScreenshot(page, '05-after-login-wait', processedArgs.debug_mode);
           log.push('Login submitted, waiting for dashboard...');
           
           // Wait for login to complete
           await page.waitForSelector('a:has-text("Research Hub")', { timeout: 30000 });
-          await this.takeDebugScreenshot(page, '06-dashboard-loaded', args.debug_mode);
+          await this.takeDebugScreenshot(page, '06-dashboard-loaded', processedArgs.debug_mode);
           log.push('Successfully logged in');
         } else {
-          await this.takeDebugScreenshot(page, '03-already-logged-in', args.debug_mode);
+          await this.takeDebugScreenshot(page, '03-already-logged-in', processedArgs.debug_mode);
           log.push('Already logged in, skipping login step');
         }
         
         // Step 3: Navigate to hotel search
         log.push('=== Navigating to Hotel Search ===');
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await this.showBrowserStatus(page, 'Finding hotel search...', 3, 6);
         }
         
         // Look for the hotel search link - fail if not found
         await page.waitForSelector('text="Find a Hotel"', { timeout: 10000 });
-        await this.takeDebugScreenshot(page, '07-before-hotel-link-click', args.debug_mode);
+        await this.takeDebugScreenshot(page, '07-before-hotel-link-click', processedArgs.debug_mode);
         await page.click('text="Find a Hotel"');
         log.push('Clicked "Find a Hotel" link');
         
         await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
         await page.waitForTimeout(2000); // Allow form to load
-        await this.takeDebugScreenshot(page, '08-hotel-search-form', args.debug_mode);
+        await this.takeDebugScreenshot(page, '08-hotel-search-form', processedArgs.debug_mode);
         log.push('Navigated to hotel search form');
         
         // Step 4: Fill search form
         log.push('=== Filling Search Form ===');
-        if (args.debug_mode) {
-          await this.showBrowserStatus(page, `Searching for ${args.location}...`, 4, 6);
+        if (processedArgs.debug_mode) {
+          await this.showBrowserStatus(page, `Searching for ${processedArgs.location}...`, 4, 6);
         }
         
         // Fill location using the correct selector for this form
@@ -363,8 +492,8 @@ class CPMaxxLocalMCP {
         await locationField.clear();
         
         // Type location character by character to trigger autocomplete properly
-        await locationField.type(args.location, { delay: 100 });
-        log.push(`Location typed: ${args.location}, waiting for autocomplete...`);
+        await locationField.type(processedArgs.location, { delay: 100 });
+        log.push(`Location typed: ${processedArgs.location}, waiting for autocomplete...`);
         
         // Wait longer for autocomplete to appear
         await page.waitForTimeout(3000); // Give more time for autocomplete
@@ -416,7 +545,7 @@ class CPMaxxLocalMCP {
         } else {
           log.push('❌ ERROR: No autocomplete dropdown found - form will fail');
           log.push('This is a CPMAXX validation requirement - location must be selected from dropdown');
-          throw new Error(`Location autocomplete required but not found. Typed "${args.location}" but no dropdown appeared. CPMAXX requires selecting from autocomplete.`);
+          throw new Error(`Location autocomplete required but not found. Typed "${processedArgs.location}" but no dropdown appeared. CPMAXX requires selecting from autocomplete.`);
         }
         
         // Convert dates from YYYY-MM-DD to MM/DD/YYYY format
@@ -425,8 +554,8 @@ class CPMaxxLocalMCP {
           return `${month}/${day}/${year}`;
         };
         
-        const formattedCheckin = formatDateForForm(args.check_in_date);
-        const formattedCheckout = formatDateForForm(args.check_out_date);
+        const formattedCheckin = formatDateForForm(processedArgs.check_in_date);
+        const formattedCheckout = formatDateForForm(processedArgs.check_out_date);
         
         // Fill dates - need to clear auto-populated values first
         log.push('Filling check-in date...');
@@ -448,28 +577,28 @@ class CPMaxxLocalMCP {
         // Skip Location Radius (first select) and target the actual occupancy selectors
         // Number of rooms - target by name attribute or position after location radius
         const roomsSelect = await page.locator('select').nth(1); // Second select element (skip location radius)
-        await roomsSelect.selectOption(args.rooms.toString());
-        log.push(`Rooms selected: ${args.rooms}`);
+        await roomsSelect.selectOption(processedArgs.rooms.toString());
+        log.push(`Rooms selected: ${processedArgs.rooms}`);
         
         // Adults per room - third select element  
         const adultsSelect = await page.locator('select').nth(2); // Third select element
-        await adultsSelect.selectOption(args.adults.toString());
-        log.push(`Adults selected: ${args.adults}`);
+        await adultsSelect.selectOption(processedArgs.adults.toString());
+        log.push(`Adults selected: ${processedArgs.adults}`);
         
         // Children per room - fourth select element
         const childrenSelect = await page.locator('select').nth(3); // Fourth select element
-        await childrenSelect.selectOption(args.children.toString());
-        log.push(`Children selected: ${args.children}`);
+        await childrenSelect.selectOption(processedArgs.children.toString());
+        log.push(`Children selected: ${processedArgs.children}`);
         
-        log.push(`Occupancy filled: ${args.rooms} rooms, ${args.adults} adults, ${args.children} children`);
+        log.push(`Occupancy filled: ${processedArgs.rooms} rooms, ${processedArgs.adults} adults, ${processedArgs.children} children`);
         
         // Submit search
         log.push('Submitting search form...');
-        await this.takeDebugScreenshot(page, '09-before-search-submit', args.debug_mode);
+        await this.takeDebugScreenshot(page, '09-before-search-submit', processedArgs.debug_mode);
         
         // Click the "Start Search" button
         await page.click('button:has-text("Start Search")');
-        await this.takeDebugScreenshot(page, '10-after-search-submit', args.debug_mode);
+        await this.takeDebugScreenshot(page, '10-after-search-submit', processedArgs.debug_mode);
         
         // Check for error dialog - if it appears, fail immediately
         try {
@@ -477,7 +606,7 @@ class CPMaxxLocalMCP {
           log.push('❌ Error dialog appeared - search form submission failed');
           
           // Take screenshot of error for debugging
-          await this.takeDebugScreenshot(page, '11-error-dialog', args.debug_mode);
+          await this.takeDebugScreenshot(page, '11-error-dialog', processedArgs.debug_mode);
           
           throw new Error('Search form submission failed with error dialog. Check form field validation.');
         } catch (e) {
@@ -493,21 +622,21 @@ class CPMaxxLocalMCP {
         log.push('Search submitted, waiting for results...');
         
         // Take screenshot after search submission
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await page.screenshot({ path: 'cpmaxx-after-search-submit.png' });
           log.push('📸 Screenshot saved: cpmaxx-after-search-submit.png');
         }
         
         // Step 5: Skip filters for now to get basic search working
-        if (args.filters) {
+        if (processedArgs.filters) {
           log.push('=== Filters requested but skipping for initial testing ===');
-          log.push(`Requested filters: ${JSON.stringify(args.filters)}`);
+          log.push(`Requested filters: ${JSON.stringify(processedArgs.filters)}`);
           log.push('Will implement filters after basic search is working');
         }
         
         // Step 6: Simple wait for results to load
         log.push('=== Waiting for Hotel Results to Load ===');
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await this.showBrowserStatus(page, 'Loading hotel results...', 5, 6);
         }
         
@@ -520,16 +649,16 @@ class CPMaxxLocalMCP {
           log.push('⚠️ No hotel checkboxes found after 90s - may be no results or still loading');
         }
         
-        // Additional wait for more results to load from all providers
+        // Additional wait for more results to load from all providers  
         log.push('Waiting additional time for all providers to return results...');
-        await page.waitForTimeout(30000); // Wait 30 seconds for more results to aggregate
+        await page.waitForTimeout(processedArgs.debug_mode ? 5000 : 30000); // Shorter wait in debug mode
         
         // ENHANCED: Navigate through ALL pages to collect 60 results (20 per page = 3 pages)
         log.push('=== Implementing Pagination for Complete Results ===');
         
         let allHotels: any[] = [];
         let currentPage = 1;
-        const maxPages = 5; // CPMaxx typically shows 20 results per page, so 5 pages = 100 results max
+        const maxPages = 3; // Start with just 3 pages for testing
         
         // Function to extract hotels from current page using REAL DOM selectors
         const extractCurrentPageHotels = async () => {
@@ -697,46 +826,40 @@ class CPMaxxLocalMCP {
         allHotels.push(...currentPageHotels);
         log.push(`Page ${currentPage}: Extracted ${currentPageHotels.length} hotels`);
         
-        // Check if there are more pages by looking for pagination controls
+        log.push(`=== PAGINATION DEBUG START ===`);
+        log.push(`Starting pagination loop: currentPage=${currentPage}, maxPages=${maxPages}`);
+        log.push(`Condition check: ${currentPage} < ${maxPages} = ${currentPage < maxPages}`);
+        
+        if (currentPage < maxPages) {
+          log.push(`Entering pagination while loop...`);
+        } else {
+          log.push(`Skipping pagination: condition is false`);
+        }
+        
+        // Navigate through pages using direct URL manipulation (more reliable than clicking buttons)
         while (currentPage < maxPages) {
           try {
-            // Look for "Next" button or page navigation - use actual CPMaxx selectors from DOM
-            const nextPageSelectors = [
-              'a[aria-label="Next"].ajax',  // Primary selector from DOM analysis
-              'a[aria-label="Next"]',
-              '.pagination a[aria-label="Next"]',
-              'li:has(a[aria-label="Next"]) a'
-            ];
+            currentPage++;
             
-            let nextButtonFound = false;
-            let nextButton = null;
+            // Build the URL for the next page: https://cpmaxx.cruiseplannersnet.com/HotelEngine/searchResults/map#page_num:2
+            const currentUrl = page.url();
+            let nextPageUrl;
             
-            for (const selector of nextPageSelectors) {
-              try {
-                nextButton = page.locator(selector);
-                const isVisible = await nextButton.isVisible();
-                const isEnabled = await nextButton.isEnabled();
-                
-                if (isVisible && isEnabled) {
-                  nextButtonFound = true;
-                  log.push(`Found next page button: ${selector}`);
-                  break;
-                }
-              } catch (e) {
-                // Continue to next selector
-              }
+            if (currentUrl.includes('#page_num:')) {
+              // Replace existing page number
+              nextPageUrl = currentUrl.replace(/#page_num:\d+/, `#page_num:${currentPage}`);
+            } else {
+              // Add page number to URL
+              const baseUrl = currentUrl.split('#')[0];
+              nextPageUrl = `${baseUrl}#page_num:${currentPage}`;
             }
             
-            if (!nextButtonFound) {
-              log.push(`No more pages available after page ${currentPage}`);
-              break;
-            }
+            log.push(`Navigating to page ${currentPage} via URL: ${nextPageUrl}`);
             
-            // Click the next page button
-            log.push(`Navigating to page ${currentPage + 1}...`);
-            await nextButton!.click();
+            // Navigate to the next page URL
+            await page.goto(nextPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
             
-            // Wait for AJAX to complete - CPMaxx uses AJAX for pagination
+            // Wait for AJAX to complete and new hotels to load
             await page.waitForLoadState('networkidle', { timeout: 30000 });
             await page.waitForTimeout(10000); // Extended wait for AJAX hotel results to load
             
@@ -763,7 +886,7 @@ class CPMaxxLocalMCP {
             log.push(`Page ${currentPage}: Extracted ${currentPageHotels.length} hotels`);
             
             // Take screenshot of each page if debug mode
-            if (args.debug_mode) {
+            if (processedArgs.debug_mode) {
               await page.screenshot({ path: `cpmaxx-page-${currentPage}.png` });
               log.push(`📸 Screenshot saved: cpmaxx-page-${currentPage}.png`);
             }
@@ -777,7 +900,7 @@ class CPMaxxLocalMCP {
         log.push(`=== Pagination Complete: ${allHotels.length} total hotels collected across ${currentPage} pages ===`);
         
         // Final screenshot before full extraction
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await page.screenshot({ path: 'cpmaxx-before-full-extraction.png' });
           log.push('📸 Screenshot saved: cpmaxx-before-full-extraction.png');
         }
@@ -861,7 +984,7 @@ class CPMaxxLocalMCP {
         });
         
         log.push(`Successfully extracted ${allHotels.length} hotels`);
-        if (args.debug_mode) {
+        if (processedArgs.debug_mode) {
           await this.showBrowserStatus(page, `Complete! Found ${allHotels.length} hotels`, 6, 6);
         }
         hotels.forEach((hotel, index) => {
@@ -911,7 +1034,8 @@ class CPMaxxLocalMCP {
               balanced: h.scores.balanced,
               bestValue: h.scores.bestValue
             },
-            extractionMethod: h.extractionMethod
+            extractionMethod: h.extractionMethod,
+            pageNumber: h.pageNumber  // Include pageNumber to verify pagination
           })),
           
           
@@ -926,10 +1050,10 @@ class CPMaxxLocalMCP {
           },
           
           search_metadata: {
-            location: args.location,
-            dates: `${args.check_in_date} to ${args.check_out_date}`,
-            guests: `${args.adults} adults${args.children > 0 ? `, ${args.children} children` : ''}`,
-            rooms: args.rooms,
+            location: processedArgs.location,
+            dates: `${processedArgs.check_in_date} to ${processedArgs.check_out_date}`,
+            guests: `${processedArgs.adults} adults${processedArgs.children > 0 ? `, ${processedArgs.children} children` : ''}`,
+            rooms: processedArgs.rooms,
             search_timestamp: new Date().toISOString(),
             source: 'comprehensive_cpmaxx_extraction',
             extractionVersion: '2.0',
@@ -982,7 +1106,7 @@ class CPMaxxLocalMCP {
         log.push(`Error during hotel search: ${error instanceof Error ? error.message : 'Unknown error'}`);
         throw error;
       }
-    }, { headless: !args.debug_mode, debug: args.debug_mode });
+    }, { headless: !processedArgs.debug_mode, debug: processedArgs.debug_mode });
 
     return {
       content: [
