@@ -43,15 +43,19 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'execute_test_scenario',
         {
-          scenarioId: {
-            type: "string",
-            description: "ID of the test scenario to execute (e.g., 'flight_simple_001', 'hotel_intermediate_001', 'workflow_complex_001'). Use list_test_scenarios to see available scenarios."
+          type: "object",
+          properties: {
+            scenarioId: {
+              type: "string",
+              description: "ID of the test scenario to execute (e.g., 'flight_simple_001', 'hotel_intermediate_001', 'workflow_complex_001'). Use list_test_scenarios to see available scenarios."
+            },
+            generateVariation: {
+              type: "boolean",
+              description: "Generate a variation of the scenario"
+            }
           },
-          generateVariation: {
-            type: "boolean",
-            description: "Generate a variation of the scenario",
-            required: false
-          }
+          required: ["scenarioId"],
+          additionalProperties: false
         },
         async (params) => {
           try {
@@ -120,28 +124,33 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'analyze_conversation_quality',
         {
-          testId: {
-            type: "string",
-            description: "Test ID to analyze"
-          },
-          transcript: {
-            type: "string", 
-            description: "Full conversation transcript"
-          },
-          toolCalls: {
-            type: "array",
-            description: "Array of MCP tool calls made during the conversation",
-            items: {
-              type: "object",
-              properties: {
-                tool: { type: "string" },
-                parameters: { type: "object" },
-                response: { type: "string" },
-                timestamp: { type: "string" },
-                success: { type: "boolean" }
+          type: "object",
+          properties: {
+            testId: {
+              type: "string",
+              description: "Test ID to analyze"
+            },
+            transcript: {
+              type: "string", 
+              description: "Full conversation transcript"
+            },
+            toolCalls: {
+              type: "array",
+              description: "Array of MCP tool calls made during the conversation",
+              items: {
+                type: "object",
+                properties: {
+                  tool: { type: "string" },
+                  parameters: { type: "object" },
+                  response: { type: "string" },
+                  timestamp: { type: "string" },
+                  success: { type: "boolean" }
+                }
               }
             }
-          }
+          },
+          required: ["testId", "transcript", "toolCalls"],
+          additionalProperties: false
         },
         async (params) => {
           try {
@@ -177,17 +186,21 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'generate_test_report',
         {
-          testIds: {
-            type: "array",
-            description: "Array of test IDs to include in report",
-            items: { type: "string" }
+          type: "object",
+          properties: {
+            testIds: {
+              type: "array",
+              description: "Array of test IDs to include in report",
+              items: { type: "string" }
+            },
+            format: {
+              type: "string",
+              description: "Report format",
+              enum: ["summary", "detailed", "json"]
+            }
           },
-          format: {
-            type: "string",
-            description: "Report format",
-            enum: ["summary", "detailed", "json"],
-            required: false
-          }
+          required: ["testIds"],
+          additionalProperties: false
         },
         async (params) => {
           try {
@@ -231,18 +244,20 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'list_test_scenarios',
         {
-          category: {
-            type: "string",
-            description: "Filter by category",
-            enum: ["flight", "hotel", "activity", "workflow", "edge_case", "all"],
-            required: false
+          type: "object",
+          properties: {
+            category: {
+              type: "string",
+              description: "Filter by category",
+              enum: ["flight", "hotel", "activity", "workflow", "edge_case", "all"]
+            },
+            complexity: {
+              type: "string", 
+              description: "Filter by complexity",
+              enum: ["simple", "intermediate", "complex", "all"]
+            }
           },
-          complexity: {
-            type: "string", 
-            description: "Filter by complexity",
-            enum: ["simple", "intermediate", "complex", "all"],
-            required: false
-          }
+          additionalProperties: false
         },
         async (params) => {
           try {
@@ -273,28 +288,28 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'generate_test_scenarios',
         {
-          count: {
-            type: "number",
-            description: "Number of scenarios to generate",
-            required: false
+          type: "object",
+          properties: {
+            count: {
+              type: "number",
+              description: "Number of scenarios to generate"
+            },
+            complexity: {
+              type: "string",
+              description: "Complexity level to generate",
+              enum: ["simple", "intermediate", "complex", "mixed"]
+            },
+            category: {
+              type: "string",
+              description: "Category to focus on",
+              enum: ["flight", "hotel", "activity", "workflow", "edge_case", "mixed"]
+            },
+            seed: {
+              type: "string",
+              description: "Seed for reproducible generation"
+            }
           },
-          complexity: {
-            type: "string",
-            description: "Complexity level to generate",
-            enum: ["simple", "intermediate", "complex", "mixed"],
-            required: false
-          },
-          category: {
-            type: "string",
-            description: "Category to focus on",
-            enum: ["flight", "hotel", "activity", "workflow", "edge_case", "mixed"],
-            required: false
-          },
-          seed: {
-            type: "string",
-            description: "Seed for reproducible generation",
-            required: false
-          }
+          additionalProperties: false
         },
         async (params) => {
           try {
@@ -355,15 +370,20 @@ export class TravelTestingMCP extends McpAgent {
       this.server.tool(
         'create_scenario_variation',
         {
-          scenarioId: {
-            type: "string",
-            description: "ID of the base scenario to create variation from"
+          type: "object",
+          properties: {
+            scenarioId: {
+              type: "string",
+              description: "ID of the base scenario to create variation from"
+            },
+            variationType: {
+              type: "string",
+              description: "Type of variation to create",
+              enum: ["date_shift", "budget_increase", "traveler_increase", "destination_swap"]
+            }
           },
-          variationType: {
-            type: "string",
-            description: "Type of variation to create",
-            enum: ["date_shift", "budget_increase", "traveler_increase", "destination_swap"]
-          }
+          required: ["scenarioId", "variationType"],
+          additionalProperties: false
         },
         async (params) => {
           try {
