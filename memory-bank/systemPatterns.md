@@ -185,3 +185,136 @@ This completes the local server setup and resolves the core pagination issue ide
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 
+**MCP Server Changes Detected** (2025-06-09 21:11)
+- Modified: remote-mcp-servers/amadeus-api-mcp/services/amadeus-fetch.ts,remote-mcp-servers/amadeus-api-mcp/services/flight-service.ts,remote-mcp-servers/amadeus-api-mcp/tools/city-search.ts,remote-mcp-servers/amadeus-api-mcp/tools/index.ts,remote-mcp-servers/amadeus-api-mcp/tools/search-flights.ts,remote-mcp-servers/cpmaxx-integration-mcp/FINAL_ANALYSIS.md,remote-mcp-servers/cpmaxx-integration-mcp/README-LOCAL-SETUP.md,remote-mcp-servers/cpmaxx-integration-mcp/cpmaxx-after-search-submit.png,remote-mcp-servers/cpmaxx-integration-mcp/cpmaxx-before-extraction.png,remote-mcp-servers/cpmaxx-integration-mcp/cpmaxx-final-dom.html,remote-mcp-servers/cpmaxx-integration-mcp/cpmaxx-login-debug.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-12-483Z-01-after-navigation-to-login.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-14-782Z-02-login-page-loaded.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-15-020Z-03-credentials-filled.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-15-268Z-04-after-login-click.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-18-521Z-05-after-login-wait.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-19-124Z-06-dashboard-loaded.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-19-665Z-07-before-hotel-link-click.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-22-798Z-08-hotel-search-form.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-29-946Z-09-before-search-submit.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-30-213Z-10-after-search-submit.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-38-30-443Z-11-error-dialog.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-47-870Z-01-after-navigation-to-login.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-50-145Z-02-login-page-loaded.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-50-354Z-03-credentials-filled.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-50-598Z-04-after-login-click.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-53-762Z-05-after-login-wait.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-54-325Z-06-dashboard-loaded.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-54-860Z-07-before-hotel-link-click.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-39-57-929Z-08-hotel-search-form.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-40-05-514Z-09-before-search-submit.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-2025-06-10T00-40-05-779Z-10-after-search-submit.png,remote-mcp-servers/cpmaxx-integration-mcp/debug-cpmaxx-login.js,remote-mcp-servers/cpmaxx-integration-mcp/src/local-server.ts,remote-mcp-servers/cpmaxx-integration-mcp/start-local-server.sh,remote-mcp-servers/cpmaxx-integration-mcp/test-analysis.md,remote-mcp-servers/cpmaxx-integration-mcp/test-hotel-search.js,remote-mcp-servers/cpmaxx-integration-mcp/test-local-server.js,remote-mcp-servers/cpmaxx-integration-mcp/test-october-search.js,remote-mcp-servers/cpmaxx-integration-mcp/test-quick-search.js,remote-mcp-servers/cpmaxx-integration-mcp/test-real-search.js,remote-mcp-servers/cpmaxx-integration-mcp/test-standalone-quick.js,remote-mcp-servers/d1-database_2/README.md,remote-mcp-servers/d1-database_2/biome.json,remote-mcp-servers/d1-database_2/debug-build/pure-mcp-index.js,remote-mcp-servers/d1-database_2/index.js,remote-mcp-servers/d1-database_2/src/index.js,remote-mcp-servers/d1-database_2/test-schemas.js,remote-mcp-servers/d1-database_2/worker-mcpagent.js,
+- Context: refactor: split MetaMCP evaluation tools to separate branch
+
+Moved all MetaMCP evaluation files to 'evaluation/metamcp-tools' branch to keep this branch focused on production MCP servers. The enhanced MCP servers using the mcp-remote pattern remain on this branch and are ready for production use.
+
+Split summary:
+- MetaMCP evaluation tools → evaluation/metamcp-tools branch
+- Enhanced MCP servers remain on feature/metamcp-migration branch
+- No dependencies between the two - MCP servers work independently
+
+This keeps the repository clean and focused, with evaluation tools available separately if needed.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 00:44)
+- Modified: remote-mcp-servers/cpmaxx-integration-mcp/src/local-server-standalone.ts,
+- Context: feat: implement URL-based pagination for CPMaxx hotel search
+
+- Replace unreliable button clicking with direct URL navigation (#page_num:2, #page_num:3)
+- Add comprehensive pagination framework to collect hotels from multiple pages
+- Remove Zod dependency and implement pure JSON schemas for MCP compatibility
+- Add pageNumber metadata to hotel results for pagination verification
+- Enhance error handling and debugging for pagination navigation
+- Optimize wait times with debug mode for faster testing
+- Support up to 10 pages of results (200+ hotels) for comprehensive searches
+
+Addresses pagination issues where CPMaxx shows 67 pages with 1,316 results.
+URL-based navigation is more reliable than DOM button detection.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 00:49)
+- Modified: remote-mcp-servers/claude-travel-testing-mcp/README.md,remote-mcp-servers/claude-travel-testing-mcp/package-lock.json,remote-mcp-servers/claude-travel-testing-mcp/package.json,remote-mcp-servers/claude-travel-testing-mcp/src/index.ts,remote-mcp-servers/claude-travel-testing-mcp/test-connection.js,remote-mcp-servers/claude-travel-testing-mcp/tsconfig.json,remote-mcp-servers/claude-travel-testing-mcp/worker-mcpagent.js,
+- Context: feat: implement core automated testing MCP server with comprehensive evaluation framework
+
+## Core Testing Infrastructure
+- **New MCP Server**: claude-travel-testing-mcp deployed to production
+- **URL**: https://claude-travel-testing-mcp.somotravel.workers.dev
+- **Integration**: Added to Claude Desktop via mcp-use bridge
+
+## Testing Tools Implemented
+- `execute_test_scenario`: Loads realistic travel planning scenarios
+- `analyze_conversation_quality`: Multi-dimensional performance scoring (accuracy, completeness, efficiency, helpfulness, professionalism)
+- `generate_test_report`: Comprehensive test reporting and analytics
+- `list_test_scenarios`: Scenario management with filtering capabilities
+- `health_check`: Server status and capability verification
+
+## Sprint Planning Framework
+- **Sprint S06**: Automated Testing System sprint structure created
+- **7 Detailed Tasks**: Complete task breakdown with acceptance criteria
+- **Simone Integration**: Full sprint tracking in .simone/ framework
+
+## Architecture & Features
+- **MCP-Native Design**: Testing server provides tools TO Claude Desktop for natural conversation flow
+- **Sample Scenarios**: 3 built-in test cases (flight search, hotel booking, complete workflow)
+- **Performance Analytics**: Real-time MCP tool call monitoring and conversation analysis
+- **Production Ready**: Deployed to Cloudflare Workers with full error handling
+
+## Configuration Updates
+- Added to claude_desktop_config_pure_mcp.json for Claude Desktop integration
+- Connected via mcp-use bridge for seamless travel agent testing
+- Ready for immediate use in travel agent performance evaluation
+
+This establishes the foundation for comprehensive automated testing of the Claude Desktop travel agent system, enabling systematic evaluation of conversation quality, tool usage efficiency, and overall helpfulness.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 00:50)
+- Modified: remote-mcp-servers/cpmaxx-integration-mcp/src/local-server-standalone.ts,
+- Context: feat: add timing expectations to tool descriptions
+
+- Add 2-3 minute timing warning for search_hotels with pagination
+- Add 30-60 second timing info for test_browser tool
+- Help Claude and users set proper expectations for tool execution
+- Prevent premature timeouts during multi-page hotel searches
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 01:14)
+- Modified: remote-mcp-servers/claude-travel-testing-mcp/package-lock.json,remote-mcp-servers/claude-travel-testing-mcp/package.json,remote-mcp-servers/claude-travel-testing-mcp/src/index.ts,remote-mcp-servers/claude-travel-testing-mcp/src/scenario-generator.ts,
+- Context: fix: enhance travel testing MCP server with better error handling and scenario access
+
+- Add parameter validation with helpful error messages for execute_test_scenario and generate_test_report tools
+- Integrate scenario generator to provide access to all 26+ generated scenarios plus static scenarios
+- Update all scenario dates to be after August 1, 2025 minimum
+- Improve date generation logic with proper validation and variation handling
+- Enhanced listTestScenarios to include both static and generated scenarios
+- Add better error messages showing available scenarios when ID not found
+- Deploy updated server with improved reliability and user experience
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 01:23)
+- Modified: remote-mcp-servers/claude-travel-testing-mcp/src/index.ts,
+- Context: fix: correct JSON Schema format for travel testing MCP tool definitions
+
+- Update all tool schemas to use proper JSON Schema format with type: "object", properties, and required arrays
+- Mark scenarioId as required parameter in execute_test_scenario tool to fix parameter validation
+- Mark testIds as required in generate_test_report tool
+- Mark scenarioId and variationType as required in create_scenario_variation tool
+- Add additionalProperties: false for strict validation on all tools
+- Resolve issue where Claude Desktop wasn't enforcing required parameters due to incorrect schema format
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
+**MCP Server Changes Detected** (2025-06-10 09:13)
+- Modified: remote-mcp-servers/github-mcp/README.md,remote-mcp-servers/github-mcp/package-lock.json,remote-mcp-servers/github-mcp/package.json,remote-mcp-servers/github-mcp/src-simple/index.js,remote-mcp-servers/github-mcp/src/index-backup.js,remote-mcp-servers/github-mcp/src/index-fixed.js,remote-mcp-servers/github-mcp/src/index-mcpagent.js,remote-mcp-servers/github-mcp/src/pure-mcp-index.js,remote-mcp-servers/github-mcp/src/pure-mcp-index.ts,remote-mcp-servers/github-mcp/test-github-connection.js,remote-mcp-servers/github-mcp/tsconfig.json,remote-mcp-servers/github-mcp/worker-mcpagent.js,remote-mcp-servers/github-mcp/wrangler.pure-mcp.toml,
+- Context: feat: implement pure MCP GitHub server for travel document management
+
+- Migrate GitHub MCP from FastMCP to pure MCP protocol for mcp-remote compatibility
+- Add TypeScript implementation with proper Cloudflare Workers support
+- Include 7 GitHub API tools: file operations, branch management, commit history
+- Deploy successfully to https://github-mcp-pure.somotravel.workers.dev
+- Enable travel document storage and website management for client sharing
+- Support for iamneilroberts/trip-summary repository integration
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+

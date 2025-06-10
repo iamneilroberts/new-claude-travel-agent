@@ -1,2 +1,7 @@
-// GitHub MCP using McpAgent framework
-export { default, GitHubMCP } from './src/index-mcpagent.js';
+/**
+ * GitHub MCP Server Worker for mcp-remote integration
+ */
+
+import worker from './src/pure-mcp-index.ts';
+
+export default worker;

@@ -19,5 +19,18 @@ alias claude-mobile="open -a 'Claude' && echo '[MOBILE] new lead processing'"
 alias travel-init="echo 'initialize_travel_assistant with first_message: travel mode' | pbcopy"
 alias mobile-init="echo 'initialize_travel_assistant with first_message: [MOBILE] lead processing' | pbcopy"
 
+# Memory Bank / ActiveContext browsing shortcuts
+alias recent='tail -20 memory-bank/activeContext.md'
+alias status='head -10 memory-bank/activeContext.md'
+alias context='cat memory-bank/activeContext.md && echo "\n=== Current Git Status ===" && git status'
+alias today='grep "$(date +%Y-%m-%d)" memory-bank/activeContext.md'
+alias commits-week='grep "$(date -d "7 days ago" +%Y-%m-%d)" memory-bank/activeContext.md -A 1000'
+alias commits-month='grep "$(date -d "30 days ago" +%Y-%m-%d)" memory-bank/activeContext.md -A 1000'
+alias sessions='grep "Claude Session" memory-bank/activeContext.md | tail -10'
+alias full-status='echo "=== Current Focus ===" && head -10 memory-bank/activeContext.md && echo "\n=== Recent Activity ===" && tail -10 memory-bank/activeContext.md && echo "\n=== Git Status ===" && git status'
+alias edit-context='${EDITOR:-nano} memory-bank/activeContext.md'
+alias focus='grep -A 5 "Current Focus" memory-bank/activeContext.md'
+
 echo "Travel shortcuts loaded!"
 echo "Usage: travel, travelmode, interactive, emails, chisholm"
+echo "Memory: recent, status, context, today, sessions, full-status, focus"

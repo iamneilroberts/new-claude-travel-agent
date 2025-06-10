@@ -55,12 +55,29 @@ export class TravelTestingMCP extends McpAgent {
             }
           },
           required: ["scenarioId"],
-          additionalProperties: false
+          additionalProperties: true
         },
         async (params) => {
           try {
+            // Debug: Log what parameters we're receiving
+            console.log("execute_test_scenario received params:", JSON.stringify(params));
+            
+            // Extract scenarioId from various possible formats
+            let scenarioId = params.scenarioId || params.scenario_id || params.id;
+            
+            // Sometimes parameters come wrapped in different ways
+            if (!scenarioId && typeof params === 'object') {
+              // Check if it's nested or has different property names
+              for (const key of Object.keys(params)) {
+                if (key.toLowerCase().includes('scenario') || key.toLowerCase().includes('id')) {
+                  scenarioId = params[key];
+                  break;
+                }
+              }
+            }
+            
             // Check if scenarioId is provided
-            if (!params.scenarioId) {
+            if (!scenarioId) {
               const availableScenarios = await this.listTestScenarios();
               return {
                 content: [{
@@ -68,6 +85,7 @@ export class TravelTestingMCP extends McpAgent {
                   text: JSON.stringify({
                     status: "error",
                     message: "Missing required parameter 'scenarioId'. Please specify a scenario ID to execute.",
+                    receivedParams: params,
                     availableScenarios: availableScenarios.scenarios,
                     usage: "Call this tool with: {\"scenarioId\": \"flight_simple_001\"}"
                   }, null, 2)
@@ -75,7 +93,7 @@ export class TravelTestingMCP extends McpAgent {
               };
             }
 
-            const scenario = await this.getTestScenario(params.scenarioId, params.generateVariation);
+            const scenario = await this.getTestScenario(scenarioId, params.generateVariation);
             
             const result = {
               testId: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -419,6 +437,113 @@ export class TravelTestingMCP extends McpAgent {
         }
       );
 
+      // Quick test tools for easy execution
+      this.server.tool(
+        'run_flight_simple_001',
+        {
+          type: "object",
+          properties: {},
+          additionalProperties: false
+        },
+        async () => {
+          try {
+            const scenario = await this.getTestScenario("flight_simple_001");
+            const result = {
+              testId: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              scenario: scenario,
+              instructions: [
+                "A test scenario has been loaded. Please execute the following travel planning request:",
+                "",
+                `**Test Scenario:** ${scenario.title}`,
+                `**Complexity:** ${scenario.complexity}`,
+                `**Category:** ${scenario.category}`,
+                "",
+                `**Your Task:** ${scenario.prompt}`,
+                "",
+                "Please process this request using your available travel tools and provide a complete response.",
+                "The testing system will monitor your tool usage and analyze the conversation quality."
+              ].join("\n"),
+              metadata: {
+                expectedOutcomes: scenario.expectedOutcomes,
+                requiredTools: scenario.requiredTools,
+                startTime: new Date().toISOString(),
+              }
+            };
+            
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify(result, null, 2)
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'run_flight_simple_001':`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ 
+                  status: "error", 
+                  message: error instanceof Error ? error.message : 'Unknown error' 
+                })
+              }]
+            };
+          }
+        }
+      );
+
+      this.server.tool(
+        'run_hotel_intermediate_001',
+        {
+          type: "object",
+          properties: {},
+          additionalProperties: false
+        },
+        async () => {
+          try {
+            const scenario = await this.getTestScenario("hotel_intermediate_001");
+            const result = {
+              testId: `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              scenario: scenario,
+              instructions: [
+                "A test scenario has been loaded. Please execute the following travel planning request:",
+                "",
+                `**Test Scenario:** ${scenario.title}`,
+                `**Complexity:** ${scenario.complexity}`,
+                `**Category:** ${scenario.category}`,
+                "",
+                `**Your Task:** ${scenario.prompt}`,
+                "",
+                "Please process this request using your available travel tools and provide a complete response.",
+                "The testing system will monitor your tool usage and analyze the conversation quality."
+              ].join("\n"),
+              metadata: {
+                expectedOutcomes: scenario.expectedOutcomes,
+                requiredTools: scenario.requiredTools,
+                startTime: new Date().toISOString(),
+              }
+            };
+            
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify(result, null, 2)
+              }]
+            };
+          } catch (error) {
+            console.error(`Error in 'run_hotel_intermediate_001':`, error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({ 
+                  status: "error", 
+                  message: error instanceof Error ? error.message : 'Unknown error' 
+                })
+              }]
+            };
+          }
+        }
+      );
+
       // Health check tool
       this.server.tool(
         'health_check',
@@ -732,6 +857,8 @@ export default {
           'list_test_scenarios',
           'generate_test_scenarios',
           'create_scenario_variation',
+          'run_flight_simple_001',
+          'run_hotel_intermediate_001',
           'health_check'
         ],
         endpoints: ['/health', '/sse', '/mcp'],

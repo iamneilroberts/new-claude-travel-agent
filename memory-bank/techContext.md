@@ -154,3 +154,19 @@ Infrastructure coverage:
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 
+**Database Schema Update** (2025-06-09 21:11)
+- refactor: split MetaMCP evaluation tools to separate branch
+
+Moved all MetaMCP evaluation files to 'evaluation/metamcp-tools' branch to keep this branch focused on production MCP servers. The enhanced MCP servers using the mcp-remote pattern remain on this branch and are ready for production use.
+
+Split summary:
+- MetaMCP evaluation tools → evaluation/metamcp-tools branch
+- Enhanced MCP servers remain on feature/metamcp-migration branch
+- No dependencies between the two - MCP servers work independently
+
+This keeps the repository clean and focused, with evaluation tools available separately if needed.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+

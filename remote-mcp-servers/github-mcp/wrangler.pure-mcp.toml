@@ -1,16 +1,16 @@
 name = "github-mcp-pure"
-main = "src/pure-mcp-index.js"
-compatibility_date = "2024-09-23"
+main = "src/pure-mcp-index.ts"
+compatibility_date = "2024-01-15"
 compatibility_flags = ["nodejs_compat"]
 
-[observability.logs]
-enabled = true
-
 [vars]
-MCP_AUTH_KEY = "github-mcp-auth-key-2025"
+environment = "production"
+# Note: GITHUB_TOKEN and MCP_AUTH_KEY should be set via environment variables
+# or wrangler secrets for production deployment
 
-# Secrets (set via wrangler secret put)
-# GITHUB_TOKEN = "..."
+[env.production]
+name = "github-mcp-pure"
+route = { pattern = "github-mcp-pure.somotravel.workers.dev/*", zone_name = "somotravel.workers.dev" }
 
-[triggers]
-crons = []
+[env.staging]
+name = "github-mcp-staging"

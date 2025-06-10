@@ -219,3 +219,115 @@ This completes the local server setup and resolves the core pagination issue ide
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-09 21:07)
+- ✨ Added: refactor: split MetaMCP evaluation tools to separate branch
+
+Moved all MetaMCP evaluation files to 'evaluation/metamcp-tools' branch to keep this branch focused on production MCP servers. The enhanced MCP servers using the mcp-remote pattern remain on this branch and are ready for production use.
+
+Split summary:
+- MetaMCP evaluation tools → evaluation/metamcp-tools branch
+- Enhanced MCP servers remain on feature/metamcp-migration branch
+- No dependencies between the two - MCP servers work independently
+
+This keeps the repository clean and focused, with evaluation tools available separately if needed.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-09 21:11)
+- 🐛 Fixed: feat: implement URL-based pagination for CPMaxx hotel search
+
+- Replace unreliable button clicking with direct URL navigation (#page_num:2, #page_num:3)
+- Add comprehensive pagination framework to collect hotels from multiple pages
+- Remove Zod dependency and implement pure JSON schemas for MCP compatibility
+- Add pageNumber metadata to hotel results for pagination verification
+- Enhance error handling and debugging for pagination navigation
+- Optimize wait times with debug mode for faster testing
+- Support up to 10 pages of results (200+ hotels) for comprehensive searches
+
+Addresses pagination issues where CPMaxx shows 67 pages with 1,316 results.
+URL-based navigation is more reliable than DOM button detection.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 00:44)
+- 🐛 Fixed: feat: implement core automated testing MCP server with comprehensive evaluation framework
+
+## Core Testing Infrastructure
+- **New MCP Server**: claude-travel-testing-mcp deployed to production
+- **URL**: https://claude-travel-testing-mcp.somotravel.workers.dev
+- **Integration**: Added to Claude Desktop via mcp-use bridge
+
+## Testing Tools Implemented
+- `execute_test_scenario`: Loads realistic travel planning scenarios
+- `analyze_conversation_quality`: Multi-dimensional performance scoring (accuracy, completeness, efficiency, helpfulness, professionalism)
+- `generate_test_report`: Comprehensive test reporting and analytics
+- `list_test_scenarios`: Scenario management with filtering capabilities
+- `health_check`: Server status and capability verification
+
+## Sprint Planning Framework
+- **Sprint S06**: Automated Testing System sprint structure created
+- **7 Detailed Tasks**: Complete task breakdown with acceptance criteria
+- **Simone Integration**: Full sprint tracking in .simone/ framework
+
+## Architecture & Features
+- **MCP-Native Design**: Testing server provides tools TO Claude Desktop for natural conversation flow
+- **Sample Scenarios**: 3 built-in test cases (flight search, hotel booking, complete workflow)
+- **Performance Analytics**: Real-time MCP tool call monitoring and conversation analysis
+- **Production Ready**: Deployed to Cloudflare Workers with full error handling
+
+## Configuration Updates
+- Added to claude_desktop_config_pure_mcp.json for Claude Desktop integration
+- Connected via mcp-use bridge for seamless travel agent testing
+- Ready for immediate use in travel agent performance evaluation
+
+This establishes the foundation for comprehensive automated testing of the Claude Desktop travel agent system, enabling systematic evaluation of conversation quality, tool usage efficiency, and overall helpfulness.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 00:49)
+- 🐛 Fixed: feat: add timing expectations to tool descriptions
+
+- Add 2-3 minute timing warning for search_hotels with pagination
+- Add 30-60 second timing info for test_browser tool
+- Help Claude and users set proper expectations for tool execution
+- Prevent premature timeouts during multi-page hotel searches
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 00:50)
+- 🐛 Fixed: fix: enhance travel testing MCP server with better error handling and scenario access
+
+- Add parameter validation with helpful error messages for execute_test_scenario and generate_test_report tools
+- Integrate scenario generator to provide access to all 26+ generated scenarios plus static scenarios
+- Update all scenario dates to be after August 1, 2025 minimum
+- Improve date generation logic with proper validation and variation handling
+- Enhanced listTestScenarios to include both static and generated scenarios
+- Add better error messages showing available scenarios when ID not found
+- Deploy updated server with improved reliability and user experience
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 01:14)
+- 🐛 Fixed: fix: correct JSON Schema format for travel testing MCP tool definitions
+
+- Update all tool schemas to use proper JSON Schema format with type: "object", properties, and required arrays
+- Mark scenarioId as required parameter in execute_test_scenario tool to fix parameter validation
+- Mark testIds as required in generate_test_report tool
+- Mark scenarioId and variationType as required in create_scenario_variation tool
+- Add additionalProperties: false for strict validation on all tools
+- Resolve issue where Claude Desktop wasn't enforcing required parameters due to incorrect schema format
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 01:23)
+- ✨ Added: feat: implement pure MCP GitHub server for travel document management
+
+- Migrate GitHub MCP from FastMCP to pure MCP protocol for mcp-remote compatibility
+- Add TypeScript implementation with proper Cloudflare Workers support
+- Include 7 GitHub API tools: file operations, branch management, commit history
+- Deploy successfully to https://github-mcp-pure.somotravel.workers.dev
+- Enable travel document storage and website management for client sharing
+- Support for iamneilroberts/trip-summary repository integration
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 09:13)
