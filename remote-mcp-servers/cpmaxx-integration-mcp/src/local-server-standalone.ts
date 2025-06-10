@@ -524,274 +524,345 @@ class CPMaxxLocalMCP {
         log.push('Waiting additional time for all providers to return results...');
         await page.waitForTimeout(30000); // Wait 30 seconds for more results to aggregate
         
-        // Final screenshot before extraction
-        if (args.debug_mode) {
-          await page.screenshot({ path: 'cpmaxx-before-extraction.png' });
-          log.push('📸 Screenshot saved: cpmaxx-before-extraction.png');
-          
-          // Save the actual HTML that Playwright sees after AJAX
-          const htmlContent = await page.content();
-          const fs = await import('fs');
-          fs.writeFileSync('cpmaxx-final-dom.html', htmlContent);
-          log.push('📄 HTML saved: cpmaxx-final-dom.html');
-          
-          // Log all elements with "property" class for debugging
-          const propertyElements = await page.$$eval('.property', (elements) => {
-            return elements.map((el, i) => ({
-              index: i,
-              html: el.outerHTML.substring(0, 500),
-              textContent: el.textContent?.substring(0, 200),
-              hasPropertyName: !!el.querySelector('.property-name'),
-              propertyNameText: el.querySelector('.property-name')?.textContent?.trim() || 'NOT FOUND'
-            }));
-          });
-          log.push('🔍 Property elements analysis:');
-          propertyElements.forEach((el, i) => {
-            log.push(`  Element ${i}: name="${el.propertyNameText}" hasNameEl=${el.hasPropertyName}`);
-          });
-        }
+        // ENHANCED: Navigate through ALL pages to collect 60 results (20 per page = 3 pages)
+        log.push('=== Implementing Pagination for Complete Results ===');
         
-        // Check multiple selectors for hotels with better precision
-        const propertyResultCount = await page.locator('.property.result').count();
-        const hotelCheckboxCount = await page.locator('.he-hotel-comparison[data-name]').count();
-        const featuredCount = await page.locator('[data-featured="1"]').count();
+        let allHotels: any[] = [];
+        let currentPage = 1;
+        const maxPages = 5; // CPMaxx typically shows 20 results per page, so 5 pages = 100 results max
         
-        log.push(`Property.result count (featured): ${propertyResultCount}`);
-        log.push(`Hotel checkbox count (all results): ${hotelCheckboxCount}`);
-        log.push(`Featured hotels: ${featuredCount}`);
-        
-        // ENHANCED: Extract comprehensive hotel data from DOM
-        const hotels = await page.$$eval('.he-hotel-comparison[data-name]', (checkboxElements) => {
-          return checkboxElements.map((checkbox, index) => {
-            // All hotel data is in the checkbox data attributes!
-            const hotelName = checkbox.getAttribute('data-name') || 'Unknown Hotel';
-            const address = checkbox.getAttribute('data-address') || 'Address not available';
-            const description = checkbox.getAttribute('data-description') || 'No description available';
-            const price = parseFloat(checkbox.getAttribute('data-total-stay') || '0');
-            const originalPrice = parseFloat(checkbox.getAttribute('data-original-price') || '0');
-            const rating = parseFloat(checkbox.getAttribute('data-star-rating') || '0');
-            const giataId = checkbox.getAttribute('data-giata-id') || '';
-            const featuredImage = checkbox.getAttribute('data-image') || '';
+        // Function to extract hotels from current page using REAL DOM selectors
+        const extractCurrentPageHotels = async () => {
+          return await page.evaluate(() => {
+            const checkboxElements = document.querySelectorAll('input.he-hotel-comparison[data-name]');
+            console.log(`Found ${checkboxElements.length} hotel checkboxes on current page`);
             
-            // Find the hotel container that contains this checkbox
-            const hotelContainer = checkbox.closest('.result, .property, .hotel-result');
-            
-            // Extract REAL commission data from DOM structure
-            let commission = 0;
-            let commissionPercent = 0;
-            
-            if (hotelContainer) {
-              // Look for commission text in the hotel details section
-              const commissionElement = hotelContainer.querySelector('.hotel-details .row.pad10-vert-top .col-md-5');
-              if (commissionElement && commissionElement.textContent) {
-                const commissionText = commissionElement.textContent;
-                
-                // Parse commission: "<b>Commission:</b> $53.77 (28.4%)"
-                const commissionMatch = commissionText.match(/Commission:\s*\$?([0-9,.]+)\s*\(([0-9.]+)%\)/i);
-                if (commissionMatch) {
-                  commission = parseFloat(commissionMatch[1].replace(',', ''));
-                  commissionPercent = parseFloat(commissionMatch[2]);
-                }
+            return Array.from(checkboxElements).map((checkbox, index) => {
+              // Extract all data from checkbox attributes (this is where the real data is!)
+              const hotelName = checkbox.getAttribute('data-name') || 'Unknown Hotel';
+              const address = checkbox.getAttribute('data-address') || 'Address not available';
+              const description = checkbox.getAttribute('data-description') || 'No description available';
+              const totalStay = parseFloat(checkbox.getAttribute('data-total-stay') || '0');
+              const originalPrice = parseFloat(checkbox.getAttribute('data-original-price') || '0');
+              const rating = parseFloat(checkbox.getAttribute('data-star-rating') || '0');
+              const giataId = checkbox.getAttribute('data-giata-id') || '';
+              const featuredImage = checkbox.getAttribute('data-image') || '';
+              const checkIn = checkbox.getAttribute('data-check-in') || '';
+              const checkOut = checkbox.getAttribute('data-check-out') || '';
+              
+              // Calculate nightly rate
+              const nightlyRate = totalStay > 0 && checkIn && checkOut ? 
+                Math.round((totalStay / ((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24))) * 100) / 100 : 
+                totalStay;
+              
+              // Find the hotel container for additional data extraction
+              let hotelContainer = checkbox.closest('.property');
+              if (!hotelContainer) {
+                // Alternative: look for the container by going up the DOM tree
+                hotelContainer = checkbox.closest('.result') || checkbox.closest('[class*="hotel"]');
               }
-            }
-            
-            // If no commission found, mark as unavailable rather than calculating
-            if (commission === 0) {
-              commission = 0;
-              commissionPercent = 0;
-              // Note: Real commission data not found in DOM for this hotel
-            }
-            
-            // Extract hotel programs/badges (THC, SIG, FHR, etc.)
-            const hotelPrograms: string[] = [];
-            if (hotelContainer) {
-              const specialtyBadges = hotelContainer.querySelectorAll('.specialty-badge');
-              specialtyBadges.forEach((badge: any) => {
-                const badgeText = badge.textContent?.trim();
-                if (badgeText) {
-                  hotelPrograms.push(badgeText);
-                }
-              });
-            }
-            
-            // Extract coordinates from POI data-marker
-            let coordinates: {lat: number, lng: number} | undefined;
-            if (hotelContainer) {
-              const poiLink = hotelContainer.querySelector('a[data-marker]');
-              if (poiLink) {
-                const markerData = poiLink.getAttribute('data-marker');
-                if (markerData) {
-                  try {
-                    // Decode HTML entities and parse JSON
-                    const decodedData = markerData.replace(/&quot;/g, '"');
-                    const markerObj = JSON.parse(decodedData);
-                    if (markerObj.lat && markerObj.lng) {
-                      coordinates = {
-                        lat: parseFloat(markerObj.lat),
-                        lng: parseFloat(markerObj.lng)
-                      };
-                    }
-                  } catch (e) {
-                    // Ignore parsing errors
+              
+              // Extract REAL commission data from the detailed view
+              let commission = 0;
+              let commissionPercent = 0;
+              
+              if (hotelContainer) {
+                // Look in the specific commission section - this is the real commission data!
+                const commissionElements = hotelContainer.querySelectorAll('.row.pad10-vert-top .col-md-5');
+                commissionElements.forEach((element) => {
+                  const commissionText = element.textContent || '';
+                  // Parse: "<b>Commission:</b> $404.15 (30%)"
+                  const commissionMatch = commissionText.match(/Commission:\s*\$?([0-9,.]+)\s*\(([0-9.]+)%\)/i);
+                  if (commissionMatch) {
+                    commission = parseFloat(commissionMatch[1].replace(/,/g, ''));
+                    commissionPercent = parseFloat(commissionMatch[2]);
                   }
-                }
+                });
               }
-            }
-            
-            // Extract OTA verification data
-            let otaVerification: any = null;
-            if (hotelContainer) {
-              const verifiedBox = hotelContainer.querySelector('.verified-box[data-content]');
-              if (verifiedBox) {
-                const dataContent = verifiedBox.getAttribute('data-content');
-                if (dataContent) {
-                  try {
-                    // Parse OTA comparison data from popover content
-                    const otaMatches = dataContent.match(/<div class='provider-name'>([^<]+)<\/div><div class='provider-price'>\$?([0-9,.]+)<\/div>/g);
-                    if (otaMatches) {
-                      const otaRates: any[] = [];
-                      otaMatches.forEach(match => {
-                        const providerMatch = match.match(/<div class='provider-name'>([^<]+)<\/div><div class='provider-price'>\$?([0-9,.]+)<\/div>/);
-                        if (providerMatch) {
-                          otaRates.push({
-                            provider: providerMatch[1],
-                            price: parseFloat(providerMatch[2].replace(',', ''))
-                          });
-                        }
-                      });
-                      
-                      if (otaRates.length > 0) {
-                        otaVerification = {
-                          verified: true,
-                          rates: otaRates,
-                          lowestOtaPrice: Math.min(...otaRates.map(r => r.price)),
-                          highestOtaPrice: Math.max(...otaRates.map(r => r.price))
+              
+              // Extract hotel programs (SIG, FHR, SGP, etc.)
+              const hotelPrograms: string[] = [];
+              if (hotelContainer) {
+                const programBadges = hotelContainer.querySelectorAll('.label.specialty-badge');
+                programBadges.forEach((badge) => {
+                  const programText = badge.textContent?.trim();
+                  if (programText) {
+                    hotelPrograms.push(programText);
+                  }
+                });
+              }
+              
+              // Extract amenities from amenity icons
+              const amenities: string[] = [];
+              if (hotelContainer) {
+                const amenityElements = hotelContainer.querySelectorAll('.property-rate-amenity-name');
+                amenityElements.forEach((amenity) => {
+                  const amenityText = amenity.textContent?.trim();
+                  if (amenityText) {
+                    amenities.push(amenityText);
+                  }
+                });
+              }
+              
+              // Extract coordinates from POI marker data
+              let coordinates: {lat: number, lng: number} | undefined = undefined;
+              if (hotelContainer) {
+                const poiLink = hotelContainer.querySelector('a[data-marker]');
+                if (poiLink) {
+                  const markerData = poiLink.getAttribute('data-marker');
+                  if (markerData) {
+                    try {
+                      // Decode HTML entities and parse JSON
+                      const decodedData = markerData.replace(/&quot;/g, '"');
+                      const markerObj = JSON.parse(decodedData);
+                      if (markerObj.lat && markerObj.lng) {
+                        coordinates = {
+                          lat: parseFloat(markerObj.lat),
+                          lng: parseFloat(markerObj.lng)
                         };
                       }
+                    } catch (e) {
+                      console.log('Error parsing coordinates:', e);
                     }
-                  } catch (e) {
-                    // Ignore parsing errors
                   }
                 }
               }
-            }
-            
-            // Extract total price with taxes
-            let totalPrice = 0;
-            if (hotelContainer) {
-              const priceElements = Array.from(hotelContainer.querySelectorAll('p'));
-              const totalPriceElement = priceElements.find((p: any) => p.textContent?.includes('Total:'));
-              if (totalPriceElement) {
-                const totalText = totalPriceElement.textContent || '';
-                const totalMatch = totalText.match(/Total:\s*\$([0-9,.]+)/);
-                if (totalMatch) {
-                  totalPrice = parseFloat(totalMatch[1].replace(',', ''));
+              
+              // Extract total price with taxes from pricing box
+              let totalPriceWithTaxes = totalStay;
+              if (hotelContainer) {
+                const totalPriceElements = hotelContainer.querySelectorAll('p');
+                totalPriceElements.forEach((p) => {
+                  const text = p.textContent || '';
+                  const totalMatch = text.match(/Total:\s*\$([0-9,.]+)/);
+                  if (totalMatch) {
+                    totalPriceWithTaxes = parseFloat(totalMatch[1].replace(/,/g, ''));
+                  }
+                });
+              }
+              
+              // Extract booking URLs
+              let selectHotelUrl = '';
+              let hotelSheetUrl = '';
+              if (hotelContainer) {
+                const selectButton = hotelContainer.querySelector('a[href*="/HotelEngine/processor/selectHotel/"]');
+                if (selectButton) {
+                  selectHotelUrl = selectButton.getAttribute('href') || '';
+                }
+                
+                const sheetLink = hotelContainer.querySelector('a[href*="/HotelSheets/processor/selectRooms/"]');
+                if (sheetLink) {
+                  hotelSheetUrl = sheetLink.getAttribute('href') || '';
                 }
               }
-            }
-            
-            // Extract amenities from amenity icons and data attributes
-            const amenityIcons = hotelContainer ? 
-              Array.from(hotelContainer.querySelectorAll('.property-rate-amenity-icon img, .amenity-icon img')).map(
-                (img: any) => img.alt || img.title || img.src?.split('/').pop()?.replace('.png', '') || ''
-              ).filter(Boolean) : [];
-            
-            // Extract amenities from checkbox data (appears to have some amenity data)
-            const dataAmenities = amenityIcons.length > 0 ? amenityIcons : [];
-            
-            // Look for photo count in nearby elements
-            const containerText = hotelContainer?.textContent || '';
-            const photoCountMatch = containerText.match(/(\d+)\s*Pictures?/i);
-            const photoCount = photoCountMatch ? parseInt(photoCountMatch[1]) : 0;
-            
-            // Extract booking URLs
-            let selectHotelUrl = '';
-            let hotelSheetUrl = '';
-            if (hotelContainer) {
-              const selectButton = hotelContainer.querySelector('a[href*="/HotelEngine/processor/selectHotel/"]');
-              if (selectButton) {
-                selectHotelUrl = selectButton.getAttribute('href') || '';
-              }
               
-              const sheetLink = hotelContainer.querySelector('a[href*="/HotelSheets/processor/selectRooms/"]');
-              if (sheetLink) {
-                hotelSheetUrl = sheetLink.getAttribute('href') || '';
+              return {
+                name: hotelName,
+                address: address,
+                description: description,
+                rating: Math.round(rating * 10) / 10,
+                price: nightlyRate, // Per night rate
+                originalPrice: Math.round(originalPrice * 100) / 100,
+                totalStay: Math.round(totalStay * 100) / 100, // Total stay amount
+                totalPriceWithTaxes: Math.round(totalPriceWithTaxes * 100) / 100,
+                commission: Math.round(commission * 100) / 100,
+                commissionPercent: Math.round(commissionPercent * 10) / 10,
+                giataId: giataId,
+                featuredImage: featuredImage,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                available: true,
+                
+                // Enhanced data
+                hotelPrograms: hotelPrograms,
+                amenities: amenities,
+                coordinates: coordinates,
+                
+                // URLs
+                selectHotelUrl: selectHotelUrl,
+                hotelSheetUrl: hotelSheetUrl,
+                
+                // Metadata
+                pageNumber: undefined, // Will be set later
+                hotelIndex: index + 1,
+                extractionMethod: 'real_dom_comprehensive'
+              };
+            });
+          });
+        };
+        
+        // Extract hotels from current page (page 1)
+        let currentPageHotels = await extractCurrentPageHotels();
+        currentPageHotels.forEach(hotel => (hotel as any).pageNumber = currentPage);
+        allHotels.push(...currentPageHotels);
+        log.push(`Page ${currentPage}: Extracted ${currentPageHotels.length} hotels`);
+        
+        // Check if there are more pages by looking for pagination controls
+        while (currentPage < maxPages) {
+          try {
+            // Look for "Next" button or page navigation - use actual CPMaxx selectors from DOM
+            const nextPageSelectors = [
+              'a[aria-label="Next"].ajax',  // Primary selector from DOM analysis
+              'a[aria-label="Next"]',
+              '.pagination a[aria-label="Next"]',
+              'li:has(a[aria-label="Next"]) a'
+            ];
+            
+            let nextButtonFound = false;
+            let nextButton = null;
+            
+            for (const selector of nextPageSelectors) {
+              try {
+                nextButton = page.locator(selector);
+                const isVisible = await nextButton.isVisible();
+                const isEnabled = await nextButton.isEnabled();
+                
+                if (isVisible && isEnabled) {
+                  nextButtonFound = true;
+                  log.push(`Found next page button: ${selector}`);
+                  break;
+                }
+              } catch (e) {
+                // Continue to next selector
               }
             }
+            
+            if (!nextButtonFound) {
+              log.push(`No more pages available after page ${currentPage}`);
+              break;
+            }
+            
+            // Click the next page button
+            log.push(`Navigating to page ${currentPage + 1}...`);
+            await nextButton!.click();
+            
+            // Wait for AJAX to complete - CPMaxx uses AJAX for pagination
+            await page.waitForLoadState('networkidle', { timeout: 30000 });
+            await page.waitForTimeout(10000); // Extended wait for AJAX hotel results to load
+            
+            // Wait for hotel checkboxes to appear on the new page
+            try {
+              await page.waitForSelector('input.he-hotel-comparison[data-name]', { timeout: 20000 });
+              log.push(`New page loaded with hotel results`);
+            } catch (e) {
+              log.push(`Warning: Hotel checkboxes took longer than expected to load on page ${currentPage + 1}`);
+            }
+            
+            currentPage++;
+            
+            // Extract hotels from new page
+            currentPageHotels = await extractCurrentPageHotels();
+            
+            if (currentPageHotels.length === 0) {
+              log.push(`Page ${currentPage}: No hotels found, stopping pagination`);
+              break;
+            }
+            
+            currentPageHotels.forEach(hotel => (hotel as any).pageNumber = currentPage);
+            allHotels.push(...currentPageHotels);
+            log.push(`Page ${currentPage}: Extracted ${currentPageHotels.length} hotels`);
+            
+            // Take screenshot of each page if debug mode
+            if (args.debug_mode) {
+              await page.screenshot({ path: `cpmaxx-page-${currentPage}.png` });
+              log.push(`📸 Screenshot saved: cpmaxx-page-${currentPage}.png`);
+            }
+            
+          } catch (error) {
+            log.push(`Error navigating to page ${currentPage + 1}: ${error}`);
+            break;
+          }
+        }
+        
+        log.push(`=== Pagination Complete: ${allHotels.length} total hotels collected across ${currentPage} pages ===`);
+        
+        // Final screenshot before full extraction
+        if (args.debug_mode) {
+          await page.screenshot({ path: 'cpmaxx-before-full-extraction.png' });
+          log.push('📸 Screenshot saved: cpmaxx-before-full-extraction.png');
+        }
+        
+        // Now perform full data extraction on all collected hotels
+        // Go back to page 1 to start comprehensive extraction
+        if (currentPage > 1) {
+          log.push('Returning to page 1 for comprehensive data extraction...');
+          await page.goto(page.url().replace(/(&|\?)page=\d+/, ''), { waitUntil: 'networkidle' });
+          await page.waitForTimeout(3000);
+        }
+        
+        // Transform all collected hotels into the final format with enhanced data
+        const hotels = allHotels.map((hotelData, index) => {
+          // Start with comprehensive data already collected
+          const hotel = {
+            name: hotelData.name,
+            address: hotelData.address,
+            description: hotelData.description,
+            rating: hotelData.rating,
+            price: hotelData.price, // Per night rate
+            originalPrice: hotelData.originalPrice,
+            totalPrice: hotelData.totalPriceWithTaxes || hotelData.totalStay,
+            commission: hotelData.commission,
+            commissionPercent: hotelData.commissionPercent,
+            available: hotelData.available,
+            
+            // URLs for booking/management
+            urls: {
+              booking: `https://cpmaxx.cruiseplannersnet.com/HotelEngine/searchResults`,
+              selectHotel: hotelData.selectHotelUrl,
+              createHotelSheet: hotelData.hotelSheetUrl
+            },
+            
+            // Enhanced photo information
+            photos: {
+              featured: hotelData.featuredImage.split(',')[0] || '',
+              gallery: hotelData.featuredImage.split(',').filter(Boolean),
+              giataId: hotelData.giataId,
+              photoCount: hotelData.featuredImage ? hotelData.featuredImage.split(',').length : 0
+            },
+            
+            // Enhanced amenities and programs - now with REAL data
+            amenities: hotelData.amenities || [],
+            hotelPrograms: hotelData.hotelPrograms || [],
+            
+            // Enhanced location data - now with REAL coordinates
+            location: {
+              coordinates: hotelData.coordinates,
+              district: hotelData.address,
+              city: hotelData.address.split(' ').slice(-2, -1)[0] || '',
+              state: hotelData.address.split(' ').slice(-1)[0] || ''
+            },
+            
+            // OTA comparison data (will be enhanced in future versions)
+            otaVerification: null,
             
             // Calculate value metrics for intelligent recommendation
-            const commissionValue = commission;
-            const priceValue = price > 0 ? 1000 / price : 0; // Inverse price (lower is better)
-            const ratingValue = rating * 20; // Scale 0-5 to 0-100
+            scores: {
+              maxCommission: 0,
+              balanced: 0,
+              bestValue: 0,
+              commissionOnly: hotelData.commission,
+              ratingOnly: hotelData.rating * 20,
+              priceOnly: hotelData.price > 0 ? 1000 / hotelData.price : 0
+            },
             
-            // Composite scores for different priorities
-            const maxCommissionScore = commissionValue * 2 + ratingValue * 0.5 + priceValue * 0.3;
-            const balancedScore = commissionValue * 0.6 + ratingValue * 0.8 + priceValue * 0.6;
-            const bestValueScore = ratingValue * 1.0 + priceValue * 0.8 + commissionValue * 0.4;
-            
-            return {
-              name: hotelName,
-              address: address,
-              description: description,
-              rating: Math.round(rating * 10) / 10, // Keep one decimal for ratings
-              price: Math.round(price * 100) / 100,
-              originalPrice: Math.round(originalPrice * 100) / 100,
-              totalPrice: totalPrice,
-              commission: Math.round(commission * 100) / 100,
-              commissionPercent: Math.round(commissionPercent * 10) / 10,
-              available: true, // All checkbox results are available
-              
-              // URLs for booking/management
-              urls: {
-                booking: window.location.href,
-                selectHotel: selectHotelUrl,
-                createHotelSheet: hotelSheetUrl
-              },
-              
-              // Enhanced photo information
-              photos: {
-                featured: featuredImage.split(',')[0] || '',
-                gallery: featuredImage.split(',').filter(Boolean),
-                giataId: giataId,
-                photoCount: photoCount
-              },
-              
-              // Enhanced amenities and programs
-              amenities: dataAmenities,
-              hotelPrograms: hotelPrograms,
-              
-              // Enhanced location data
-              location: {
-                coordinates: coordinates,
-                district: address,
-                city: address.split(' ').slice(-2, -1)[0] || '', // Extract city from address
-                state: address.split(' ').slice(-1)[0] || '' // Extract state/zip
-              },
-              
-              // OTA comparison data
-              otaVerification: otaVerification,
-              
-              // Intelligence scores for recommendations
-              scores: {
-                maxCommission: Math.round(maxCommissionScore),
-                balanced: Math.round(balancedScore),
-                bestValue: Math.round(bestValueScore),
-                commissionOnly: Math.round(commissionValue),
-                ratingOnly: Math.round(ratingValue),
-                priceOnly: Math.round(priceValue)
-              },
-              
-              // Metadata
-              extractionMethod: 'comprehensive_dom_extraction',
-              hotelIndex: index + 1,
-              extractedAt: new Date().toISOString()
-            };
-          });
+            // Metadata
+            extractionMethod: 'paginated_real_dom_extraction',
+            hotelIndex: hotelData.hotelIndex,
+            pageNumber: hotelData.pageNumber,
+            extractedAt: new Date().toISOString()
+          };
+          
+          // Calculate composite scores for intelligent recommendations
+          hotel.scores.maxCommission = Math.round(hotel.scores.commissionOnly * 2 + hotel.scores.ratingOnly * 0.5 + hotel.scores.priceOnly * 0.3);
+          hotel.scores.balanced = Math.round(hotel.scores.commissionOnly * 0.6 + hotel.scores.ratingOnly * 0.8 + hotel.scores.priceOnly * 0.6);
+          hotel.scores.bestValue = Math.round(hotel.scores.ratingOnly * 1.0 + hotel.scores.priceOnly * 0.8 + hotel.scores.commissionOnly * 0.4);
+          
+          return hotel;
         });
         
-        log.push(`Successfully extracted ${hotels.length} hotels`);
+        log.push(`Successfully extracted ${allHotels.length} hotels`);
         if (args.debug_mode) {
-          await this.showBrowserStatus(page, `Complete! Found ${hotels.length} hotels`, 6, 6);
+          await this.showBrowserStatus(page, `Complete! Found ${allHotels.length} hotels`, 6, 6);
         }
         hotels.forEach((hotel, index) => {
           log.push(`  ${index + 1}. ${hotel.name} - $${hotel.price}/night - ${hotel.rating}⭐ - Commission: $${hotel.commission} (${hotel.commissionPercent}%)`);
@@ -814,13 +885,13 @@ class CPMaxxLocalMCP {
         // Count hotels with special programs
         const hotelProgramCounts: { [key: string]: number } = {};
         hotels.forEach(hotel => {
-          hotel.hotelPrograms.forEach(program => {
+          hotel.hotelPrograms.forEach((program: string) => {
             hotelProgramCounts[program] = (hotelProgramCounts[program] || 0) + 1;
           });
         });
         
         // Count OTA verified hotels
-        const otaVerifiedCount = hotels.filter(h => h.otaVerification?.verified).length;
+        const otaVerifiedCount = hotels.filter(h => h.otaVerification && (h.otaVerification as any).verified).length;
         
         // Create a summary response optimized for maximum hotel count
         const summaryResponse = {
