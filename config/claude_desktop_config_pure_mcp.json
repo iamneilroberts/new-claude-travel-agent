@@ -98,6 +98,15 @@
         "--server", "basic-memory"
       ],
       "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
+    },
+    "travel-testing": {
+      "command": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/venv/bin/python",
+      "args": [
+        "-m", "mcp_use",
+        "--config", "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use/production_config_pure_mcp.json",
+        "--server", "travel-testing"
+      ],
+      "cwd": "/home/neil/dev/new-claude-travel-agent/mcptools/mcp-use"
     }
   }
 }
