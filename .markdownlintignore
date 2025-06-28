@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+
+# Test files
+testing/
+**/testing/
+
+# Vendor files
+vendor/
+
+# Generated files
+*.generated.md
+CHANGELOG.md
+
+# Third-party files
+**/third-party/
+
+# IDE
+.vscode/
+.idea/
+
+# Archives and backups
+.simone-backups/
+obsolete/
+
+# MCP specific
+mcp-remote-reference/
+mcpo-evaluation/
+metatool-evaluation/
+
+# Temporary
+*.tmp
+*.temp
+tmp/
+temp/
