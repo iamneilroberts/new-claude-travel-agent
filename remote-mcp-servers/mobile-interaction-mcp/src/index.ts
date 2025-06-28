@@ -3,6 +3,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MobileMessageParser } from "./messageParser.js";
 import { MobileMessage, ConversationContext, MobileResponse } from "./tools/index.js";
+import { GmailClient } from "./gmail-client.js";
+import { CarrierLookupService } from "./carrier-lookup.js";
+import { SmsFormatter } from "./sms-formatter.js";
 
 interface Env {
   MCP_AUTH_KEY: string;
@@ -11,7 +14,13 @@ interface Env {
   TWILIO_ACCOUNT_SID: string;
   TWILIO_AUTH_TOKEN: string;
   OPENAI_API_KEY: string;
+  GMAIL_CLIENT_ID: string;
+  GMAIL_CLIENT_SECRET: string;
+  GMAIL_REFRESH_TOKEN: string;
+  GMAIL_ACCESS_TOKEN?: string;
+  NUMVERIFY_API_KEY?: string;
   CONVERSATION_STATE: KVNamespace;
+  CARRIER_CACHE?: KVNamespace;
   DB: D1Database;
 }
 
@@ -22,6 +31,8 @@ export class MobileInteractionMCP extends McpAgent {
   });
 
   private messageParser = new MobileMessageParser();
+  private gmailClient?: GmailClient;
+  private carrierLookup?: CarrierLookupService;
 
   async init() {
     const env = this.env as Env;
@@ -226,7 +237,159 @@ export class MobileInteractionMCP extends McpAgent {
         }
       );
 
-      console.log('Registered 4 Mobile Interaction tools');
+      // Initialize Gmail client and carrier lookup
+      this.gmailClient = new GmailClient({
+        clientId: env.GMAIL_CLIENT_ID,
+        clientSecret: env.GMAIL_CLIENT_SECRET,
+        refreshToken: env.GMAIL_REFRESH_TOKEN,
+        accessToken: env.GMAIL_ACCESS_TOKEN
+      });
+
+      this.carrierLookup = new CarrierLookupService(env);
+
+      // Send Message Tool (Gmail and Gmail2SMS)
+      this.server.tool(
+        'send_message',
+        {
+          recipient: z.string().describe('Email address or phone number'),
+          message: z.string().describe('Message content to send'),
+          platform: z.enum(['gmail', 'gmail2sms', 'auto']).default('auto').describe('Platform to use (auto will detect based on recipient)'),
+          subject: z.string().optional().describe('Email subject (for gmail only)'),
+          carrier: z.string().optional().describe('Manual carrier selection for gmail2sms (e.g., "verizon", "att", "tmobile")'),
+          attachments: z.array(z.object({
+            url: z.string(),
+            filename: z.string(),
+            contentType: z.string()
+          })).optional().describe('Attachments for email')
+        },
+        async (params) => {
+          try {
+            // Detect recipient type and platform
+            let platform = params.platform;
+            const isEmail = params.recipient.includes('@');
+            const isPhone = /^\+?[\d\s\-\(\)]+$/.test(params.recipient);
+
+            if (platform === 'auto') {
+              if (isEmail) {
+                platform = 'gmail';
+              } else if (isPhone) {
+                platform = 'gmail2sms';
+              } else {
+                throw new Error('Unable to determine recipient type. Please specify platform.');
+              }
+            }
+
+            let result;
+
+            if (platform === 'gmail') {
+              // Send direct email
+              if (!this.gmailClient) {
+                throw new Error('Gmail client not initialized');
+              }
+
+              result = await this.gmailClient.sendEmail({
+                to: params.recipient,
+                subject: params.subject,
+                body: params.message
+              });
+
+              return {
+                content: [{
+                  type: "text",
+                  text: JSON.stringify({
+                    status: "sent",
+                    platform: "gmail",
+                    recipient: params.recipient,
+                    messageId: result.id,
+                    threadId: result.threadId,
+                    sent_at: new Date().toISOString()
+                  })
+                }]
+              };
+
+            } else if (platform === 'gmail2sms') {
+              // Send SMS via email gateway
+              if (!this.gmailClient || !this.carrierLookup) {
+                throw new Error('Gmail client or carrier lookup not initialized');
+              }
+
+              // Format phone number and lookup carrier
+              let lookupResult = await this.carrierLookup.lookupCarrier(params.recipient);
+
+              // If automatic lookup failed but manual carrier was provided
+              if (!lookupResult.carrier && params.carrier) {
+                const manualCarrier = this.carrierLookup.getCarrierByKey(params.carrier);
+                if (manualCarrier) {
+                  lookupResult = {
+                    phoneNumber: this.carrierLookup.formatPhoneNumber(params.recipient),
+                    carrier: manualCarrier,
+                    cached: false
+                  };
+                }
+              }
+
+              if (!lookupResult.carrier) {
+                // Provide helpful error with common carriers
+                const commonCarriers = this.carrierLookup.getCommonCarriers()
+                  .map(c => `"${c.key}" (${c.info.name})`)
+                  .join(', ');
+
+                throw new Error(
+                  `Unable to determine carrier for ${params.recipient}. ` +
+                  `Try specifying carrier manually with one of: ${commonCarriers}`
+                );
+              }
+
+              // Format message for SMS
+              const formattedMessage = SmsFormatter.formatForSms(params.message);
+
+              // Build SMS gateway email
+              const smsEmail = this.carrierLookup.buildSmsEmail(lookupResult.phoneNumber, lookupResult.carrier);
+
+              // Send via Gmail
+              result = await this.gmailClient.sendEmail({
+                to: smsEmail,
+                subject: '', // No subject for SMS gateways
+                body: formattedMessage
+              });
+
+              return {
+                content: [{
+                  type: "text",
+                  text: JSON.stringify({
+                    status: "sent",
+                    platform: "gmail2sms",
+                    recipient: params.recipient,
+                    carrier: lookupResult.carrier.name,
+                    gateway: smsEmail,
+                    messageId: result.id,
+                    sent_at: new Date().toISOString(),
+                    sms_segments: SmsFormatter.calculateSmsSegments(formattedMessage)
+                  })
+                }]
+              };
+            } else {
+              throw new Error(`Unsupported platform: ${platform}`);
+            }
+
+          } catch (error) {
+            console.error('Error sending message:', error);
+            return {
+              content: [{
+                type: "text",
+                text: JSON.stringify({
+                  status: "error",
+                  message: error instanceof Error ? error.message : 'Failed to send message',
+                  recipient: params.recipient,
+                  platform: params.platform
+                })
+              }]
+            };
+          }
+        }
+      );
+
+      console.log('Registered 5 Mobile Interaction tools');
     } catch (error) {
       console.error('Failed to initialize Mobile Interaction tools:', error);
 

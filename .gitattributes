@@ -1,8 +1,16 @@
 # Protect critical documentation files
 .simone/** text eol=lf
 .simone/*.md text eol=lf
+.simone/03_SPRINTS/** text eol=lf
+.simone/sprints/** text eol=lf
 travel-shortcuts.sh text eol=lf
 
 # Ensure these files are always included in git operations
 .simone/** -export-ignore
+.simone/03_SPRINTS/** -export-ignore
+.simone/sprints/** -export-ignore
 CLAUDE.md -export-ignore
+
+# Mark sprint files as important - should not be deleted without explicit confirmation
+.simone/03_SPRINTS/**/*.md linguist-documentation
+.simone/sprints/*.md linguist-documentation

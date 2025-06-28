@@ -19,6 +19,7 @@ A mobile-optimized MCP server that enables natural language interactions with th
 2. **`send_mobile_response`**: Send formatted responses to mobile platforms  
 3. **`query_trip_info`**: Retrieve trip information from database
 4. **`process_voice_message`**: Transcribe and process voice messages
+5. **`send_message`**: Send messages via Gmail or SMS (using email-to-SMS gateways)
 
 ## Architecture
 
@@ -46,8 +47,16 @@ TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 TWILIO_ACCOUNT_SID=your-twilio-account-sid
 TWILIO_AUTH_TOKEN=your-twilio-auth-token
 
+# Gmail OAuth (for send_message tool)
+GMAIL_CLIENT_ID=your-gmail-oauth-client-id
+GMAIL_CLIENT_SECRET=your-gmail-oauth-client-secret
+GMAIL_REFRESH_TOKEN=your-gmail-refresh-token
+
 # AI Services
 OPENAI_API_KEY=your-openai-api-key-for-transcription
+
+# Optional - Carrier Lookup
+NUMVERIFY_API_KEY=your-numverify-api-key
 
 # MCP Authentication
 MCP_AUTH_KEY=mobile-interaction-mcp-auth-key-2025
@@ -118,6 +127,33 @@ npm run deploy
 **User:** "Process this invoice for the Welford trip" [attaches PDF]
 
 **Response:** "✅ I've processed the invoice from Apple Vacations. Updated total cost to $8,823 and added confirmation numbers. The trip details have been updated."
+
+### Send Messages (NEW)
+
+**Send Email:**
+```javascript
+// Via MCP tool
+{
+  "tool": "send_message",
+  "params": {
+    "recipient": "client@example.com",
+    "message": "Your itinerary is confirmed",
+    "subject": "Travel Confirmation"
+  }
+}
+```
+
+**Send SMS via Email Gateway:**
+```javascript
+// Auto-detects phone number and uses carrier gateway
+{
+  "tool": "send_message", 
+  "params": {
+    "recipient": "+12514635712",
+    "message": "Flight UA123 boards at Gate B12"
+  }
+}
+```
 
 ## Integration with Claude Desktop
 

@@ -344,3 +344,14 @@ Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 09:13)
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-10 09:15)
+- 🐛 Fixed: feat(crash-recovery): add session recovery tools and commands
+
+- Add /crash-recover slash command for API timeout recovery
+- Create session recovery analyzer script
+- Add chat history analyzer for recovery
+- Implement session state manager
+- Add recovery script runner
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com> (2025-06-27 10:28)

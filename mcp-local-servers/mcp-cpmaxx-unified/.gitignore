@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.js
+*.d.ts
+*.js.map
+
+# Test files and results
+testing/
+test-*.ts
+test-*.js
+parse-*.ts
+search-results/
+*-results.json
+*.log
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
