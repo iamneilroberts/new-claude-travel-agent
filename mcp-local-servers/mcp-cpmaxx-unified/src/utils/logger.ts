@@ -1,8 +1,9 @@
-// Simple logger utility for MCP server
+// Logger utility for MCP server
+// All logs must go to stderr to avoid interfering with JSON-RPC protocol on stdout
 
 export const logger = {
   info: (message: string, ...args: any[]) => {
-    console.log(`[INFO] ${message}`, ...args);
+    console.error(`[INFO] ${message}`, ...args);
   },
   
   error: (message: string, ...args: any[]) => {
@@ -10,12 +11,12 @@ export const logger = {
   },
   
   warn: (message: string, ...args: any[]) => {
-    console.warn(`[WARN] ${message}`, ...args);
+    console.error(`[WARN] ${message}`, ...args);
   },
   
   debug: (message: string, ...args: any[]) => {
     if (process.env.DEBUG) {
-      console.log(`[DEBUG] ${message}`, ...args);
+      console.error(`[DEBUG] ${message}`, ...args);
     }
   }
 };
