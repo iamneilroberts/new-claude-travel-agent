@@ -17,7 +17,7 @@ iwr -useb https://raw.githubusercontent.com/iamneilroberts/new-claude-travel-age
 ## 📋 Prerequisites
 
 - [Claude Desktop](https://claude.ai/download)
-- [Docker Desktop](https://docs.docker.com/get-docker/)
+- [Docker Desktop](https://docs.docker.com/get-docker/) (optional, for local Chrome automation)
 - [Node.js](https://nodejs.org/) (v18 or higher)
 
 ## 🔧 Manual Installation
@@ -43,10 +43,9 @@ cd new-claude-travel-agent
 
 - **MCP proxy** (`mcp-use`) - For connecting to remote services
 - **Configuration files** - Automatically configured for Claude Desktop
-- **Docker container** - Pre-built Chrome automation environment
-- **Desktop extension** - Optional .dxt file for new Claude Desktop features
+- **Docker container** (optional) - Pre-built Chrome automation environment
 
-Total download: ~200MB (mostly the Docker container)
+Total download: ~10MB (or ~200MB with Docker container)
 
 ## 🔑 You'll Need
 
@@ -65,24 +64,12 @@ Once installed, you'll have access to:
 - 💾 Personal travel history
 - 🎯 Smart recommendations
 
-## 🔄 Updates
-
-To update to the latest version:
-
-```bash
-# Mac/Linux
-curl -sSL https://raw.githubusercontent.com/iamneilroberts/new-claude-travel-agent/install/update.sh | bash
-
-# Windows
-iwr -useb https://raw.githubusercontent.com/iamneilroberts/new-claude-travel-agent/install/update.ps1 | iex
-```
-
 ## ❓ Troubleshooting
 
 If you encounter issues:
 
 1. Ensure all prerequisites are installed
-2. Check Docker is running: `docker --version`
+2. Check Docker is running (if using local automation): `docker --version`
 3. Verify Node.js: `node --version`
 4. Restart Claude Desktop after installation
 

@@ -26,13 +26,20 @@ check_command() {
 echo -e "\n${YELLOW}Checking prerequisites...${NC}"
 MISSING_DEPS=0
 
-check_command "docker" || MISSING_DEPS=1
 check_command "node" || MISSING_DEPS=1
 check_command "npm" || MISSING_DEPS=1
 
+# Docker is optional
+if check_command "docker"; then
+    echo -e "${GREEN}✅ Docker found - local automation will be available${NC}"
+    USE_DOCKER=1
+else
+    echo -e "${YELLOW}⚠️  Docker not found - remote services only${NC}"
+    USE_DOCKER=0
+fi
+
 if [ $MISSING_DEPS -eq 1 ]; then
     echo -e "\n${RED}Please install missing dependencies first:${NC}"
-    echo "- Docker: https://docs.docker.com/get-docker/"
     echo "- Node.js: https://nodejs.org/"
     exit 1
 fi
@@ -53,17 +60,6 @@ fi
 
 echo -e "${GREEN}✅ Using Claude config directory: $CLAUDE_CONFIG_DIR${NC}"
 
-# Install mcp-use
-echo -e "\n${YELLOW}Installing MCP proxy...${NC}"
-npm install -g mcp-use
-
-# Pull Docker container
-echo -e "\n${YELLOW}Pulling Claude Travel Agent container...${NC}"
-docker pull ghcr.io/iamneilroberts/claude-travel/mcp-cpmaxx-unified:latest || {
-    echo -e "${YELLOW}Note: Container not yet published. Building locally...${NC}"
-    # For now, we'll skip this since the container isn't published yet
-}
-
 # Get configuration details
 echo -e "\n${YELLOW}Configuration Setup${NC}"
 echo "You'll need:"
@@ -75,7 +71,10 @@ read -p "Enter your MCP auth token: " AUTH_TOKEN
 
 # Create configuration
 echo -e "\n${YELLOW}Creating Claude Desktop configuration...${NC}"
-cat > "$CLAUDE_CONFIG_DIR/claude_desktop_config.json" << EOF
+
+if [ $USE_DOCKER -eq 1 ]; then
+    # Full config with Docker
+    cat > "$CLAUDE_CONFIG_DIR/claude_desktop_config.json" << EOF
 {
   "mcpServers": {
     "travel-agent-remote": {
@@ -98,45 +97,30 @@ cat > "$CLAUDE_CONFIG_DIR/claude_desktop_config.json" << EOF
   }
 }
 EOF
-
-# Create desktop extension directory
-echo -e "\n${YELLOW}Creating desktop extensions...${NC}"
-mkdir -p "$HOME/.claude-extensions"
-cat > "$HOME/.claude-extensions/travel-agent.dxt" << EOF
+else
+    # Remote only config
+    cat > "$CLAUDE_CONFIG_DIR/claude_desktop_config.json" << EOF
 {
-  "name": "Claude Travel Agent",
-  "description": "Complete travel planning assistant",
-  "version": "2.0.0",
-  "author": "Neil Roberts",
-  "mcp": {
-    "command": "npx",
-    "args": ["mcp-use", "https://${WORKER_DOMAIN}"],
-    "env": {
-      "MCP_USE_AUTH_TOKEN": "${AUTH_TOKEN}"
+  "mcpServers": {
+    "travel-agent-remote": {
+      "command": "npx",
+      "args": ["mcp-use", "https://${WORKER_DOMAIN}"],
+      "env": {
+        "MCP_USE_AUTH_TOKEN": "${AUTH_TOKEN}"
+      }
     }
-  },
-  "metadata": {
-    "icon": "✈️",
-    "categories": ["travel", "planning", "automation"],
-    "capabilities": [
-      "Flight search (Amadeus)",
-      "Hotel search (Google Places)",
-      "Travel package search (CPMaxx)",
-      "Itinerary generation",
-      "Mobile notifications",
-      "Document creation"
-    ]
   }
 }
 EOF
+fi
 
 # Test connection
 echo -e "\n${YELLOW}Testing connection...${NC}"
-if npx mcp-use test "https://${WORKER_DOMAIN}" --token "${AUTH_TOKEN}" 2>/dev/null; then
+npx mcp-use test "https://${WORKER_DOMAIN}" --token "${AUTH_TOKEN}" 2>/dev/null && {
     echo -e "${GREEN}✅ Connection successful!${NC}"
-else
-    echo -e "${YELLOW}⚠️  Could not verify connection. Please check your credentials.${NC}"
-fi
+} || {
+    echo -e "${YELLOW}⚠️  Could not verify connection. Please check your credentials after restarting Claude.${NC}"
+}
 
 # Success message
 echo -e "\n${GREEN}🎉 Installation complete!${NC}"
@@ -147,6 +131,8 @@ echo "2. Look for 'travel-agent-remote' in the MCP tools"
 echo "3. Try asking: 'Search for flights from NYC to Paris next week'"
 echo ""
 echo "Configuration saved to: $CLAUDE_CONFIG_DIR/claude_desktop_config.json"
-echo "Desktop extension saved to: $HOME/.claude-extensions/travel-agent.dxt"
-echo ""
-echo "For updates, run: curl -sSL https://raw.githubusercontent.com/iamneilroberts/new-claude-travel-agent/install/update.sh | bash"
+
+if [ $USE_DOCKER -eq 1 ]; then
+    echo ""
+    echo "Docker container will be downloaded on first use of local automation tools."
+fi
