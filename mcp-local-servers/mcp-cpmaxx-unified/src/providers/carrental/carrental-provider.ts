@@ -1,5 +1,6 @@
-import { carRentalParser } from './carrental-parser';
-import { CarRentalSearchResults, CarRentalSearchCriteria, CarRentalVendorResult, CarRentalOffer } from './types';
+import { carRentalParser } from './carrental-parser.js';
+import { CarRentalSearchResults, CarRentalSearchCriteria, CarRentalVendorResult, CarRentalOffer } from './types.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Car Rental Provider for CPMaxx
@@ -16,14 +17,14 @@ export class CarRentalProvider {
    * Search for car rentals through CPMaxx
    */
   async search(criteria: CarRentalSearchCriteria): Promise<CarRentalSearchResults> {
-    console.log('🚗 Starting car rental search through CPMaxx...');
+    logger.info('🚗 Starting car rental search through CPMaxx...');
 
     try {
       // Use the new searchAllVendors method for comprehensive results
       return await this.searchAllVendors(criteria);
 
     } catch (error) {
-      console.error('❌ Car rental search failed:', error);
+      logger.error('❌ Car rental search failed:', error);
       throw error;
     }
   }
@@ -32,7 +33,7 @@ export class CarRentalProvider {
    * Search all car rental vendors (multi-page navigation)
    */
   async searchAllVendors(criteria: CarRentalSearchCriteria): Promise<CarRentalSearchResults> {
-    console.log('🚗 Starting comprehensive car rental search...');
+    logger.info('🚗 Starting comprehensive car rental search...');
 
     try {
       // Navigate to CPMaxx car rental search
@@ -50,7 +51,7 @@ export class CarRentalProvider {
       // Extract vendor links from location page
       const vendorLinks = await this.extractVendorLinks();
 
-      console.log(`📍 Found ${vendorLinks.length} vendor locations`);
+      logger.info(`📍 Found ${vendorLinks.length} vendor locations`);
 
       // Initialize results
       const results: CarRentalSearchResults = {
@@ -69,7 +70,7 @@ export class CarRentalProvider {
       // Visit each vendor page and extract vehicles
       for (const vendorLink of vendorLinks) {
         try {
-          console.log(`🔍 Fetching vehicles from ${vendorLink.vendorName}...`);
+          logger.info(`🔍 Fetching vehicles from ${vendorLink.vendorName}...`);
 
           // Navigate to vendor page
           await this.chromeMcp.chrome_navigate({ url: vendorLink.url });
@@ -86,11 +87,11 @@ export class CarRentalProvider {
             const offers = this.convertVehiclesToOffers(vendorResult);
             results.offers.push(...offers);
 
-            console.log(`✅ Found ${vendorResult.vehicles.length} vehicles from ${vendorLink.vendorName}`);
+            logger.info(`✅ Found ${vendorResult.vehicles.length} vehicles from ${vendorLink.vendorName}`);
           }
 
         } catch (vendorError) {
-          console.error(`❌ Error processing vendor ${vendorLink.vendorName}:`, vendorError);
+          logger.error(`❌ Error processing vendor ${vendorLink.vendorName}:`, vendorError);
           results.errors.push({
             code: 'VENDOR_EXTRACTION_ERROR',
             message: `Failed to extract vehicles from ${vendorLink.vendorName}: ${vendorError}`
@@ -108,12 +109,12 @@ export class CarRentalProvider {
         errors: results.errors.map(e => e.message)
       };
 
-      console.log(`✅ Car rental search completed: ${results.offers.length} total offers from ${results.vendors!.length} vendors`);
+      logger.info(`✅ Car rental search completed: ${results.offers.length} total offers from ${results.vendors!.length} vendors`);
 
       return results;
 
     } catch (error) {
-      console.error('❌ Car rental search failed:', error);
+      logger.error('❌ Car rental search failed:', error);
       throw error;
     }
   }
@@ -122,7 +123,7 @@ export class CarRentalProvider {
    * Navigate to car rental search page
    */
   private async navigateToCarRentalSearch(): Promise<void> {
-    console.log('📍 Navigating to car rental search...');
+    logger.info('📍 Navigating to car rental search...');
 
     // Check current page
     const currentContent = await this.chromeMcp.chrome_get_web_content({
@@ -143,19 +144,19 @@ export class CarRentalProvider {
     // Look for car rental option
     // First, check if we're already on a car rental page
     if (currentContent.text && currentContent.text.includes('Find a rental car')) {
-      console.log('✅ Already on car rental page');
+      logger.info('✅ Already on car rental page');
       return;
     }
 
     // Navigate to Research Hub as per user guidance
-    console.log('📍 Navigating to Research Hub...');
+    logger.info('📍 Navigating to Research Hub...');
     await this.chromeMcp.chrome_navigate({
       url: 'https://cpmaxx.cruiseplannersnet.com/main/hub/research_hub'
     });
     await this.wait(3000);
 
     // Click on car rental option
-    console.log('🚗 Looking for car rental option...');
+    logger.info('🚗 Looking for car rental option...');
 
     // Try multiple selectors for car rental
     const carRentalSelectors = [
@@ -176,7 +177,7 @@ export class CarRentalProvider {
           timeout: 2000
         });
         if (result.success) {
-          console.log(`✅ Clicked car rental using selector: ${selector}`);
+          logger.info(`✅ Clicked car rental using selector: ${selector}`);
           clicked = true;
           break;
         }
@@ -187,7 +188,7 @@ export class CarRentalProvider {
 
     if (!clicked) {
       // If no direct link, might need to look in a different section
-      console.log('⚠️ Could not find direct car rental link, checking for alternative navigation...');
+      logger.warn('⚠️ Could not find direct car rental link, checking for alternative navigation...');
 
       // Take a screenshot to see current state
       const screenshot = await this.chromeMcp.chrome_screenshot({
@@ -209,7 +210,7 @@ export class CarRentalProvider {
     });
 
     if (!carPageContent.text || !carPageContent.text.toLowerCase().includes('car')) {
-      console.warn('⚠️ May not be on car rental page');
+      logger.warn('⚠️ May not be on car rental page');
     }
   }
 
@@ -217,7 +218,7 @@ export class CarRentalProvider {
    * Fill car rental search form
    */
   private async fillCarRentalSearchForm(criteria: CarRentalSearchCriteria): Promise<void> {
-    console.log('📝 Filling car rental search form...');
+    logger.info('📝 Filling car rental search form...');
 
     // Fill pickup location
     await this.fillLocation('pickup', criteria.pickupLocation);
@@ -244,20 +245,20 @@ export class CarRentalProvider {
       await this.selectCarType(criteria.carType);
     }
 
-    console.log('✅ Car rental form filled');
+    logger.info('✅ Car rental form filled');
   }
 
   /**
    * Fill location field
    */
   private async fillLocation(type: 'pickup' | 'dropoff', location: string): Promise<void> {
-    console.log(`📍 Filling ${type} location: ${location}`);
+    logger.info(`📍 Filling ${type} location: ${location}`);
 
     // Primary selector for car search
     const selector = '#carsearch-location_search';
 
     // Execute entire autocomplete sequence in single script to avoid focus loss
-    console.log(`🚀 Using single-script autocomplete solution...`);
+    logger.info(`🚀 Using single-script autocomplete solution...`);
 
     const result = await this.chromeMcp.chrome_inject_script({
       type: 'MAIN',
@@ -412,19 +413,19 @@ export class CarRentalProvider {
       const parsed = JSON.parse(result);
 
       if (parsed.success) {
-        console.log(`✅ ${parsed.message || 'Location filled successfully'}`);
+        logger.info(`✅ ${parsed.message || 'Location filled successfully'}`);
         if (parsed.warning) {
-          console.warn(`⚠️ ${parsed.warning}`);
+          logger.warn(`⚠️ ${parsed.warning}`);
         }
         if (parsed.finalValue) {
-          console.log(`📝 Final value: ${parsed.finalValue}`);
+          logger.info(`📝 Final value: ${parsed.finalValue}`);
         }
       } else {
-        console.error(`❌ ${parsed.error}`);
+        logger.error(`❌ ${parsed.error}`);
 
         // If we found an alternate selector, try the old method with it
         if (parsed.useAlternate) {
-          console.log(`🔄 Retrying with alternate selector: ${parsed.useAlternate}`);
+          logger.info(`🔄 Retrying with alternate selector: ${parsed.useAlternate}`);
           await this.chromeMcp.chrome_fill_or_select({
             selector: parsed.useAlternate,
             value: location
@@ -432,8 +433,8 @@ export class CarRentalProvider {
         }
       }
     } catch (e) {
-      console.error('❌ Could not parse autocomplete result:', e);
-      console.warn('⚠️ Falling back to simple fill without autocomplete');
+      logger.error('❌ Could not parse autocomplete result:', e);
+      logger.warn('⚠️ Falling back to simple fill without autocomplete');
 
       // Fallback: just try to fill the field
       await this.chromeMcp.chrome_fill_or_select({
@@ -510,7 +511,7 @@ export class CarRentalProvider {
    * Select car type
    */
   private async selectCarType(carType: string): Promise<void> {
-    console.log(`🚗 Selecting car type: ${carType}`);
+    logger.info(`🚗 Selecting car type: ${carType}`);
 
     const carTypeSelectors = [
       'select[name="car-type"]',
@@ -535,7 +536,7 @@ export class CarRentalProvider {
    * Submit search form
    */
   private async submitSearch(): Promise<void> {
-    console.log('🔍 Submitting car rental search...');
+    logger.info('🔍 Submitting car rental search...');
 
     const searchButtonSelectors = [
       'button[type="submit"]',
@@ -554,7 +555,7 @@ export class CarRentalProvider {
         });
 
         if (result.success) {
-          console.log('✅ Search submitted');
+          logger.info('✅ Search submitted');
           return;
         }
       } catch (e) {
@@ -569,7 +570,7 @@ export class CarRentalProvider {
    * Wait for search results
    */
   private async waitForResults(): Promise<void> {
-    console.log('⏳ Waiting for car rental results...');
+    logger.info('⏳ Waiting for car rental results...');
 
     const resultSelectors = [
       '.car-result',
@@ -588,7 +589,7 @@ export class CarRentalProvider {
         });
 
         if (elements && elements.elements && elements.elements.length > 0) {
-          console.log(`✅ Found ${elements.elements.length} car rental results`);
+          logger.info(`✅ Found ${elements.elements.length} car rental results`);
           await this.wait(2000); // Extra wait for all results
           return;
         }
@@ -598,7 +599,7 @@ export class CarRentalProvider {
       attempts++;
     }
 
-    console.warn('⚠️ Results may not have fully loaded');
+    logger.warn('⚠️ Results may not have fully loaded');
   }
 
   /**
@@ -655,7 +656,7 @@ export class CarRentalProvider {
    * Wait for location results page
    */
   private async waitForLocationResults(): Promise<void> {
-    console.log('⏳ Waiting for location results...');
+    logger.info('⏳ Waiting for location results...');
 
     const locationSelectors = [
       '.location-result',
@@ -675,7 +676,7 @@ export class CarRentalProvider {
         });
 
         if (elements && elements.elements && elements.elements.length > 0) {
-          console.log(`✅ Found ${elements.elements.length} location results`);
+          logger.info(`✅ Found ${elements.elements.length} location results`);
           await this.wait(1000); // Extra wait for all results
           return;
         }
@@ -685,14 +686,14 @@ export class CarRentalProvider {
       attempts++;
     }
 
-    console.warn('⚠️ Location results may not have fully loaded');
+    logger.warn('⚠️ Location results may not have fully loaded');
   }
 
   /**
    * Extract vendor links from location results
    */
   private async extractVendorLinks(): Promise<Array<{vendorName: string, url: string}>> {
-    console.log('🔗 Extracting vendor links...');
+    logger.info('🔗 Extracting vendor links...');
 
     const vendorLinks: Array<{vendorName: string, url: string}> = [];
 
@@ -737,7 +738,7 @@ export class CarRentalProvider {
       }
 
     } catch (error) {
-      console.error('Error extracting vendor links:', error);
+      logger.error('Error extracting vendor links:', error);
     }
 
     return vendorLinks;
@@ -747,7 +748,7 @@ export class CarRentalProvider {
    * Extract vehicles from a vendor page
    */
   private async extractVehiclesFromVendor(vendorLink: {vendorName: string, url: string}): Promise<CarRentalVendorResult | null> {
-    console.log(`📋 Extracting vehicles from ${vendorLink.vendorName}...`);
+    logger.info(`📋 Extracting vehicles from ${vendorLink.vendorName}...`);
 
     try {
       // Wait for vehicle results
@@ -797,7 +798,7 @@ export class CarRentalProvider {
       return vendorResult;
 
     } catch (error) {
-      console.error(`Error extracting vehicles from ${vendorLink.vendorName}:`, error);
+      logger.error(`Error extracting vehicles from ${vendorLink.vendorName}:`, error);
       return null;
     }
   }
