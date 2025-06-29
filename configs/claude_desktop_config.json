@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "travel-agent-remote": {
+      "command": "npx",
+      "args": ["mcp-use", "https://YOUR-WORKER-DOMAIN.workers.dev"],
+      "env": {
+        "MCP_USE_AUTH_TOKEN": "YOUR_AUTH_TOKEN"
+      }
+    },
+    "cpmaxx-local": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "--pull", "missing",
+        "ghcr.io/iamneilroberts/claude-travel/mcp-cpmaxx-unified:latest"
+      ]
+    }
+  }
+}
